@@ -1,0 +1,27 @@
+{
+  "replay_source": "backend\\ml\\outputs\\replay_logs\\gear.csv",
+  "total_frames_processed": 5000,
+  "total_alerts": 221,
+  "alerts_per_1000_frames": 44.2,
+  "critical_alert_rate": 0.0,
+  "high_alert_rate": 0.0,
+  "alerts_per_severity": {
+    "MEDIUM": 221
+  },
+  "alerts_per_reason": {
+    "continuity_break": 221
+  },
+  "alerts_per_can_id": {
+    "0x221": 49,
+    "0x149": 53,
+    "0x13C": 65,
+    "0x104": 54
+  },
+  "alerts_per_risk_level": {
+    "MEDIUM": 221
+  },
+  "max_fusion_score_observed": 0.6258876929961891,
+  "average_fusion_score_observed": 0.474078547231838,
+  "runtime_duration_sec": 0.8787777000015922,
+  "fps": 5689.721075069317
+}

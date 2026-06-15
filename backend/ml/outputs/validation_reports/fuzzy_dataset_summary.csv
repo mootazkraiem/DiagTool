@@ -1,0 +1,9 @@
+metric,value
+replay_source,C:\Users\benkr\OneDrive\can_project\assets\archive\Fuzzy_dataset.csv
+total_frames_processed,3838859
+total_alerts,0
+alerts_per_1000_frames,0.000000
+critical_alert_rate,0.000000
+high_alert_rate,0.000000
+runtime_duration_sec,2342.100685
+fps,1639.066597

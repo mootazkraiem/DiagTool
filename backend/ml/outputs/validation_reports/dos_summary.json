@@ -1,0 +1,25 @@
+{
+  "replay_source": "backend\\ml\\outputs\\replay_logs\\dos.csv",
+  "total_frames_processed": 5000,
+  "total_alerts": 32,
+  "alerts_per_1000_frames": 6.4,
+  "critical_alert_rate": 0.0,
+  "high_alert_rate": 6.4,
+  "alerts_per_severity": {
+    "HIGH": 32
+  },
+  "alerts_per_reason": {
+    "timing_burst": 32
+  },
+  "alerts_per_can_id": {
+    "0x0": 16,
+    "0x1": 16
+  },
+  "alerts_per_risk_level": {
+    "HIGH": 32
+  },
+  "max_fusion_score_observed": 0.9580389743379147,
+  "average_fusion_score_observed": 0.3757427426856288,
+  "runtime_duration_sec": 0.6309300000011717,
+  "fps": 7924.809408319012
+}

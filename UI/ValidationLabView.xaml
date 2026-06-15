@@ -1,0 +1,500 @@
+<UserControl
+    x:Class="CANvision.Native.UI.ValidationLabView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:CANvision.Native.ViewModels">
+    <Grid>
+        <Grid.Background>
+            <ImageBrush ImageSource="pack://siteoforigin:,,,/assets/6k+-D+copy+-+High+Contrast.webp" Stretch="UniformToFill" Opacity="0.28" />
+        </Grid.Background>
+        <Rectangle Fill="#E0080C0F" />
+        <Rectangle>
+            <Rectangle.Fill>
+                <RadialGradientBrush Center="0.5,0.45" GradientOrigin="0.5,0.45" RadiusX="0.65" RadiusY="0.55">
+                    <GradientStop Color="#1800FFEE" Offset="0" />
+                    <GradientStop Color="#C0080C10" Offset="0.7" />
+                </RadialGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" CanContentScroll="True">
+            <Grid Margin="20,16,20,16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- ── ROW 0: TOP STATUS BAR ─────────────────────────────────────── -->
+                <Border Grid.Row="0" Margin="0,0,0,12" Padding="14,8" Background="#B0080C0F" BorderBrush="#2A3B42" BorderThickness="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Foreground="#4A7A85" FontFamily="Consolas" FontSize="9" VerticalAlignment="Center" Text="VAL-LAB // " />
+                            <TextBlock Foreground="#00F0FF" FontFamily="Consolas" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" Text="{Binding SessionStatus}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <TextBlock Foreground="#4A7A85" FontFamily="Consolas" FontSize="9" VerticalAlignment="Center" Margin="0,0,6,0" Text="FILE:" />
+                            <TextBlock Foreground="#8ABBC5" FontFamily="Consolas" FontSize="9" VerticalAlignment="Center" Margin="0,0,20,0" Text="{Binding LoadedFileName}" />
+                            <TextBlock Foreground="#4A7A85" FontFamily="Consolas" FontSize="9" VerticalAlignment="Center" Margin="0,0,6,0" Text="FRAMES:" />
+                            <TextBlock Foreground="#8ABBC5" FontFamily="Consolas" FontSize="9" VerticalAlignment="Center" Margin="0,0,20,0" Text="{Binding TotalFrameCountText}" />
+                            <TextBlock Foreground="#4A7A85" FontFamily="Consolas" FontSize="9" VerticalAlignment="Center" Margin="0,0,6,0" Text="DUR:" />
+                            <TextBlock Foreground="#8ABBC5" FontFamily="Consolas" FontSize="9" VerticalAlignment="Center" Text="{Binding SessionDurationText}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- ── ROW 1: CONTROL STRIP ──────────────────────────────────────── -->
+                <Border Grid.Row="1" Margin="0,0,0,12" Padding="14,10" Background="#A0080D10" BorderBrush="#253840" BorderThickness="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Left: import buttons -->
+                        <StackPanel Grid.Column="0" Orientation="Horizontal">
+                            <Button Width="130" Margin="0,0,8,0" Style="{StaticResource HudActionButtonStyle}"
+                                    Command="{Binding ImportDatasetCommand}" Content="IMPORT DATASET" />
+                            <Button Width="110" Margin="0,0,8,0" Style="{StaticResource HudActionButtonStyle}"
+                                    Command="{Binding ImportGtCommand}" Content="IMPORT GT" />
+                        </StackPanel>
+
+                        <!-- Center: GT info -->
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
+                            <TextBlock Foreground="#3D6870" FontFamily="Consolas" FontSize="9" VerticalAlignment="Center" Margin="0,0,6,0" Text="GT WINDOWS:" />
+                            <TextBlock Foreground="#00F0FF" FontFamily="Consolas" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,16,0" Text="{Binding ExpectedAttacksText}" />
+                            <TextBlock Foreground="#3D6870" FontFamily="Consolas" FontSize="9" VerticalAlignment="Center" Margin="0,0,6,0" Text="TYPE:" />
+                            <TextBlock Foreground="#8ABBC5" FontFamily="Consolas" FontSize="9" VerticalAlignment="Center" Text="{Binding ExpectedAttackTypesText}" />
+                        </StackPanel>
+
+                        <!-- Right: playback controls -->
+                        <StackPanel Grid.Column="2" Orientation="Horizontal">
+                            <Button Width="100" Margin="0,0,8,0" Style="{StaticResource HudActionButtonStyle}"
+                                    Command="{Binding StartValidationCommand}" Content="▶  REPLAY" />
+                            <Button Width="80" Margin="0,0,8,0" Style="{StaticResource HudActionButtonStyle}"
+                                    Command="{Binding StopValidationCommand}" Content="■  STOP" />
+                            <Button Width="70" Margin="0,0,8,0" Style="{StaticResource HudActionButtonStyle}"
+                                    Command="{Binding ResetCommand}" Content="RESET" />
+                            <Button Width="100" Style="{StaticResource HudActionButtonStyle}"
+                                    Command="{Binding ExportReportCommand}" Content="EXPORT RPT" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- ── ROW 2: MAIN 3-COLUMN BODY ─────────────────────────────────── -->
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="250" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- ── LEFT PANEL: GT + Detected Windows ──────────────────────── -->
+                    <Grid Grid.Column="0" Margin="0,0,12,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- GT Windows list -->
+                        <Border Grid.Row="0" Margin="0,0,0,8" Padding="10" Background="#A5080C10" BorderBrush="#2A3840" BorderThickness="1">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Foreground="#FFB400" FontFamily="Consolas" FontSize="9" FontWeight="Bold" Margin="0,0,0,8" Text="GROUND TRUTH WINDOWS" />
+                                <ItemsControl Grid.Row="1" ItemsSource="{Binding GtAttackWindows}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type vm:GtAttackWindow}">
+                                            <Border Margin="0,0,0,6" Padding="7,5" Background="#600A0D11" BorderBrush="#1F2E38" BorderThickness="1">
+                                                <Grid>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="Auto" />
+                                                    </Grid.RowDefinitions>
+                                                    <TextBlock Foreground="#FFB400" FontFamily="Consolas" FontSize="9" FontWeight="Bold" Text="{Binding AttackType}" />
+                                                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,2,0,0">
+                                                        <TextBlock Foreground="#5A8793" FontFamily="Consolas" FontSize="8" Text="{Binding StartSecText}" />
+                                                        <TextBlock Foreground="#3D5F6A" FontFamily="Consolas" FontSize="8" Margin="4,0" Text="→" />
+                                                        <TextBlock Foreground="#5A8793" FontFamily="Consolas" FontSize="8" Text="{Binding EndSecText}" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Grid>
+                        </Border>
+
+                        <!-- Detected Windows list -->
+                        <Border Grid.Row="1" Padding="10" Background="#A5080C10" BorderBrush="#2A3840" BorderThickness="1">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Foreground="#00E5FF" FontFamily="Consolas" FontSize="9" FontWeight="Bold" Margin="0,0,0,8" Text="DETECTED WINDOWS" />
+                                <ItemsControl Grid.Row="1" ItemsSource="{Binding DetectedWindows}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type vm:ValidationDetectedWindow}">
+                                            <Border Margin="0,0,0,6" Padding="7,5" Background="#600A0D11" BorderBrush="{Binding BarBrush}" BorderThickness="1">
+                                                <Grid>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="Auto" />
+                                                    </Grid.RowDefinitions>
+                                                    <DockPanel>
+                                                        <TextBlock Foreground="#D0EEF4" FontFamily="Consolas" FontSize="9" Text="{Binding AttackType}" />
+                                                        <TextBlock DockPanel.Dock="Right" FontFamily="Consolas" FontSize="8" Foreground="{Binding BarBrush}" Text="{Binding StatusText}" />
+                                                    </DockPanel>
+                                                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,2,0,0">
+                                                        <TextBlock Foreground="#4A7A85" FontFamily="Consolas" FontSize="8" Text="{Binding StartSecText}" />
+                                                        <TextBlock Foreground="#2E5560" FontFamily="Consolas" FontSize="8" Margin="4,0" Text="→" />
+                                                        <TextBlock Foreground="#4A7A85" FontFamily="Consolas" FontSize="8" Text="{Binding EndSecText}" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <!-- ── CENTER PANEL: Metrics + Timeline + Explainability ─────── -->
+                    <Grid Grid.Column="1" Margin="0,0,12,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Metrics grid -->
+                        <Border Grid.Row="0" Margin="0,0,0,10" Padding="14,12" Background="#B0080D10" BorderBrush="#253B42" BorderThickness="1">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Foreground="#4A7A85" FontFamily="Consolas" FontSize="9" Margin="0,0,0,10" Text="DETECTION METRICS" />
+
+                                <!-- Row 1: raw counts -->
+                                <UniformGrid Grid.Row="1" Rows="1" Margin="0,0,0,10">
+                                    <StackPanel Margin="0,0,12,0">
+                                        <TextBlock Foreground="#3D6068" FontFamily="Consolas" FontSize="8" Text="EXPECTED" />
+                                        <TextBlock Foreground="#FFB400" FontFamily="Consolas" FontSize="22" FontWeight="Bold" Text="{Binding ExpectedAttacksText}" />
+                                    </StackPanel>
+                                    <StackPanel Margin="0,0,12,0">
+                                        <TextBlock Foreground="#3D6068" FontFamily="Consolas" FontSize="8" Text="DETECTED" />
+                                        <TextBlock Foreground="#00F0FF" FontFamily="Consolas" FontSize="22" FontWeight="Bold" Text="{Binding DetectedAttacksText}" />
+                                    </StackPanel>
+                                    <StackPanel Margin="0,0,12,0">
+                                        <TextBlock Foreground="#3D6068" FontFamily="Consolas" FontSize="8" Text="MATCHED" />
+                                        <TextBlock Foreground="#00E060" FontFamily="Consolas" FontSize="22" FontWeight="Bold" Text="{Binding MatchedAttacksText}" />
+                                    </StackPanel>
+                                    <StackPanel Margin="0,0,12,0">
+                                        <TextBlock Foreground="#3D6068" FontFamily="Consolas" FontSize="8" Text="MISSED" />
+                                        <TextBlock Foreground="#FF6040" FontFamily="Consolas" FontSize="22" FontWeight="Bold" Text="{Binding MissedDetectionsText}" />
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Foreground="#3D6068" FontFamily="Consolas" FontSize="8" Text="FALSE POS" />
+                                        <TextBlock Foreground="#FF9020" FontFamily="Consolas" FontSize="22" FontWeight="Bold" Text="{Binding FalsePositivesText}" />
+                                    </StackPanel>
+                                </UniformGrid>
+
+                                <!-- Row 2: F1/Precision/Recall -->
+                                <UniformGrid Grid.Row="2" Rows="1">
+                                    <StackPanel Margin="0,0,12,0">
+                                        <TextBlock Foreground="#3D6068" FontFamily="Consolas" FontSize="8" Text="PRECISION" />
+                                        <TextBlock Foreground="#1DEFFF" FontFamily="Consolas" FontSize="18" FontWeight="Bold" Text="{Binding PrecisionText}" />
+                                    </StackPanel>
+                                    <StackPanel Margin="0,0,12,0">
+                                        <TextBlock Foreground="#3D6068" FontFamily="Consolas" FontSize="8" Text="RECALL" />
+                                        <TextBlock Foreground="#1DEFFF" FontFamily="Consolas" FontSize="18" FontWeight="Bold" Text="{Binding RecallText}" />
+                                    </StackPanel>
+                                    <StackPanel Margin="0,0,12,0">
+                                        <TextBlock Foreground="#3D6068" FontFamily="Consolas" FontSize="8" Text="F1 SCORE" />
+                                        <TextBlock Foreground="#00F0FF" FontFamily="Consolas" FontSize="18" FontWeight="Bold" Text="{Binding F1ScoreText}" />
+                                    </StackPanel>
+                                    <StackPanel Margin="0,0,12,0">
+                                        <TextBlock Foreground="#3D6068" FontFamily="Consolas" FontSize="8" Text="MATCH %" />
+                                        <TextBlock Foreground="#8ABBC5" FontFamily="Consolas" FontSize="18" FontWeight="Bold" Text="{Binding MatchPercentText}" />
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Foreground="#3D6068" FontFamily="Consolas" FontSize="8" Text="DELAY" />
+                                        <TextBlock Foreground="#8ABBC5" FontFamily="Consolas" FontSize="18" FontWeight="Bold" Text="{Binding DetectionDelayText}" />
+                                    </StackPanel>
+                                </UniformGrid>
+                            </Grid>
+                        </Border>
+
+                        <!-- Replay Timeline -->
+                        <Border Grid.Row="1" Margin="0,0,0,10" Padding="14,10" Background="#A8080D10" BorderBrush="#1F3038" BorderThickness="1">
+                            <StackPanel>
+                                <DockPanel Margin="0,0,0,8">
+                                    <TextBlock Foreground="#4A7A85" FontFamily="Consolas" FontSize="9" Text="REPLAY TIMELINE" />
+                                    <TextBlock DockPanel.Dock="Right" Foreground="#00F0FF" FontFamily="Consolas" FontSize="9" Text="{Binding CurrentFrameText, StringFormat=FRAME {0}}" />
+                                </DockPanel>
+                                <Canvas Height="44" Width="560" Background="#60050809" ClipToBounds="True">
+                                    <!-- baseline -->
+                                    <Line X1="0" Y1="30" X2="560" Y2="30" Stroke="#1A3A42" StrokeThickness="1" />
+                                    <!-- replay polyline -->
+                                    <Polyline Points="{Binding ReplayTimelinePoints}" Stroke="#00D0E8" StrokeThickness="1.5" StrokeLineJoin="Round" />
+                                </Canvas>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- CAN-ID Correlation Table -->
+                        <Border Grid.Row="2" Margin="0,0,0,10" Padding="14,10" Background="#A5080D10" BorderBrush="#1F3038" BorderThickness="1">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" MaxHeight="140" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Foreground="#4A7A85" FontFamily="Consolas" FontSize="9" Margin="0,0,0,6" Text="CAN-ID CORRELATION" />
+                                <!-- Header -->
+                                <Grid Grid.Row="1" Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="60" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="60" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Foreground="#2E545E" FontFamily="Consolas" FontSize="8" Text="CAN-ID" />
+                                    <TextBlock Grid.Column="1" Foreground="#2E545E" FontFamily="Consolas" FontSize="8" Text="HITS" />
+                                    <TextBlock Grid.Column="2" Foreground="#2E545E" FontFamily="Consolas" FontSize="8" Text="TYPE" />
+                                    <TextBlock Grid.Column="3" Foreground="#2E545E" FontFamily="Consolas" FontSize="8" Text="SOURCE" />
+                                </Grid>
+                                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                                    <ItemsControl ItemsSource="{Binding CanIdCorrelations}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="{x:Type vm:CanIdCorrelationRow}">
+                                                <Grid Margin="0,0,0,3">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="80" />
+                                                        <ColumnDefinition Width="60" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="60" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Foreground="#A0D4DE" FontFamily="Consolas" FontSize="9" Text="{Binding CanIdHex}" />
+                                                    <TextBlock Grid.Column="1" Foreground="#7AAAB4" FontFamily="Consolas" FontSize="9" Text="{Binding HitCount}" />
+                                                    <TextBlock Grid.Column="2" Foreground="#6A9AA4" FontFamily="Consolas" FontSize="9" Text="{Binding AttackType}" />
+                                                    <TextBlock Grid.Column="3" FontFamily="Consolas" FontSize="9" Foreground="{Binding SourceBrush}" Text="{Binding SourceLabel}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </Grid>
+                        </Border>
+
+                        <!-- Explainability rows (fills remaining space) -->
+                        <Border Grid.Row="3" Padding="14,10" Background="#A0080D10" BorderBrush="#1F3038" BorderThickness="1">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Foreground="#4A7A85" FontFamily="Consolas" FontSize="9" Margin="0,0,0,6" Text="DETECTION EXPLAINABILITY" />
+                                <!-- Header -->
+                                <Grid Grid.Row="1" Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="70" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="55" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Foreground="#2E545E" FontFamily="Consolas" FontSize="8" Text="TIMESTAMP" />
+                                    <TextBlock Grid.Column="1" Foreground="#2E545E" FontFamily="Consolas" FontSize="8" Text="CAN-ID" />
+                                    <TextBlock Grid.Column="2" Foreground="#2E545E" FontFamily="Consolas" FontSize="8" Text="TYPE" />
+                                    <TextBlock Grid.Column="3" Foreground="#2E545E" FontFamily="Consolas" FontSize="8" Text="SEV" />
+                                </Grid>
+                                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                                    <ItemsControl ItemsSource="{Binding ExplainabilityRows}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="{x:Type vm:ExplainabilityEntry}">
+                                                <Grid Margin="0,0,0,3">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="80" />
+                                                        <ColumnDefinition Width="70" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="55" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Foreground="#6A9AA4" FontFamily="Consolas" FontSize="9" Text="{Binding TimestampText}" />
+                                                    <TextBlock Grid.Column="1" Foreground="#8ABBC5" FontFamily="Consolas" FontSize="9" Text="{Binding CanIdHex}" />
+                                                    <TextBlock Grid.Column="2" Foreground="#7AAAB4" FontFamily="Consolas" FontSize="9" Text="{Binding AnomalyType}" />
+                                                    <TextBlock Grid.Column="3" FontFamily="Consolas" FontSize="9" FontWeight="Bold" Foreground="{Binding SeverityBrush}" Text="{Binding Severity}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <!-- ── RIGHT PANEL: False Positives + Frame Progress + ML Diagnostics ── -->
+                    <Grid Grid.Column="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Replay progress -->
+                        <Border Grid.Row="0" Margin="0,0,0,10" Padding="12,10" Background="#A5080D10" BorderBrush="#253840" BorderThickness="1">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Foreground="#4A7A85" FontFamily="Consolas" FontSize="9" Margin="0,0,0,8" Text="REPLAY PROGRESS" />
+                                <Grid Grid.Row="1" Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Foreground="#3D6068" FontFamily="Consolas" FontSize="8" Text="CURRENT" />
+                                        <TextBlock Foreground="#00F0FF" FontFamily="Consolas" FontSize="18" FontWeight="Bold" Text="{Binding CurrentFrameText}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Foreground="#3D6068" FontFamily="Consolas" FontSize="8" Text="TOTAL" />
+                                        <TextBlock Foreground="#6AAAB4" FontFamily="Consolas" FontSize="18" FontWeight="Bold" Text="{Binding TotalFrameCountText}" />
+                                    </StackPanel>
+                                </Grid>
+                                <StackPanel Grid.Row="2" Orientation="Horizontal">
+                                    <TextBlock Foreground="#3D6068" FontFamily="Consolas" FontSize="8" Margin="0,0,6,0" Text="MODE:" />
+                                    <TextBlock Foreground="#00F0FF" FontFamily="Consolas" FontSize="9" FontWeight="Bold" Text="{Binding ValidationModeText}" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- False positives list -->
+                        <Border Grid.Row="1" Padding="12,10" Background="#A5080D10" BorderBrush="#253840" BorderThickness="1">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Foreground="#FF6020" FontFamily="Consolas" FontSize="9" FontWeight="Bold" Margin="0,0,0,6" Text="FALSE POSITIVES" />
+                                <!-- Header -->
+                                <Grid Grid.Row="1" Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="60" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Foreground="#2E545E" FontFamily="Consolas" FontSize="8" Text="WINDOW" />
+                                    <TextBlock Grid.Column="1" Foreground="#2E545E" FontFamily="Consolas" FontSize="8" Text="CAN-ID" />
+                                </Grid>
+                                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                                    <ItemsControl ItemsSource="{Binding FalsePositiveRows}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="{x:Type vm:FalsePositiveEntry}">
+                                                <Grid Margin="0,0,0,4">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="60" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Foreground="#CC7050" FontFamily="Consolas" FontSize="9" Text="{Binding TimestampText}" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Grid.Column="1" Foreground="#8A7060" FontFamily="Consolas" FontSize="9" Text="{Binding CanIdHex}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </Grid>
+                        </Border>
+
+                        <!-- ML Diagnostics panel (row 2) -->
+                        <Border Grid.Row="2" Margin="0,10,0,0" Padding="12,10"
+                                Background="#A5080D10" BorderBrush="#1E3540" BorderThickness="1">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Text="ML DIAGNOSTICS"
+                                           Foreground="#4A7A85" FontFamily="Consolas" FontSize="9"
+                                           Margin="0,0,0,8"/>
+                                <StackPanel Grid.Row="1" Margin="0,0,0,2">
+                                    <Grid Margin="0,0,0,3">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Foreground="#2E545E" FontFamily="Consolas" FontSize="8" Text="DETECTION PATH"/>
+                                        <TextBlock Grid.Column="1" Foreground="#00F0FF" FontFamily="Consolas" FontSize="8"
+                                                   Text="{Binding MlDetectionPathText}" TextAlignment="Right"/>
+                                    </Grid>
+                                    <Grid Margin="0,0,0,3">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Foreground="#2E545E" FontFamily="Consolas" FontSize="8" Text="FRAMES SCORED"/>
+                                        <TextBlock Grid.Column="1" Foreground="#6AAAB4" FontFamily="Consolas" FontSize="8"
+                                                   Text="{Binding MlFramesScoredText}" TextAlignment="Right"/>
+                                    </Grid>
+                                    <Grid Margin="0,0,0,3">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Foreground="#2E545E" FontFamily="Consolas" FontSize="8" Text="ABOVE THRESHOLD"/>
+                                        <TextBlock Grid.Column="1" Foreground="#6AAAB4" FontFamily="Consolas" FontSize="8"
+                                                   Text="{Binding MlAboveThresholdText}" TextAlignment="Right"/>
+                                    </Grid>
+                                    <Grid Margin="0,0,0,3">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Foreground="#2E545E" FontFamily="Consolas" FontSize="8" Text="ML WINDOWS"/>
+                                        <TextBlock Grid.Column="1" Foreground="#6AAAB4" FontFamily="Consolas" FontSize="8"
+                                                   Text="{Binding MlWindowsGeneratedText}" TextAlignment="Right"/>
+                                    </Grid>
+                                    <Grid Margin="0,4,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Foreground="#2E545E" FontFamily="Consolas" FontSize="7" Text="P"/>
+                                            <TextBlock Foreground="#56F0AC" FontFamily="Consolas" FontSize="11" FontWeight="Bold"
+                                                       Text="{Binding PrecisionText}"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                                            <TextBlock Foreground="#2E545E" FontFamily="Consolas" FontSize="7" Text="R"/>
+                                            <TextBlock Foreground="#56F0AC" FontFamily="Consolas" FontSize="11" FontWeight="Bold"
+                                                       Text="{Binding RecallText}"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+                                            <TextBlock Foreground="#2E545E" FontFamily="Consolas" FontSize="7" Text="F1"/>
+                                            <TextBlock Foreground="#56F0AC" FontFamily="Consolas" FontSize="11" FontWeight="Bold"
+                                                       Text="{Binding F1ScoreText}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

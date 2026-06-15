@@ -1,0 +1,16 @@
+metric,value
+replay_source,backend\ml\outputs\replay_logs\fuzzy.csv
+total_frames_processed,5000
+total_alerts,2496
+alerts_per_1000_frames,499.200000
+critical_alert_rate,0.000000
+high_alert_rate,146.200000
+runtime_duration_sec,6.447844
+fps,775.453028
+severity_MEDIUM,1765
+severity_HIGH,731
+reason_continuity_break,2496
+can_id_0x104,624
+can_id_0x13C,624
+can_id_0x149,624
+can_id_0x221,624

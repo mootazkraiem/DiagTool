@@ -1,0 +1,29 @@
+{
+  "replay_source": "backend\\ml\\outputs\\replay_logs\\fuzzy.csv",
+  "total_frames_processed": 5000,
+  "total_alerts": 2496,
+  "alerts_per_1000_frames": 499.2,
+  "critical_alert_rate": 0.0,
+  "high_alert_rate": 146.2,
+  "alerts_per_severity": {
+    "MEDIUM": 1765,
+    "HIGH": 731
+  },
+  "alerts_per_reason": {
+    "continuity_break": 2496
+  },
+  "alerts_per_can_id": {
+    "0x104": 624,
+    "0x13C": 624,
+    "0x149": 624,
+    "0x221": 624
+  },
+  "alerts_per_risk_level": {
+    "MEDIUM": 1765,
+    "HIGH": 731
+  },
+  "max_fusion_score_observed": 0.858041781178721,
+  "average_fusion_score_observed": 0.7735837139523037,
+  "runtime_duration_sec": 6.447843799993279,
+  "fps": 775.4530281898597
+}

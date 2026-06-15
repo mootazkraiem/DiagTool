@@ -1,0 +1,16 @@
+{
+  "replay_source": "C:\\Users\\benkr\\Downloads\\can_log_stable_sample.csv",
+  "total_frames_processed": 45,
+  "total_alerts": 0,
+  "alerts_per_1000_frames": 0.0,
+  "critical_alert_rate": 0.0,
+  "high_alert_rate": 0.0,
+  "alerts_per_severity": {},
+  "alerts_per_reason": {},
+  "alerts_per_can_id": {},
+  "alerts_per_risk_level": {},
+  "max_fusion_score_observed": 0.10054081159961574,
+  "average_fusion_score_observed": 0.10012297204650365,
+  "runtime_duration_sec": 0.008893499994883314,
+  "fps": 5059.875192656411
+}

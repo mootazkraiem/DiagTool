@@ -1,0 +1,463 @@
+<UserControl
+    x:Class="CANvision.Native.UI.AnalyticsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:CANvision.Native.ViewModels"
+    Background="#060E0E">
+
+    <UserControl.Resources>
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#0F1A1A" Offset="0"/>
+                        <GradientStop Color="#0A1212" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush" Value="#28009999"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="3"/>
+            <Setter Property="Padding" Value="10,8"/>
+        </Style>
+
+        <Style x:Key="InnerCard" TargetType="Border">
+            <Setter Property="Background" Value="#08000000"/>
+            <Setter Property="BorderBrush" Value="#182F36"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="2"/>
+            <Setter Property="Padding" Value="8,6"/>
+        </Style>
+
+        <Style x:Key="Lbl" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Bahnschrift"/>
+            <Setter Property="FontSize" Value="8.5"/>
+            <Setter Property="Foreground" Value="#3A6060"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <Style x:Key="Meta" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Bahnschrift"/>
+            <Setter Property="FontSize" Value="8"/>
+            <Setter Property="Foreground" Value="#2A4A4A"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+
+        <Style x:Key="Title" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Bahnschrift"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#00C8C8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+
+        <Style x:Key="Mono" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="Foreground" Value="#D0ECEC"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+
+        <Style x:Key="KpiValue" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Bahnschrift"/>
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="LineHeight" Value="22"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#00C8C8"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="56"/>
+            <RowDefinition Height="80"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="26"/>
+        </Grid.RowDefinitions>
+
+        <!-- Background radial glow -->
+        <Rectangle Grid.RowSpan="4" IsHitTestVisible="False">
+            <Rectangle.Fill>
+                <RadialGradientBrush GradientOrigin="0.5,0.42" Center="0.5,0.42" RadiusX="0.58" RadiusY="0.55">
+                    <GradientStop Color="#08001818" Offset="0"/>
+                    <GradientStop Color="#00000000" Offset="1"/>
+                </RadialGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+
+        <!-- Row 0: Action bar -->
+        <Border Grid.Row="0" BorderBrush="#18009999" BorderThickness="0,0,0,1">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#0C1616" Offset="0"/>
+                    <GradientStop Color="#080E0E" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+            <UniformGrid Columns="5" Margin="12,0">
+                <Border BorderBrush="#162F6666" BorderThickness="0,0,1,0" Padding="10,0">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="REPLAY SOURCE" Style="{StaticResource Meta}"/>
+                        <TextBlock Text="{Binding ReplayNameText}" Style="{StaticResource Mono}"/>
+                    </StackPanel>
+                </Border>
+                <Border BorderBrush="#162F6666" BorderThickness="0,0,1,0" Padding="10,0">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="DETECTED ATTACK" Style="{StaticResource Meta}"/>
+                        <TextBlock Text="{Binding CurrentAttackText}" Style="{StaticResource Mono}" Foreground="#FF8C3A"/>
+                    </StackPanel>
+                </Border>
+                <Border BorderBrush="#162F6666" BorderThickness="0,0,1,0" Padding="10,0">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="FUSION SCORE" Style="{StaticResource Meta}"/>
+                        <TextBlock Text="{Binding FusionScoreText}" Style="{StaticResource Mono}" Foreground="#00C8C8"/>
+                    </StackPanel>
+                </Border>
+                <Border BorderBrush="#162F6666" BorderThickness="0,0,1,0" Padding="10,0">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="SESSION ALERTS" Style="{StaticResource Meta}"/>
+                        <TextBlock Text="{Binding TotalAlerts}" Style="{StaticResource Mono}"/>
+                    </StackPanel>
+                </Border>
+                <Border Padding="10,0">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="LAST UPDATE" Style="{StaticResource Meta}"/>
+                        <TextBlock Text="{Binding UpdatedText}" Style="{StaticResource Mono}"/>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+        </Border>
+
+        <!-- Row 1: KPI cards -->
+        <Border Grid.Row="1" BorderBrush="#18009999" BorderThickness="0,0,0,1">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#0C1616" Offset="0"/>
+                    <GradientStop Color="#080E0E" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+            <UniformGrid Columns="5" Margin="12,8">
+                <!-- FUSION SCORE -->
+                <Border Style="{StaticResource Card}" Margin="4,0">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                        <TextBlock Text="FUSION SCORE" Style="{StaticResource Lbl}"/>
+                        <TextBlock Grid.Row="1" Text="{Binding FusionScoreText}" Style="{StaticResource KpiValue}" Foreground="#00C8C8" Margin="0,4,0,0"/>
+                        <Grid Grid.Row="2" Height="20" VerticalAlignment="Bottom" ClipToBounds="True">
+                            <Polyline Points="{Binding RiskScoreTrendPoints}" Stroke="#00C8C8" StrokeThickness="1.2"/>
+                        </Grid>
+                    </Grid>
+                </Border>
+                <!-- TOTAL ALERTS -->
+                <Border Style="{StaticResource Card}" Margin="4,0">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                        <TextBlock Text="TOTAL ALERTS" Style="{StaticResource Lbl}"/>
+                        <TextBlock Grid.Row="1" Text="{Binding TotalAlerts}" Style="{StaticResource KpiValue}" Foreground="#D0ECEC" Margin="0,4,0,0"/>
+                        <Grid Grid.Row="2" Height="20" VerticalAlignment="Bottom" ClipToBounds="True">
+                            <Polyline Points="{Binding AttackCoverageTrendPoints}" Stroke="#D0ECEC" StrokeThickness="1.2"/>
+                        </Grid>
+                    </Grid>
+                </Border>
+                <!-- HIGH SEVERITY -->
+                <Border Style="{StaticResource Card}" Margin="4,0">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                        <TextBlock Text="HIGH SEVERITY" Style="{StaticResource Lbl}"/>
+                        <TextBlock Grid.Row="1" Text="{Binding HighSeverityCount}" Style="{StaticResource KpiValue}" Foreground="#FF5050" Margin="0,4,0,0"/>
+                        <Grid Grid.Row="2" Height="20" VerticalAlignment="Bottom" ClipToBounds="True">
+                            <Polyline Points="{Binding FalsePositiveTrendPoints}" Stroke="#FF5050" StrokeThickness="1.2"/>
+                        </Grid>
+                    </Grid>
+                </Border>
+                <!-- AVG SCORE -->
+                <Border Style="{StaticResource Card}" Margin="4,0">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                        <TextBlock Text="AVG FUSION SCORE" Style="{StaticResource Lbl}"/>
+                        <TextBlock Grid.Row="1" Text="{Binding AvgScoreText}" Style="{StaticResource KpiValue}" Foreground="#FF8C3A" Margin="0,4,0,0"/>
+                        <Grid Grid.Row="2" Height="20" VerticalAlignment="Bottom" ClipToBounds="True">
+                            <Polyline Points="{Binding ModelConfidenceTrendPoints}" Stroke="#FF8C3A" StrokeThickness="1.2"/>
+                        </Grid>
+                    </Grid>
+                </Border>
+                <!-- PEAK SCORE -->
+                <Border Style="{StaticResource Card}" Margin="4,0">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                        <TextBlock Text="PEAK SCORE" Style="{StaticResource Lbl}"/>
+                        <TextBlock Grid.Row="1" Text="{Binding PeakScoreText}" Style="{StaticResource KpiValue}" Foreground="#B46CFF" Margin="0,4,0,0"/>
+                        <Grid Grid.Row="2" Height="20" VerticalAlignment="Bottom" ClipToBounds="True">
+                            <Polyline Points="{Binding PrecisionTrendPoints}" Stroke="#B46CFF" StrokeThickness="1.2"/>
+                        </Grid>
+                    </Grid>
+                </Border>
+            </UniformGrid>
+        </Border>
+
+        <!-- Row 2: Main content — 3 zones -->
+        <Grid Grid.Row="2" Margin="12,10,12,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="220"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="260"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- ── LEFT: Attack Distribution + Trigger Breakdown ── -->
+            <Grid Grid.Column="0" Margin="0,0,8,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="150"/>
+                </Grid.RowDefinitions>
+
+                <!-- Attack Type Distribution -->
+                <Border Grid.Row="0" Style="{StaticResource Card}" Margin="0,0,0,8">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="ATTACK DISTRIBUTION" Style="{StaticResource Title}"/>
+                        <Grid Grid.Row="1" Margin="0,10,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="48"/>
+                                <ColumnDefinition Width="46"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="TYPE" Style="{StaticResource Meta}"/>
+                            <TextBlock Grid.Column="1" Text="ALERTS" Style="{StaticResource Meta}"/>
+                            <TextBlock Grid.Column="2" Text="RATIO" Style="{StaticResource Meta}"/>
+                        </Grid>
+                        <ItemsControl Grid.Row="2" ItemsSource="{Binding AttackTypeCounts}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:AttackCountItem}">
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="5"/>
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="48"/>
+                                            <ColumnDefinition Width="46"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Name}" Foreground="#00C8C8" FontFamily="Consolas" FontSize="10"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Count}" Foreground="#D0ECEC" FontFamily="Consolas" FontSize="10"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding PctText}" Foreground="#3A6060" FontFamily="Consolas" FontSize="9" VerticalAlignment="Center"/>
+                                        <Grid Grid.Row="1" Grid.ColumnSpan="3">
+                                            <Rectangle Height="4" Fill="#182F36"/>
+                                            <Rectangle Height="4" Width="{Binding BarWidth}" Fill="#00C8C8" HorizontalAlignment="Left"/>
+                                        </Grid>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Grid>
+                </Border>
+
+                <!-- Detection Triggers -->
+                <Border Grid.Row="1" Style="{StaticResource Card}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="DETECTION TRIGGERS" Style="{StaticResource Title}"/>
+                        <ItemsControl Grid.Row="1" ItemsSource="{Binding TriggerReasonCounts}" Margin="0,10,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:TriggerReasonItem}">
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="5"/>
+                                        </Grid.RowDefinitions>
+                                        <DockPanel>
+                                            <TextBlock Text="{Binding Reason}" Foreground="#D0ECEC" FontFamily="Consolas" FontSize="9.5"/>
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding PctText}" Foreground="#56F0AC" FontFamily="Consolas" FontSize="9"/>
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding Count}" Foreground="#6E9090" FontFamily="Consolas" FontSize="9" Margin="0,0,8,0"/>
+                                        </DockPanel>
+                                        <Grid Grid.Row="1">
+                                            <Rectangle Fill="#182F36"/>
+                                            <Rectangle Width="{Binding BarWidth}" Fill="#56F0AC" HorizontalAlignment="Left"/>
+                                        </Grid>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- ── CENTER: Fusion Score Monitor ── -->
+            <Border Grid.Column="1" Style="{StaticResource Card}" Margin="0,0,8,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="46"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header with legend -->
+                    <DockPanel>
+                        <TextBlock Text="FUSION SCORE MONITOR" Style="{StaticResource Title}"/>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Ellipse Width="6" Height="6" Fill="#00C8C8" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <TextBlock Text="SCORE" Foreground="#00C8C8" FontFamily="Consolas" FontSize="8" VerticalAlignment="Center" Margin="0,0,14,0"/>
+                            <Ellipse Width="6" Height="6" Fill="#FF8C3A" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <TextBlock Text="ALERT  0.40" Foreground="#FF8C3A" FontFamily="Consolas" FontSize="8" VerticalAlignment="Center" Margin="0,0,14,0"/>
+                            <Ellipse Width="6" Height="6" Fill="#FF5050" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <TextBlock Text="HIGH   0.80" Foreground="#FF5050" FontFamily="Consolas" FontSize="8" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </DockPanel>
+
+                    <TextBlock Grid.Row="1" Text="{Binding AnalyticsSummary}" Style="{StaticResource Meta}" Margin="0,6,0,0"/>
+
+                    <!-- Chart: Y-axis fixed 0.0–1.5, threshold lines at accurate positions -->
+                    <!-- alert 0.40 → Y = 112 - (0.40/1.5)*110 = 112 - 29 = 83              -->
+                    <!-- high  0.80 → Y = 112 - (0.80/1.5)*110 = 112 - 59 = 53              -->
+                    <Grid Grid.Row="2" Margin="0,8,0,0" ClipToBounds="True">
+                        <UniformGrid Rows="4">
+                            <Border BorderBrush="#102F6666" BorderThickness="0,1,0,0"/>
+                            <Border BorderBrush="#102F6666" BorderThickness="0,1,0,0"/>
+                            <Border BorderBrush="#102F6666" BorderThickness="0,1,0,0"/>
+                            <Border BorderBrush="#102F6666" BorderThickness="0,1,0,1"/>
+                        </UniformGrid>
+                        <Viewbox Stretch="Fill">
+                            <Grid Width="634" Height="112">
+                                <Polyline Points="{Binding AnomalyScoreLinePoints}" Stroke="#00C8C8" StrokeThickness="1.5"/>
+                                <Line X1="10" Y1="83" X2="634" Y2="83" Stroke="#FF8C3A" StrokeDashArray="5 3" StrokeThickness="1"/>
+                                <Line X1="10" Y1="53" X2="634" Y2="53" Stroke="#FF5050" StrokeDashArray="5 3" StrokeThickness="1"/>
+                            </Grid>
+                        </Viewbox>
+                    </Grid>
+
+                    <!-- Bottom stats row -->
+                    <UniformGrid Grid.Row="3" Columns="4" Margin="0,10,0,0">
+                        <StackPanel>
+                            <TextBlock Text="CURRENT" Style="{StaticResource Lbl}"/>
+                            <TextBlock Text="{Binding FusionScoreText}" Foreground="#00C8C8" FontFamily="Bahnschrift" FontSize="17" FontWeight="SemiBold"/>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="AVERAGE" Style="{StaticResource Lbl}"/>
+                            <TextBlock Text="{Binding AvgScoreText}" Foreground="#FF8C3A" FontFamily="Bahnschrift" FontSize="17" FontWeight="SemiBold"/>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="PEAK" Style="{StaticResource Lbl}"/>
+                            <TextBlock Text="{Binding PeakScoreText}" Foreground="#FF5050" FontFamily="Bahnschrift" FontSize="17" FontWeight="SemiBold"/>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="ALERTS" Style="{StaticResource Lbl}"/>
+                            <TextBlock Text="{Binding TotalAlerts}" Foreground="#D0ECEC" FontFamily="Bahnschrift" FontSize="17" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </UniformGrid>
+                </Grid>
+            </Border>
+
+            <!-- ── RIGHT: CAN Targets + IDS Status ── -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="170"/>
+                </Grid.RowDefinitions>
+
+                <!-- Top targeted CAN IDs -->
+                <Border Grid.Row="0" Style="{StaticResource Card}" Margin="0,0,0,8">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="TOP TARGETED CAN IDS" Style="{StaticResource Title}"/>
+                        <Grid Grid.Row="1" Margin="0,8,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="24"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="52"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="#" Style="{StaticResource Meta}"/>
+                            <TextBlock Grid.Column="1" Text="CAN ID" Style="{StaticResource Meta}"/>
+                            <TextBlock Grid.Column="2" Text="ALERTS" Style="{StaticResource Meta}"/>
+                        </Grid>
+                        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <ItemsControl ItemsSource="{Binding TopAttackedCanIds}" AlternationCount="99">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type vm:CanIdActivityItem}">
+                                        <Border BorderBrush="#102F6666" BorderThickness="0,0,0,1" Padding="0,5">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="24"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="52"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter}, Path=(ItemsControl.AlternationIndex)}" Foreground="#2A5050" FontFamily="Consolas" FontSize="9"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding CanId}" Foreground="#00C8C8" FontFamily="Consolas" FontSize="10"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding Count}" Foreground="#D0ECEC" FontFamily="Consolas" FontSize="10"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+
+                <!-- IDS Engine Status / Model Info -->
+                <Border Grid.Row="1" Style="{StaticResource Card}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="IDS ENGINE STATUS" Style="{StaticResource Title}"/>
+                        <Grid Grid.Row="1" Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="62"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="22"/>
+                                <RowDefinition Height="22"/>
+                                <RowDefinition Height="22"/>
+                                <RowDefinition Height="22"/>
+                                <RowDefinition Height="22"/>
+                                <RowDefinition Height="22"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="RUNTIME FPS" Style="{StaticResource Meta}"/>
+                            <TextBlock Grid.Column="1" Text="{Binding RuntimeFpsText}" Style="{StaticResource Mono}" Foreground="#56F0AC" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Row="1" Text="ALERT THRESHOLD" Style="{StaticResource Meta}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="0.40" Style="{StaticResource Mono}" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Row="2" Text="TIMING WEIGHT" Style="{StaticResource Meta}"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="35%" Style="{StaticResource Mono}" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Row="3" Text="PAYLOAD WEIGHT" Style="{StaticResource Meta}"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="35%" Style="{StaticResource Mono}" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Row="4" Text="ML WEIGHT" Style="{StaticResource Meta}"/>
+                            <TextBlock Grid.Row="4" Grid.Column="1" Text="20%" Style="{StaticResource Mono}" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Row="5" Text="TEMPORAL WEIGHT" Style="{StaticResource Meta}"/>
+                            <TextBlock Grid.Row="5" Grid.Column="1" Text="10%" Style="{StaticResource Mono}" HorizontalAlignment="Right"/>
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- Row 3: Status bar -->
+        <Grid Grid.Row="3" Margin="18,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="28"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="46"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="ANALYTICS" Style="{StaticResource Meta}" VerticalAlignment="Center"/>
+            <TextBlock Grid.Column="2" Text="LIVE" Foreground="#56F0AC" FontFamily="Consolas" FontSize="9" VerticalAlignment="Center"/>
+            <TextBlock Grid.Column="4" Text="{Binding UpdatedText, StringFormat='LAST UPDATE {0}'}" Foreground="#2A5050" FontFamily="Bahnschrift" FontSize="8" VerticalAlignment="Center"/>
+            <TextBlock Grid.Column="6" Text="AUTO REFRESH ON" Foreground="#2A5050" FontFamily="Bahnschrift" FontSize="8" VerticalAlignment="Center"/>
+        </Grid>
+    </Grid>
+</UserControl>

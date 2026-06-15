@@ -1,0 +1,16 @@
+{
+  "replay_source": "backend\\ml\\outputs\\replay_logs\\normal.csv",
+  "total_frames_processed": 5000,
+  "total_alerts": 0,
+  "alerts_per_1000_frames": 0.0,
+  "critical_alert_rate": 0.0,
+  "high_alert_rate": 0.0,
+  "alerts_per_severity": {},
+  "alerts_per_reason": {},
+  "alerts_per_can_id": {},
+  "alerts_per_risk_level": {},
+  "max_fusion_score_observed": 0.4953220321748805,
+  "average_fusion_score_observed": 0.10856511594839444,
+  "runtime_duration_sec": 0.5382251000010001,
+  "fps": 9289.793433993898
+}
