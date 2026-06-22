@@ -1,0 +1,38 @@
+# Python
+can_env_313_test/
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+
+# .NET build artifacts
+bin/
+obj/
+
+# Logs
+*.log
+bin/Debug/net48/logs/
+
+# IDE
+.vs/
+*.user
+
+# Large datasets / evaluation artifacts (not source code)
+assets/archive/
+assets/evaluation/
+assets/Validation/
+assets/EV-CANlogs-main/
+assets/9) Car-Hacking Dataset/
+assets/data/
+assets/road/
+assets/Train/
+assets/Test/
+assets/Skoda Enyaq/
+assets/toyota_supra_mk4_a80/
+assets/transmit_lists/
+assets/opendbc-master/
+build_verify/
+*.MF4
+backend/ml/processed_dataset.csv

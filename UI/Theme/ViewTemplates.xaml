@@ -1,0 +1,30 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="clr-namespace:CANvision.Native.UI"
+    xmlns:vm="clr-namespace:CANvision.Native.ViewModels">
+    <DataTemplate DataType="{x:Type vm:HomeViewModel}">
+        <ui:HomeView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
+        <ui:DashboardView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:TelemetryViewModel}">
+        <ui:TelemetryView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:DiagnosticsViewModel}">
+        <ui:DiagnosticsView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:LogPlaybackViewModel}">
+        <ui:LogPlaybackView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+        <ui:SettingsView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:PreviewViewModel}">
+        <ui:PreviewView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:AnomalyIntelViewModel}">
+        <ui:AnomalyIntelView />
+    </DataTemplate>
+</ResourceDictionary>

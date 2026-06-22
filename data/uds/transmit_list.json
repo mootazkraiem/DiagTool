@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Battery Voltage Req",
+    "id": "0x7E0",
+    "data": "03 22 01 01 00 00 00 00",
+    "interval": 100,
+    "state": 1
+  },
+  {
+    "name": "Coolant Temp Req",
+    "id": "0x7E0",
+    "data": [3, 34, 1, 5, 0, 0, 0, 0],
+    "interval": 500,
+    "state": 1
+  },
+  {
+    "name": "Inactive Req",
+    "id": "0x7E1",
+    "data": "03 22 01 02",
+    "interval": 1000,
+    "state": 0
+  },
+  {
+    "name": "Battery Voltage Req",
+    "id": "0x7E0",
+    "data": "03 22 01 01 00 00 00 00",
+    "interval": 100,
+    "state": 1
+  }
+]

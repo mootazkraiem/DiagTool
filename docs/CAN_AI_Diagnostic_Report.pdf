@@ -1,0 +1,98 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 2 /Kids [3 0 R 5 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 3736 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 48 778 Tm (CAN AI Diagnostic Backend - Professional Upgrade Report) Tj
+1 0 0 1 48 764 Tm () Tj
+1 0 0 1 48 750 Tm (1\) System Architecture) Tj
+1 0 0 1 48 736 Tm (Pipeline: Multi-format CAN Parser -> Feature Engineering -> StandardScaler -> IsolationForest) Tj
+1 0 0 1 48 722 Tm (anomaly detection -> KMeans clustering -> anomaly intelligence -> LLM explanation -> FastAPI) Tj
+1 0 0 1 48 708 Tm (endpoints.) Tj
+1 0 0 1 48 694 Tm (The service is vehicle-agnostic and does not require DBC decoding.) Tj
+1 0 0 1 48 680 Tm () Tj
+1 0 0 1 48 666 Tm (2\) Why Isolation Forest) Tj
+1 0 0 1 48 652 Tm (Isolation Forest is unsupervised and suitable for mixed, unlabeled CAN telemetry where normal) Tj
+1 0 0 1 48 638 Tm (and abnormal boundaries are unknown. It isolates rare behaviors using random partitioning and) Tj
+1 0 0 1 48 624 Tm (scales well for high-volume logs.) Tj
+1 0 0 1 48 610 Tm (Random Forest is supervised; it requires labeled classes and is therefore not a fit for cold-) Tj
+1 0 0 1 48 596 Tm (start anomaly detection.) Tj
+1 0 0 1 48 582 Tm () Tj
+1 0 0 1 48 568 Tm (3\) Feature Engineering) Tj
+1 0 0 1 48 554 Tm (Core features: time_diff, message_frequency, window_frequency, byte_mean, byte_max, byte_std.) Tj
+1 0 0 1 48 540 Tm (Advanced features: rolling_mean_8, rolling_std_8, payload_entropy.) Tj
+1 0 0 1 48 526 Tm (These features capture timing behavior, bus activity intensity, and payload variability without) Tj
+1 0 0 1 48 512 Tm (OEM-specific decoding.) Tj
+1 0 0 1 48 498 Tm () Tj
+1 0 0 1 48 484 Tm (4\) Improvements Implemented) Tj
+1 0 0 1 48 470 Tm (- Parser expanded for candump, ASC Rx/Tx d lines, and generic ID#DATA fallback.) Tj
+1 0 0 1 48 456 Tm (- Parse quality metrics added \(total/parsed/skipped lines\).) Tj
+1 0 0 1 48 442 Tm (- Time-window frequency and rolling statistics added.) Tj
+1 0 0 1 48 428 Tm (- Entropy feature added for payload variability.) Tj
+1 0 0 1 48 414 Tm (- IsolationForest anomaly scoring converted to normalized severity \(0..1\).) Tj
+1 0 0 1 48 400 Tm (- Automatic cluster count selection \(elbow-style\), plus cluster profiles.) Tj
+1 0 0 1 48 386 Tm (- Model persistence added via joblib save/load.) Tj
+1 0 0 1 48 372 Tm (- FastAPI hardened with request/response schemas and typed errors.) Tj
+1 0 0 1 48 358 Tm (- Added /metrics endpoint for uptime, request counts, anomaly totals, and average latency.) Tj
+1 0 0 1 48 344 Tm (- Added caching for repeated file analysis using SHA256 fingerprints.) Tj
+1 0 0 1 48 330 Tm (- Added structured anomaly type classification: frequency/timing/data/pattern.) Tj
+1 0 0 1 48 316 Tm (- LLM prompt upgraded to include severity, type, confidence, and cluster profile.) Tj
+1 0 0 1 48 302 Tm () Tj
+1 0 0 1 48 288 Tm (5\) Limitations) Tj
+1 0 0 1 48 274 Tm (- No DBC decoding by design. This preserves portability but reduces semantic signal naming) Tj
+1 0 0 1 48 260 Tm (precision.) Tj
+1 0 0 1 48 246 Tm (- Statistical clusters are behavioral groups, not guaranteed OEM subsystem labels.) Tj
+1 0 0 1 48 232 Tm (- LLM explanations depend on API availability and key configuration.) Tj
+1 0 0 1 48 218 Tm () Tj
+1 0 0 1 48 204 Tm (6\) Example Output) Tj
+1 0 0 1 48 190 Tm ({"can_id":"0x1A2","severity":0.92,"type":"frequency_anomaly","cluster":2,"confidence":"high"}) Tj
+1 0 0 1 48 176 Tm (LLM output schema:) Tj
+1 0 0 1 48 162 Tm ({"causes":"...","risks":"...","recommendations":"..."}) Tj
+1 0 0 1 48 148 Tm () Tj
+1 0 0 1 48 134 Tm (7\) Real-world Relevance) Tj
+1 0 0 1 48 120 Tm (This backend supports fleet-scale EV diagnostics, rapid anomaly triage, and explainable) Tj
+1 0 0 1 48 106 Tm (maintenance workflows.) Tj
+1 0 0 1 48 92 Tm (It is designed for direct integration with external clients \(including C# frontends\) using) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 60 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 48 778 Tm (stable API contracts.) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000004035 00000 n 
+0000004161 00000 n 
+0000004271 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4341
+%%EOF

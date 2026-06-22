@@ -1,0 +1,9 @@
+step,reason,rows_before,rows_after,rows_removed
+timestamp,missing timestamp,3751024,3751024,0
+payload,missing payload,3751024,3751024,0
+byte_sanitize,out-of-range bytes,3751024,3751024,0
+can_id,invalid can_id,3751024,3751024,0
+can_id_frequency,can_id occurrence < 2,3751024,3751024,0
+timestamp_duplicate,duplicate consecutive timestamps,3751024,3751024,0
+time_delta,non-positive time delta,3751024,3751024,0
+time_gap_clip,extreme per-CAN-ID time gaps,3751024,3747357,3667

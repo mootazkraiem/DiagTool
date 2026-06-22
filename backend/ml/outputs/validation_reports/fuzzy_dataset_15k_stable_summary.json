@@ -1,0 +1,16 @@
+{
+  "replay_source": "C:\\Users\\benkr\\Downloads\\Fuzzy_dataset_15k_stable.csv",
+  "total_frames_processed": 5000,
+  "total_alerts": 0,
+  "alerts_per_1000_frames": 0.0,
+  "critical_alert_rate": 0.0,
+  "high_alert_rate": 0.0,
+  "alerts_per_severity": {},
+  "alerts_per_reason": {},
+  "alerts_per_can_id": {},
+  "alerts_per_risk_level": {},
+  "max_fusion_score_observed": 0.10000000000000002,
+  "average_fusion_score_observed": 0.10000000000000904,
+  "runtime_duration_sec": 0.5213678000000073,
+  "fps": 9590.158809193683
+}

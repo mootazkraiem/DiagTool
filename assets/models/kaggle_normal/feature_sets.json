@@ -1,0 +1,15 @@
+{
+  "parking": [
+    "time_diff",
+    "rolling_std_time_diff",
+    "rolling_mean_byte_diff",
+    "rolling_byte_diff_std",
+    "rolling_max_byte_diff",
+    "msg_frequency",
+    "changed_bytes_count",
+    "msg_rate",
+    "rolling_var_time_diff",
+    "payload_entropy",
+    "inter_arrival_cv"
+  ]
+}

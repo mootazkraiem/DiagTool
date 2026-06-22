@@ -1,0 +1,339 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <SolidColorBrush x:Key="HudAccentBrush" Color="#69EDFF" />
+    <SolidColorBrush x:Key="HudAccentStrongBrush" Color="#E6FCFF" />
+    <SolidColorBrush x:Key="HudAccentSoftBrush" Color="#301AC0DA" />
+    <SolidColorBrush x:Key="HudSurfaceBrush" Color="#B10A131C" />
+    <SolidColorBrush x:Key="HudSurfaceStrongBrush" Color="#D40A1721" />
+    <SolidColorBrush x:Key="HudSurfaceDimBrush" Color="#9A09131B" />
+    <SolidColorBrush x:Key="HudBorderBrush" Color="#564CCDEB" />
+    <SolidColorBrush x:Key="HudBorderStrongBrush" Color="#93C7F8FF" />
+    <SolidColorBrush x:Key="HudTitleBrush" Color="#F3FBFF" />
+    <SolidColorBrush x:Key="HudBodyBrush" Color="#B4CDD7" />
+    <SolidColorBrush x:Key="HudMutedBrush" Color="#79919D" />
+    <SolidColorBrush x:Key="HudCriticalBrush" Color="#FF8C8C" />
+    <SolidColorBrush x:Key="HudWatchBrush" Color="#FFE38A" />
+    <SolidColorBrush x:Key="HudNominalBrush" Color="#86F4D0" />
+
+    <SolidColorBrush x:Key="CanVisionHudBackgroundBrush" Color="#031417" />
+    <SolidColorBrush x:Key="CanVisionHudGlassBrush" Color="#B8071E22" />
+    <SolidColorBrush x:Key="CanVisionHudGlassQuietBrush" Color="#96041418" />
+    <SolidColorBrush x:Key="CanVisionHudBorderBrush" Color="#700AAFC8" />
+    <SolidColorBrush x:Key="CanVisionHudBorderDimBrush" Color="#380AAFC8" />
+    <SolidColorBrush x:Key="CanVisionHudLabelBrush" Color="#8BB8C1" />
+    <SolidColorBrush x:Key="CanVisionHudTelemetryBrush" Color="#89D7E5" />
+    <SolidColorBrush x:Key="CanVisionHudValueBrush" Color="#D8FBFF" />
+    <SolidColorBrush x:Key="CanVisionHudAccentBrush" Color="#0AAFC8" />
+    <SolidColorBrush x:Key="HudPanelLineBrush" Color="#5C00E5FF" />
+    <SolidColorBrush x:Key="HudLabelBrush" Color="#7F96A3" />
+    <SolidColorBrush x:Key="HudValueBrush" Color="#5FA8B8" />
+    <SolidColorBrush x:Key="HudPremiumCyanWhiteBrush" Color="#DFFDFF" />
+    <LinearGradientBrush x:Key="HudPanelFillBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#C4111A25" Offset="0" />
+        <GradientStop Color="#B20B141D" Offset="1" />
+    </LinearGradientBrush>
+    <FontFamily x:Key="HeadlineFontFamily">Bahnschrift</FontFamily>
+    <FontFamily x:Key="BodyFontFamily">Bahnschrift</FontFamily>
+    <sys:Double x:Key="DashboardLabelFontSize">9.5</sys:Double>
+    <sys:Double x:Key="DashboardValueFontSize">15</sys:Double>
+
+    <!-- Generic aliases used by TelemetryView, TypewriterTextBlock, SettingsView -->
+    <SolidColorBrush x:Key="PrimaryTextBrush" Color="#F3FBFF" />
+    <SolidColorBrush x:Key="SecondaryTextBrush" Color="#8BB8C1" />
+    <SolidColorBrush x:Key="AccentCyanBrush" Color="#00ECFF" />
+    <Color x:Key="AccentCyanColor">#00ECFF</Color>
+
+    <sys:String x:Key="DashboardLabelAsset">TACTICAL ASSET</sys:String>
+    <sys:String x:Key="DashboardLabelStart">START SESSION</sys:String>
+    <sys:String x:Key="DashboardLabelStop">STOP SESSION</sys:String>
+    <sys:String x:Key="DashboardLabelSync">SYNC STATUS</sys:String>
+    <sys:String x:Key="DashboardLabelChannels">OPEN CHANNELS</sys:String>
+    <sys:String x:Key="DashboardLabelTelemetry">TELEMETRY</sys:String>
+    <sys:String x:Key="DashboardLabelDiagnostics">DIAGNOSTICS</sys:String>
+    <sys:String x:Key="DashboardLabelRuntime">RUNTIME + ML</sys:String>
+    <sys:String x:Key="DashboardLabelEvents">LIVE EVENTS</sys:String>
+    <sys:String x:Key="DashboardLabelHealth">SYSTEM HEALTH</sys:String>
+    <sys:String x:Key="DashboardLabelFrames">FRAMES PROCESSED</sys:String>
+    <sys:String x:Key="DashboardLabelReplay">REPLAY PROGRESS</sys:String>
+    <sys:String x:Key="DashboardLabelPps">PACKETS/SEC</sys:String>
+    <sys:String x:Key="DashboardLabelTotal">TOTAL</sys:String>
+    <sys:String x:Key="DashboardLabelAnomaly">ANOMALY SCORE</sys:String>
+    <sys:String x:Key="DashboardLabelCanId">CURRENT CAN ID</sys:String>
+    <sys:String x:Key="DashboardLabelModel">ACTIVE MODEL</sys:String>
+    <sys:String x:Key="DashboardLabelConfidence">CONFIDENCE</sys:String>
+    <sys:String x:Key="DashboardLabelDetection">DETECTION STATE</sys:String>
+    <sys:String x:Key="DashboardLabelSoc">SOC</sys:String>
+    <sys:String x:Key="DashboardLabelVoltage">VOLTAGE</sys:String>
+    <sys:String x:Key="DashboardLabelCurrent">CURRENT</sys:String>
+    <sys:String x:Key="DashboardLabelSpeed">SPEED</sys:String>
+    <sys:String x:Key="DashboardLabelTemp">TEMP</sys:String>
+
+    <DropShadowEffect x:Key="CanVisionHudSoftGlow" BlurRadius="12" ShadowDepth="0" Color="#2E00D2FF" Opacity="0.42" />
+    <DropShadowEffect x:Key="CanVisionHudValueGlow" BlurRadius="10" ShadowDepth="0" Color="#3000D2FF" Opacity="0.38" />
+
+    <Style x:Key="CanVisionDashboardPanelStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource CanVisionHudGlassBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource CanVisionHudBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="7" />
+        <Setter Property="Padding" Value="10,6" />
+        <Setter Property="Effect" Value="{StaticResource CanVisionHudSoftGlow}" />
+    </Style>
+
+    <Style x:Key="CanVisionDashboardQuietPanelStyle" TargetType="Border" BasedOn="{StaticResource CanVisionDashboardPanelStyle}">
+        <Setter Property="Background" Value="{StaticResource CanVisionHudGlassQuietBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource CanVisionHudBorderDimBrush}" />
+    </Style>
+
+    <Style x:Key="CanVisionTelemetryPodStyle" TargetType="Border" BasedOn="{StaticResource CanVisionDashboardQuietPanelStyle}">
+        <Setter Property="Padding" Value="9,6" />
+        <Setter Property="MinWidth" Value="74" />
+        <Setter Property="MaxWidth" Value="210" />
+        <Setter Property="Margin" Value="0,0,7,0" />
+    </Style>
+
+    <Style x:Key="CanVisionMetricOrbitStyle" TargetType="Border" BasedOn="{StaticResource CanVisionDashboardQuietPanelStyle}">
+        <Setter Property="Padding" Value="10,7" />
+        <Setter Property="MinWidth" Value="128" />
+        <Setter Property="MaxWidth" Value="235" />
+    </Style>
+
+    <Style x:Key="CanVisionDashboardLabelStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource CanVisionHudLabelBrush}" />
+        <Setter Property="FontFamily" Value="Bahnschrift Condensed" />
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="TextWrapping" Value="NoWrap" />
+    </Style>
+
+    <Style x:Key="CanVisionDashboardMetaStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource CanVisionHudTelemetryBrush}" />
+        <Setter Property="FontFamily" Value="Consolas" />
+        <Setter Property="FontSize" Value="10.5" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <Style x:Key="CanVisionDashboardValueStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource CanVisionHudValueBrush}" />
+        <Setter Property="FontFamily" Value="Bahnschrift Condensed" />
+        <Setter Property="FontSize" Value="26" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="Effect" Value="{StaticResource CanVisionHudValueGlow}" />
+    </Style>
+
+    <Style x:Key="CanVisionDashboardPodValueStyle" TargetType="TextBlock" BasedOn="{StaticResource CanVisionDashboardValueStyle}">
+        <Setter Property="FontSize" Value="16" />
+    </Style>
+
+    <Style x:Key="CanVisionDashboardTopStripStyle" TargetType="Border" BasedOn="{StaticResource CanVisionDashboardQuietPanelStyle}">
+        <Setter Property="Padding" Value="10,6" />
+        <Setter Property="MaxHeight" Value="44" />
+    </Style>
+
+    <Style x:Key="HudCardStyle" TargetType="Border">
+        <Setter Property="Background"
+                Value="{StaticResource HudPanelFillBrush}" />
+
+        <Setter Property="BorderBrush"
+                Value="{StaticResource HudPanelLineBrush}" />
+
+        <Setter Property="BorderThickness"
+                Value="1.2" />
+
+        <Setter Property="CornerRadius"
+                Value="8" />
+
+        <Setter Property="Padding"
+                Value="10,6" />
+
+        <Setter Property="Margin"
+                Value="4" />
+
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect
+                    BlurRadius="10"
+                    ShadowDepth="0"
+                    Color="#00E5FF"
+                    Opacity="0.28"/>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="HudLabelText" TargetType="TextBlock">
+        <Setter Property="Foreground"
+                Value="{StaticResource HudLabelBrush}" />
+
+        <Setter Property="FontFamily"
+                Value="{StaticResource BodyFontFamily}" />
+
+        <Setter Property="FontSize"
+                Value="{StaticResource DashboardLabelFontSize}" />
+
+        <Setter Property="FontWeight"
+                Value="SemiBold" />
+    </Style>
+
+    <Style x:Key="HudValueText" TargetType="TextBlock">
+        <Setter Property="Foreground"
+                Value="{StaticResource HudPremiumCyanWhiteBrush}" />
+
+        <Setter Property="FontFamily"
+                Value="{StaticResource HeadlineFontFamily}" />
+
+        <Setter Property="FontSize"
+                Value="{StaticResource DashboardValueFontSize}" />
+
+        <Setter Property="FontWeight"
+                Value="Bold" />
+
+        <Setter Property="Margin"
+                Value="0,6,0,0" />
+    </Style>
+
+    <Style x:Key="HudHeroCardStyle" TargetType="Border" BasedOn="{StaticResource HudCardStyle}">
+        <Setter Property="Background" Value="{StaticResource HudSurfaceStrongBrush}" />
+        <Setter Property="Padding" Value="26" />
+    </Style>
+
+    <Style x:Key="HudCommandCardStyle" TargetType="Border" BasedOn="{StaticResource HudHeroCardStyle}">
+        <Setter Property="Background" Value="#D1081620" />
+        <Setter Property="BorderBrush" Value="{StaticResource HudBorderStrongBrush}" />
+        <Setter Property="BorderThickness" Value="1.1" />
+        <Setter Property="CornerRadius" Value="26" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect
+                    BlurRadius="10"
+                    ShadowDepth="0"
+                    Color="#1E05D9F5"
+                    Opacity="0.88" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="HudSystemShellStyle" TargetType="Border" BasedOn="{StaticResource HudCommandCardStyle}">
+        <Setter Property="Background" Value="#D0081219" />
+        <Setter Property="CornerRadius" Value="28" />
+        <Setter Property="Padding" Value="28" />
+    </Style>
+
+    <Style x:Key="HudDataPanelStyle" TargetType="Border" BasedOn="{StaticResource HudCardStyle}">
+        <Setter Property="Background" Value="{StaticResource HudSurfaceDimBrush}" />
+        <Setter Property="Padding" Value="20" />
+    </Style>
+
+    <Style x:Key="HudMetricTileStyle" TargetType="Border" BasedOn="{StaticResource HudDataPanelStyle}">
+        <Setter Property="MinHeight" Value="126" />
+    </Style>
+
+    <Style x:Key="HudEyebrowTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource HudAccentBrush}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontFamily" Value="Consolas" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <Style x:Key="HudTitleTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource HudTitleBrush}" />
+        <Setter Property="FontSize" Value="34" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontFamily" Value="Bahnschrift" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <Style x:Key="HudSectionHeaderTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource HudTitleBrush}" />
+        <Setter Property="FontSize" Value="28" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontFamily" Value="Bahnschrift" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <Style x:Key="HudBodyTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource HudBodyBrush}" />
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="FontFamily" Value="Bahnschrift" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <Style x:Key="HudMutedTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource HudMutedBrush}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontFamily" Value="Consolas" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <Style x:Key="HudMetricValueTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource HudTitleBrush}" />
+        <Setter Property="FontSize" Value="36" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="FontFamily" Value="Bahnschrift" />
+    </Style>
+
+    <Style x:Key="HudMetricLabelTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource HudMutedBrush}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontFamily" Value="Consolas" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <Style x:Key="HudLineTextBoxStyle" TargetType="TextBox">
+        <Setter Property="Background" Value="#1A101A22" />
+        <Setter Property="Foreground" Value="{StaticResource HudTitleBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource HudPanelLineBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="8,5" />
+        <Setter Property="FontFamily" Value="Consolas" />
+        <Setter Property="FontSize" Value="11" />
+    </Style>
+
+    <Style x:Key="HudComboBoxStyle" TargetType="ComboBox">
+        <Setter Property="Background" Value="#1A101A22" />
+        <Setter Property="Foreground" Value="{StaticResource HudTitleBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource HudPanelLineBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="6,3" />
+        <Setter Property="FontFamily" Value="Consolas" />
+        <Setter Property="FontSize" Value="10.5" />
+    </Style>
+
+    <!-- Needed by SettingsView -->
+    <Style x:Key="HudCheckBoxStyle" TargetType="CheckBox">
+        <Setter Property="Foreground" Value="{StaticResource HudBodyBrush}" />
+        <Setter Property="FontFamily" Value="Consolas" />
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+
+    <Style x:Key="HudBadgeBorderStyle" TargetType="Border">
+        <Setter Property="Background" Value="#1200E6FF" />
+        <Setter Property="BorderBrush" Value="{StaticResource HudAccentSoftBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="14" />
+        <Setter Property="Padding" Value="12,6" />
+    </Style>
+
+    <!-- Status card: border colour driven by Tag="CRITICAL|WATCH|NOMINAL|GOOD" -->
+    <Style x:Key="HudStatusCardStyle" TargetType="Border" BasedOn="{StaticResource HudDataPanelStyle}">
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="WATCH">
+                <Setter Property="BorderBrush" Value="{StaticResource HudWatchBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="CRITICAL">
+                <Setter Property="BorderBrush" Value="{StaticResource HudCriticalBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="NOMINAL">
+                <Setter Property="BorderBrush" Value="{StaticResource HudNominalBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="GOOD">
+                <Setter Property="BorderBrush" Value="{StaticResource HudNominalBrush}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+</ResourceDictionary>

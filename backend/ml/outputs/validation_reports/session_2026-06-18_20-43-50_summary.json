@@ -1,0 +1,40 @@
+{
+  "replay_source": "backend\\ml\\outputs\\sessions\\session_2026-06-18_20-43-50.csv",
+  "total_frames_processed": 52,
+  "total_alerts": 2,
+  "alerts_per_1000_frames": 38.46153846153847,
+  "critical_alert_rate": 0.0,
+  "high_alert_rate": 0.0,
+  "alerts_per_severity": {
+    "LOW": 2
+  },
+  "alerts_per_reason": {
+    "can_id_entropy": 2
+  },
+  "alerts_per_can_id": {
+    "0x5D2": 2
+  },
+  "alerts_per_risk_level": {
+    "LOW": 2
+  },
+  "max_fusion_score_observed": 0.41184886117154496,
+  "average_fusion_score_observed": 0.24714260077406935,
+  "runtime_duration_sec": 0.07351570000173524,
+  "fps": 707.331903236623,
+  "alert_records": [
+    {
+      "timestamp": 1781811833.450633,
+      "can_id": 1490,
+      "risk_level": "LOW",
+      "score": 0.41184886117154496,
+      "reason": "timing=0.004, payload=0.601, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 1781811835.2488432,
+      "can_id": 1490,
+      "risk_level": "LOW",
+      "score": 0.4080958096762955,
+      "reason": "timing=0.009, payload=0.585, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    }
+  ]
+}

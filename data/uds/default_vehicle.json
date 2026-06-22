@@ -1,0 +1,77 @@
+{
+  "0x1A2": {
+    "signal_name": "Battery Voltage",
+    "start_byte": 0,
+    "length": 2,
+    "bit_length": 16,
+    "byte_order": "big",
+    "scale": 0.1,
+    "offset": 0,
+    "unit": "V",
+    "safe_min": 300,
+    "safe_max": 420
+  },
+  "0x2B4": {
+    "signal_name": "Motor Temperature",
+    "start_byte": 0,
+    "length": 2,
+    "bit_length": 16,
+    "byte_order": "big",
+    "signed": true,
+    "scale": 0.5,
+    "offset": -40,
+    "unit": "C",
+    "safe_min": -50,
+    "safe_max": 120
+  },
+  "0x3F1": {
+    "signal_name": "Engine RPM",
+    "start_byte": 0,
+    "length": 2,
+    "bit_length": 16,
+    "byte_order": "big",
+    "scale": 1,
+    "offset": 0,
+    "unit": "rpm",
+    "safe_min": 600,
+    "safe_max": 5000
+  },
+  "0x4C8": {
+    "signal_name": "State of Charge",
+    "start_byte": 0,
+    "length": 2,
+    "bit_length": 16,
+    "byte_order": "big",
+    "scale": 0.5,
+    "offset": 0,
+    "unit": "%",
+    "safe_min": 15,
+    "safe_max": 100
+  },
+  "0x5D2": {
+    "signal_name": "Battery Current",
+    "start_byte": 0,
+    "length": 2,
+    "bit_length": 16,
+    "byte_order": "big",
+    "signed": true,
+    "scale": 0.1,
+    "offset": -400,
+    "unit": "A",
+    "safe_min": -180,
+    "safe_max": 220
+  },
+  "0x6E7": {
+    "signal_name": "Inverter Temperature",
+    "start_byte": 0,
+    "length": 2,
+    "bit_length": 16,
+    "byte_order": "big",
+    "signed": true,
+    "scale": 0.5,
+    "offset": -40,
+    "unit": "C",
+    "safe_min": -50,
+    "safe_max": 120
+  }
+}

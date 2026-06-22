@@ -1,0 +1,159 @@
+import random
+import time
+from datetime import datetime
+
+
+class MockSignalGenerator:
+    def __init__(self):
+        self.tick = 0
+
+        # Starting realistic Toyota hybrid / EV values
+        self.data = {
+            "SOC": 62.0,
+            "SOH": 96.0,
+
+            "BatteryVoltage": 212.0,
+            "BatteryCurrent": 12.0,
+            "BatteryTemp": 31.0,
+            "CellVoltageMax": 16.45,
+            "CellVoltageMin": 16.39,
+            "VoltageDiff": 0.06,
+
+            "MotorTemp": 52.0,
+            "MotorRPM": 1800,
+            "MotorTorque": 42,
+            "InverterTemp": 44.0,
+
+            "VehicleSpeed": 28.0,
+            "AcceleratorPedal": 18,
+            "BrakePedal": 0,
+            "RegenerativeBraking": 0,
+
+            "CoolingFanSpeed": 20,
+            "CoolantTemp": 34.0,
+
+            "OverheatFault": False,
+            "UnderVoltageFault": False,
+            "CellImbalanceFault": False,
+            "CANTimeout": False
+        }
+
+    def generate(self):
+        self.tick += 1
+
+        # ----------------------------------------
+        # Phase 1: Normal driving (0–30 sec)
+        # ----------------------------------------
+        if self.tick < 30:
+            self.data["VehicleSpeed"] += random.uniform(-2, 3)
+            self.data["BatteryCurrent"] += random.uniform(-8, 10)
+            self.data["BatteryTemp"] += random.uniform(0.0, 0.15)
+            self.data["MotorTemp"] += random.uniform(0.0, 0.2)
+            self.data["MotorRPM"] += random.randint(-150, 200)
+
+        # ----------------------------------------
+        # Phase 2: Heavy acceleration (30–60 sec)
+        # ----------------------------------------
+        elif self.tick < 60:
+            self.data["VehicleSpeed"] += random.uniform(1, 4)
+            self.data["BatteryCurrent"] += random.uniform(6, 12)
+            self.data["BatteryTemp"] += random.uniform(0.2, 0.5)
+            self.data["MotorTemp"] += random.uniform(0.3, 0.7)
+            self.data["MotorRPM"] += random.randint(100, 350)
+            self.data["MotorTorque"] += random.randint(2, 6)
+            self.data["InverterTemp"] += random.uniform(0.2, 0.5)
+
+        # ----------------------------------------
+        # Phase 3: Cooling system struggling (60–90 sec)
+        # ----------------------------------------
+        elif self.tick < 90:
+            self.data["BatteryTemp"] += random.uniform(0.4, 0.8)
+            self.data["MotorTemp"] += random.uniform(0.5, 1.0)
+            self.data["BatteryCurrent"] += random.uniform(4, 8)
+            self.data["BatteryVoltage"] -= random.uniform(0.5, 1.5)
+            self.data["VoltageDiff"] += random.uniform(0.005, 0.015)
+            self.data["CoolingFanSpeed"] += random.randint(2, 5)
+            self.data["InverterTemp"] += random.uniform(0.3, 0.8)
+
+        # ----------------------------------------
+        # Phase 4: Fault state (90–120 sec)
+        # ----------------------------------------
+        else:
+            self.data["BatteryTemp"] += random.uniform(0.3, 0.7)
+            self.data["MotorTemp"] += random.uniform(0.3, 0.6)
+            self.data["BatteryCurrent"] += random.uniform(5, 10)
+            self.data["BatteryVoltage"] -= random.uniform(1.5, 3.0)
+            self.data["VoltageDiff"] += random.uniform(0.01, 0.03)
+            self.data["SOC"] -= random.uniform(0.2, 0.5)
+
+        # ----------------------------------------
+        # Regenerative braking random events
+        # ----------------------------------------
+        if random.random() < 0.08:
+            self.data["RegenerativeBraking"] = random.randint(20, 70)
+            self.data["BatteryCurrent"] -= random.uniform(15, 40)
+            self.data["BrakePedal"] = random.randint(20, 60)
+        else:
+            self.data["RegenerativeBraking"] = 0
+            self.data["BrakePedal"] = 0
+
+        # ----------------------------------------
+        # Toyota-like cooling fan behavior
+        # ----------------------------------------
+        if self.data["BatteryTemp"] > 35:
+            self.data["CoolingFanSpeed"] = 40
+
+        if self.data["BatteryTemp"] > 40:
+            self.data["CoolingFanSpeed"] = 70
+
+        if self.data["BatteryTemp"] > 50:
+            self.data["CoolingFanSpeed"] = 100
+
+        # ----------------------------------------
+        # Derived cell voltages
+        # ----------------------------------------
+        self.data["CellVoltageMax"] = round(
+            self.data["BatteryVoltage"] / 13 + self.data["VoltageDiff"] / 2, 2
+        )
+        self.data["CellVoltageMin"] = round(
+            self.data["BatteryVoltage"] / 13 - self.data["VoltageDiff"] / 2, 2
+        )
+
+        # ----------------------------------------
+        # Toyota-like threshold rules
+        # ----------------------------------------
+        self.data["OverheatFault"] = self.data["BatteryTemp"] > 50
+        self.data["UnderVoltageFault"] = self.data["BatteryVoltage"] < 180
+        self.data["CellImbalanceFault"] = self.data["VoltageDiff"] > 0.30
+
+        # Simulate occasional CAN timeout
+        self.data["CANTimeout"] = random.random() < 0.01
+
+        # Clamp values to realistic ranges
+        self.data["SOC"] = max(0, min(100, self.data["SOC"]))
+        self.data["VehicleSpeed"] = max(0, min(160, self.data["VehicleSpeed"]))
+        self.data["CoolingFanSpeed"] = max(0, min(100, self.data["CoolingFanSpeed"]))
+        self.data["BatteryCurrent"] = max(-80, min(250, self.data["BatteryCurrent"]))
+
+        return {
+            "timestamp": datetime.now().strftime("%H:%M:%S"),
+            **{k: round(v, 2) if isinstance(v, float) else v
+               for k, v in self.data.items()}
+        }
+
+
+# ----------------------------------------
+# Example usage
+# ----------------------------------------
+if __name__ == "__main__":
+    generator = MockSignalGenerator()
+
+    while True:
+        signal = generator.generate()
+
+        print(signal)
+
+        # Put your anomaly.py call here later:
+        # alert = check_rules(signal)
+
+        time.sleep(1)

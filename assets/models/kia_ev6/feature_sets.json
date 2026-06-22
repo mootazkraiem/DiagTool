@@ -1,0 +1,24 @@
+{
+  "idle": [
+    "time_diff",
+    "rolling_std_time_diff",
+    "rolling_mean_byte_diff",
+    "rolling_byte_diff_std",
+    "rolling_max_byte_diff",
+    "rolling_min_byte_diff",
+    "rolling_range_byte_diff",
+    "msg_frequency",
+    "changed_bytes_count"
+  ],
+  "driving": [
+    "time_diff",
+    "rolling_std_time_diff",
+    "rolling_mean_byte_diff",
+    "rolling_byte_diff_std",
+    "rolling_max_byte_diff",
+    "rolling_min_byte_diff",
+    "rolling_range_byte_diff",
+    "msg_frequency",
+    "changed_bytes_count"
+  ]
+}

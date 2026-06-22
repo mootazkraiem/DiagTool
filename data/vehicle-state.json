@@ -1,0 +1,7 @@
+{
+  "battery": 92,
+  "temperature": 41,
+  "motor_status": "OK",
+  "source": "json-fallback",
+  "updated_at": "2026-04-09T14:30:00Z"
+}

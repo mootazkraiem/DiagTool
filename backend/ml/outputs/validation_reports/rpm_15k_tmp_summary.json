@@ -1,0 +1,16 @@
+{
+  "replay_source": "backend\\ml\\outputs\\replay_logs\\rpm_15k_tmp.csv",
+  "total_frames_processed": 15000,
+  "total_alerts": 0,
+  "alerts_per_1000_frames": 0.0,
+  "critical_alert_rate": 0.0,
+  "high_alert_rate": 0.0,
+  "alerts_per_severity": {},
+  "alerts_per_reason": {},
+  "alerts_per_can_id": {},
+  "alerts_per_risk_level": {},
+  "max_fusion_score_observed": 0.45958962265558284,
+  "average_fusion_score_observed": 0.17531295770746447,
+  "runtime_duration_sec": 1.6948112000009132,
+  "fps": 8850.543352552731
+}

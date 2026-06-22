@@ -1,0 +1,247 @@
+[
+  {
+    "timestamp": "2025-04-19T15:30:00",
+    "signal": "SOC",
+    "value": 78,
+    "unit": "%"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:00",
+    "signal": "BatteryVoltage",
+    "value": 392,
+    "unit": "V"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:00",
+    "signal": "BatteryCurrent",
+    "value": 42,
+    "unit": "A"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:00",
+    "signal": "BatteryTemp",
+    "value": 31,
+    "unit": "C"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:00",
+    "signal": "MotorTemp",
+    "value": 48,
+    "unit": "C"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:00",
+    "signal": "VehicleSpeed",
+    "value": 64,
+    "unit": "km/h"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:00",
+    "signal": "RPM",
+    "value": 3100,
+    "unit": "rpm"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:00",
+    "signal": "CoolantTemp",
+    "value": 37,
+    "unit": "C"
+  },
+
+  {
+    "timestamp": "2025-04-19T15:30:05",
+    "signal": "SOC",
+    "value": 77,
+    "unit": "%"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:05",
+    "signal": "BatteryVoltage",
+    "value": 389,
+    "unit": "V"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:05",
+    "signal": "BatteryCurrent",
+    "value": 58,
+    "unit": "A"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:05",
+    "signal": "BatteryTemp",
+    "value": 34,
+    "unit": "C"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:05",
+    "signal": "MotorTemp",
+    "value": 52,
+    "unit": "C"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:05",
+    "signal": "VehicleSpeed",
+    "value": 82,
+    "unit": "km/h"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:05",
+    "signal": "RPM",
+    "value": 4200,
+    "unit": "rpm"
+  },
+
+  {
+    "timestamp": "2025-04-19T15:30:10",
+    "signal": "SOC",
+    "value": 76,
+    "unit": "%"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:10",
+    "signal": "BatteryVoltage",
+    "value": 386,
+    "unit": "V"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:10",
+    "signal": "BatteryCurrent",
+    "value": 96,
+    "unit": "A"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:10",
+    "signal": "BatteryTemp",
+    "value": 39,
+    "unit": "C"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:10",
+    "signal": "MotorTemp",
+    "value": 61,
+    "unit": "C"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:10",
+    "signal": "VehicleSpeed",
+    "value": 110,
+    "unit": "km/h"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:10",
+    "signal": "RPM",
+    "value": 6100,
+    "unit": "rpm"
+  },
+
+  {
+    "timestamp": "2025-04-19T15:30:15",
+    "signal": "SOC",
+    "value": 75,
+    "unit": "%"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:15",
+    "signal": "BatteryVoltage",
+    "value": 380,
+    "unit": "V"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:15",
+    "signal": "BatteryCurrent",
+    "value": 132,
+    "unit": "A"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:15",
+    "signal": "BatteryTemp",
+    "value": 45,
+    "unit": "C"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:15",
+    "signal": "MotorTemp",
+    "value": 73,
+    "unit": "C"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:15",
+    "signal": "VehicleSpeed",
+    "value": 128,
+    "unit": "km/h"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:15",
+    "signal": "RPM",
+    "value": 7600,
+    "unit": "rpm"
+  },
+
+  {
+    "timestamp": "2025-04-19T15:30:20",
+    "signal": "BatteryVoltage",
+    "value": 362,
+    "unit": "V"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:20",
+    "signal": "BatteryCurrent",
+    "value": 175,
+    "unit": "A"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:20",
+    "signal": "BatteryTemp",
+    "value": 64,
+    "unit": "C"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:20",
+    "signal": "MotorTemp",
+    "value": 91,
+    "unit": "C"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:20",
+    "signal": "VehicleSpeed",
+    "value": 135,
+    "unit": "km/h"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:20",
+    "signal": "RPM",
+    "value": 8300,
+    "unit": "rpm"
+  },
+
+  {
+    "timestamp": "2025-04-19T15:30:25",
+    "signal": "BatteryVoltage",
+    "value": 295,
+    "unit": "V"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:25",
+    "signal": "BatteryCurrent",
+    "value": 210,
+    "unit": "A"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:25",
+    "signal": "BatteryTemp",
+    "value": 72,
+    "unit": "C"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:25",
+    "signal": "MotorTemp",
+    "value": 102,
+    "unit": "C"
+  },
+  {
+    "timestamp": "2025-04-19T15:30:25",
+    "signal": "SOC",
+    "value": 18,
+    "unit": "%"
+  }
+]

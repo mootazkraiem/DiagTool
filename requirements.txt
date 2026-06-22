@@ -1,0 +1,17 @@
+colorama==0.4.6
+fastapi==0.115.14
+joblib==1.5.2
+numpy==2.4.4
+pandas==2.3.3
+openai==1.105.0
+python-multipart==0.0.20
+PyQt6==6.11.0
+pyvista==0.47.2
+pyvistaqt==0.11.4
+pyqtgraph==0.14.0
+scikit-learn==1.9.0
+uvicorn==0.35.0
+vtk==9.6.0
+asammdf>=8.8
+cantools>=41.0
+python-can>=4.3

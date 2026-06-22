@@ -1,0 +1,74 @@
+[
+  {
+    "id": "dos_flood",
+    "keywords": ["dos", "flood", "burst", "timing", "rate", "inter_arrival", "high frequency", "timing_burst"],
+    "attack_type": "DoS / Flood Attack",
+    "summary": "Denial-of-Service flooding detected: abnormal frame injection rate saturating the CAN bus.",
+    "detail": "A DoS flood attack injects frames at rates far exceeding the ECU's normal transmission schedule, causing bus saturation and starving legitimate nodes of bandwidth. The inter-frame timing deviation (timing layer) is the primary detection signal. Affected ECUs may fail to respond to legitimate commands, trigger watchdog resets, or produce inconsistent sensor readings due to missed frames.",
+    "recommendation": "Isolate the bus segment, capture raw frames with timestamps, and compare injection rates against the vehicle's DBC nominal rates. Deploy a CAN firewall with rate-limiting rules for this message ID."
+  },
+  {
+    "id": "fuzzy_payload",
+    "keywords": ["fuzzy", "payload", "entropy", "random", "byte", "continuity", "continuity_break", "ml_outlier"],
+    "attack_type": "Fuzzy Attack",
+    "summary": "Fuzzy payload attack: randomized or malformed byte values detected in CAN frames.",
+    "detail": "Fuzzy attacks inject frames with randomized payload bytes to probe ECU responses and potentially trigger unsafe states. The payload entropy and byte-continuity layers flag these frames — legitimate CAN signals follow predictable encoding patterns, while fuzzed frames exhibit uniform or random byte distributions. This attack can crash ECU firmware, unlock safety interlocks, or force mode transitions.",
+    "recommendation": "Enable strict message authentication (if the vehicle supports CAN-FD + MAC). Short-term: block the offending CAN-ID at the gateway and review any ECU that acknowledged the malformed frames."
+  },
+  {
+    "id": "rpm_spoof",
+    "keywords": ["rpm", "motor", "0x3f1", "speed", "spoofing", "spoof", "mcu"],
+    "attack_type": "RPM Spoofing",
+    "summary": "Motor RPM spoofing: injected frames reporting false rotational speed values.",
+    "detail": "RPM spoofing targets the Motor Control Unit (MCU, CAN-ID 0x3F1) by injecting frames with manipulated RPM byte values. False high-RPM signals can trigger over-speed protection cuts or fool the traction control system into relaxing torque limits. False low-RPM during high-speed driving may disable regenerative braking unexpectedly.",
+    "recommendation": "Cross-reference RPM readings with chassis speed (0x5D2) and motor current draw. Implement cross-ECU plausibility checking to reject RPM values that are physically inconsistent with vehicle speed."
+  },
+  {
+    "id": "voltage_manipulation",
+    "keywords": ["voltage", "battery", "0x1a2", "bms", "undervoltage", "overvoltage", "soc"],
+    "attack_type": "Battery Signal Manipulation",
+    "summary": "Battery voltage or SOC manipulation: forged BMS readings detected on CAN-ID 0x1A2.",
+    "detail": "Battery Management System spoofing (0x1A2) can force premature charging cutoffs, disable thermal protections, or convince the vehicle controller that the battery is depleted, triggering emergency stops. Out-of-range voltage and SOC deltas relative to historical baselines are the primary indicators.",
+    "recommendation": "Activate hardware voltage monitoring that operates independently of the CAN bus. Flag any BMS frame where voltage delta exceeds ±30V per second or SOC changes by more than 5% per frame."
+  },
+  {
+    "id": "thermal_spoof",
+    "keywords": ["thermal", "temp", "temperature", "inverter", "cooling", "0x6e7", "tms", "overheat"],
+    "attack_type": "Thermal Sensor Spoofing",
+    "summary": "Thermal sensor spoofing: abnormal temperature values injected in Thermal Management System frames.",
+    "detail": "Thermal spoofing targets the TMS (CAN-ID 0x6E7), injecting false low-temperature readings to disable active cooling or false high-temperature readings to trigger emergency thermal shutdowns. In EVs this can cause battery cell damage from overtemperature or force premature power limits during normal operation.",
+    "recommendation": "Correlate thermal CAN readings against direct hardware sensor inputs. Deploy anomaly detection on temperature rate-of-change — physical cooling dynamics have bounded derivatives that injected values often violate."
+  },
+  {
+    "id": "gear_state_injection",
+    "keywords": ["gear", "state", "chassis", "brake", "accelerator", "0x5d2", "ccm", "injection"],
+    "attack_type": "Chassis State Injection",
+    "summary": "Chassis state injection: conflicting or out-of-range pedal/speed signals detected on 0x5D2.",
+    "detail": "Chassis module (0x5D2) spoofing can inject simultaneous brake-accelerator signals (phantom pedal events), falsify vehicle speed to trigger ABS/ESC incorrectly, or create impossible state transitions such as reverse-while-moving. These attacks exploit the CAN bus's broadcast nature — any node can inject frames that masquerade as chassis ECU output.",
+    "recommendation": "Implement chassis signal plausibility rules: brake and accelerator cannot both exceed 50% simultaneously; speed rate-of-change must not exceed physically achievable deceleration (≈1G)."
+  },
+  {
+    "id": "persistence_replay",
+    "keywords": ["persistence", "temporal", "replay", "repeated", "window", "sustained"],
+    "attack_type": "Persistence / Replay Attack",
+    "summary": "Temporal persistence pattern: frames from this CAN-ID have been flagged repeatedly over multiple detection windows.",
+    "detail": "Replay attacks retransmit previously captured legitimate frames at incorrect times, potentially re-triggering commands (e.g., unlock, enable, calibrate). The temporal persistence layer detects CAN-IDs that generate sustained anomaly scores across consecutive time windows, distinguishing systematic replay from transient noise.",
+    "recommendation": "Implement challenge-response freshness tokens for safety-critical CAN commands. Capture the repeated frames and compare byte-for-byte against legitimate traffic to identify replay candidates."
+  },
+  {
+    "id": "can_id_entropy",
+    "keywords": ["entropy", "can_id_entropy", "new_id", "unknown_id", "id_scan", "enumeration", "scanning"],
+    "attack_type": "CAN-ID Entropy / Bus Scan",
+    "summary": "Elevated CAN-ID entropy detected: unusual volume or diversity of CAN identifiers indicates active bus enumeration or ID spoofing.",
+    "detail": "A high can_id_entropy score means the distribution of CAN IDs on the bus deviates from the vehicle's established baseline profile. Attackers scanning the bus for responsive ECUs will inject frames across a wide ID range, producing abnormal entropy. Spoofing attacks may also inject frames using CAN IDs not normally present, creating entropy spikes even at low message rates.",
+    "recommendation": "Capture a raw frame dump and audit IDs against the vehicle's DBC whitelist. Block any CAN-ID outside the known-good set at the gateway. Investigate whether an unknown device is physically connected to the bus."
+  },
+  {
+    "id": "ml_outlier",
+    "keywords": ["ml", "outlier", "isolation", "forest", "anomaly_score", "ml_outlier", "model", "cluster"],
+    "attack_type": "ML Isolation Outlier",
+    "summary": "IsolationForest model flagged this frame as a statistical outlier — its feature vector lies far from all known normal clusters.",
+    "detail": "The ML layer uses an IsolationForest trained on normal vehicle traffic. Frames that are isolated early during tree construction (i.e., require few splits to separate) receive high anomaly scores. This pattern captures attacks that do not match any known timing or payload signature but are nevertheless statistically abnormal relative to the vehicle's established baseline.",
+    "recommendation": "Correlate the ML outlier with the timing and payload layers to determine the likely attack vector. If the fusion score exceeds 0.55 and the ML layer dominates, treat as a high-confidence unknown-vector intrusion until ruled out."
+  }
+]

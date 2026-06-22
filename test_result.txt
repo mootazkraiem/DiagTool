@@ -1,0 +1,21 @@
+Python: 3.13.7 (tags/v3.13.7:bcee1c3, Aug 14 2025, 14:15:11) [MSC v.1944 64 bit (AMD64)]
+numpy: OK
+pandas: OK
+sklearn: OK
+fastapi: OK
+uvicorn: OK
+joblib: OK
+Import backend.api.server: OK
+Import backend.api.mock_signals: OK
+Import backend.ml.anomaly: OK
+Import backend.ml.ai_model: OK
+Import backend.ml.engine: OK
+Import backend.ml.session_data: OK
+Import backend.data_processing.can_reader: OK
+Import backend.data_processing.decoder: OK
+Import backend.data_processing.parser: OK
+Import backend.data_processing.feature_engineering: OK
+Path data/raw/logs/tesla_log.log: OK
+Path data/uds/default_vehicle.json: OK
+Path data/uds/mock_signals.json: OK
+Path models/isolation_forest.joblib: MISSING

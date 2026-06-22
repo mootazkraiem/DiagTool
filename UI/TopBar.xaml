@@ -1,0 +1,41 @@
+<UserControl
+    x:Class="CANvision.Native.UI.TopBar"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Border
+        Background="#C0000000"
+        BorderBrush="#5900FFFF"
+        BorderThickness="0,0,0,1"
+        CornerRadius="8"
+        Padding="14,10">
+        <Grid>
+            <ItemsControl
+                x:Name="NavigationItems"
+                Margin="0"
+                HorizontalAlignment="Center"
+                ItemsSource="{Binding Tabs}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="6" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button
+                            Margin="6,0"
+                            Tag="{Binding IsActive}"
+                            Style="{StaticResource HudNavCapsuleButtonStyle}"
+                            Command="{Binding DataContext.NavigateToSectionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            CommandParameter="{Binding Section.Key}"
+                            KeyDown="OnNavigationButtonKeyDown">
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Text="{Binding Title}" />
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
+    </Border>
+</UserControl>

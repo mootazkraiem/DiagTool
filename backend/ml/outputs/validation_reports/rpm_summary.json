@@ -1,0 +1,596 @@
+{
+  "replay_source": "C:\\Users\\benkr\\OneDrive\\can_project\\backend\\ml\\outputs\\replay_logs\\rpm.csv",
+  "total_frames_processed": 5000,
+  "total_alerts": 81,
+  "alerts_per_1000_frames": 16.2,
+  "critical_alert_rate": 0.0,
+  "high_alert_rate": 0.0,
+  "alerts_per_severity": {
+    "LOW": 81
+  },
+  "alerts_per_reason": {
+    "can_id_entropy": 81
+  },
+  "alerts_per_can_id": {
+    "0x104": 20,
+    "0x13C": 21,
+    "0x149": 21,
+    "0x221": 19
+  },
+  "alerts_per_risk_level": {
+    "LOW": 81
+  },
+  "max_fusion_score_observed": 0.5360375165767678,
+  "average_fusion_score_observed": 0.26908795370421634,
+  "runtime_duration_sec": 8.399411299993517,
+  "fps": 595.2798144322161,
+  "alert_records": [
+    {
+      "timestamp": 251.99188872828407,
+      "can_id": 260,
+      "risk_level": "LOW",
+      "score": 0.40532867001216316,
+      "reason": "timing=0.001, payload=0.585, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 252.0122449730069,
+      "can_id": 316,
+      "risk_level": "LOW",
+      "score": 0.4102664539517381,
+      "reason": "timing=0.001, payload=0.599, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 252.11180025298117,
+      "can_id": 329,
+      "risk_level": "LOW",
+      "score": 0.46492771939020994,
+      "reason": "timing=0.001, payload=0.756, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 252.61121151985836,
+      "can_id": 545,
+      "risk_level": "LOW",
+      "score": 0.47552243334207855,
+      "reason": "timing=0.001, payload=0.786, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 253.2497355401872,
+      "can_id": 260,
+      "risk_level": "LOW",
+      "score": 0.4555208892075001,
+      "reason": "timing=0.001, payload=0.729, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 253.26964711639516,
+      "can_id": 316,
+      "risk_level": "LOW",
+      "score": 0.467754288849068,
+      "reason": "timing=0.001, payload=0.764, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 253.36868410625797,
+      "can_id": 329,
+      "risk_level": "LOW",
+      "score": 0.4950734594184186,
+      "reason": "timing=0.001, payload=0.842, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 253.8696783537981,
+      "can_id": 545,
+      "risk_level": "LOW",
+      "score": 0.4728393020953142,
+      "reason": "timing=0.001, payload=0.778, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 254.5083461852041,
+      "can_id": 260,
+      "risk_level": "LOW",
+      "score": 0.4081903414782462,
+      "reason": "timing=0.001, payload=0.593, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 254.52896489837784,
+      "can_id": 316,
+      "risk_level": "LOW",
+      "score": 0.41946234755250145,
+      "reason": "timing=0.001, payload=0.626, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 254.6282765204191,
+      "can_id": 329,
+      "risk_level": "LOW",
+      "score": 0.4305485569995463,
+      "reason": "timing=0.001, payload=0.657, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 255.12855168809517,
+      "can_id": 545,
+      "risk_level": "LOW",
+      "score": 0.46430439560625447,
+      "reason": "timing=0.001, payload=0.754, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 255.76932683203665,
+      "can_id": 260,
+      "risk_level": "LOW",
+      "score": 0.4494748296831049,
+      "reason": "timing=0.001, payload=0.711, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 255.7898645821104,
+      "can_id": 316,
+      "risk_level": "LOW",
+      "score": 0.4710623420049166,
+      "reason": "timing=0.001, payload=0.773, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 256.38830688233713,
+      "can_id": 545,
+      "risk_level": "LOW",
+      "score": 0.47118137824873285,
+      "reason": "timing=0.001, payload=0.774, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 256.5171240168325,
+      "can_id": 329,
+      "risk_level": "LOW",
+      "score": 0.4295545996442508,
+      "reason": "timing=0.001, payload=0.655, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 257.027811257186,
+      "can_id": 260,
+      "risk_level": "LOW",
+      "score": 0.4477174070335679,
+      "reason": "timing=0.001, payload=0.706, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 257.04858019449154,
+      "can_id": 316,
+      "risk_level": "LOW",
+      "score": 0.4367693967429919,
+      "reason": "timing=0.001, payload=0.675, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 257.64914106601,
+      "can_id": 545,
+      "risk_level": "LOW",
+      "score": 0.436846166715554,
+      "reason": "timing=0.001, payload=0.675, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 258.28874814482765,
+      "can_id": 260,
+      "risk_level": "LOW",
+      "score": 0.5005667806345481,
+      "reason": "timing=0.001, payload=0.857, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 258.31096459623143,
+      "can_id": 316,
+      "risk_level": "LOW",
+      "score": 0.47834457181889856,
+      "reason": "timing=0.001, payload=0.794, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 258.4117378083142,
+      "can_id": 329,
+      "risk_level": "LOW",
+      "score": 0.4982657163515236,
+      "reason": "timing=0.001, payload=0.851, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 258.9108179810404,
+      "can_id": 545,
+      "risk_level": "LOW",
+      "score": 0.4872875325949899,
+      "reason": "timing=0.001, payload=0.820, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 259.55063411459685,
+      "can_id": 260,
+      "risk_level": "LOW",
+      "score": 0.4157089732343816,
+      "reason": "timing=0.001, payload=0.615, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 259.57116208444074,
+      "can_id": 316,
+      "risk_level": "LOW",
+      "score": 0.4479212212010063,
+      "reason": "timing=0.001, payload=0.707, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 259.67182556172605,
+      "can_id": 329,
+      "risk_level": "LOW",
+      "score": 0.45229668608937734,
+      "reason": "timing=0.001, payload=0.720, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 260.80084671697693,
+      "can_id": 545,
+      "risk_level": "LOW",
+      "score": 0.4306938364007788,
+      "reason": "timing=0.001, payload=0.658, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 260.81018557728964,
+      "can_id": 260,
+      "risk_level": "LOW",
+      "score": 0.45603555683406216,
+      "reason": "timing=0.001, payload=0.730, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 260.8302169266371,
+      "can_id": 316,
+      "risk_level": "LOW",
+      "score": 0.4672868790993475,
+      "reason": "timing=0.001, payload=0.762, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 260.9302513956692,
+      "can_id": 329,
+      "risk_level": "LOW",
+      "score": 0.46199542988232933,
+      "reason": "timing=0.001, payload=0.747, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 262.05821104562665,
+      "can_id": 545,
+      "risk_level": "LOW",
+      "score": 0.41690004950828274,
+      "reason": "timing=0.001, payload=0.618, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 262.06887202689,
+      "can_id": 260,
+      "risk_level": "LOW",
+      "score": 0.44778012222393615,
+      "reason": "timing=0.001, payload=0.707, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 262.0881919898755,
+      "can_id": 316,
+      "risk_level": "LOW",
+      "score": 0.4331234543842702,
+      "reason": "timing=0.001, payload=0.665, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 262.1887386290047,
+      "can_id": 329,
+      "risk_level": "LOW",
+      "score": 0.4109070644249522,
+      "reason": "timing=0.001, payload=0.601, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 263.31798698099533,
+      "can_id": 545,
+      "risk_level": "LOW",
+      "score": 0.4160319225871064,
+      "reason": "timing=0.001, payload=0.616, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 263.32847992668144,
+      "can_id": 260,
+      "risk_level": "LOW",
+      "score": 0.4748550797886908,
+      "reason": "timing=0.001, payload=0.784, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 263.3484677310613,
+      "can_id": 316,
+      "risk_level": "LOW",
+      "score": 0.46371876868139206,
+      "reason": "timing=0.001, payload=0.752, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 263.4481559778745,
+      "can_id": 329,
+      "risk_level": "LOW",
+      "score": 0.44397850421526286,
+      "reason": "timing=0.001, payload=0.696, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 377.9913935860281,
+      "can_id": 260,
+      "risk_level": "LOW",
+      "score": 0.4283122741209414,
+      "reason": "timing=0.001, payload=0.651, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 378.0120358183634,
+      "can_id": 316,
+      "risk_level": "LOW",
+      "score": 0.5045350136371956,
+      "reason": "timing=0.001, payload=0.869, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 378.113027848054,
+      "can_id": 329,
+      "risk_level": "LOW",
+      "score": 0.5314086801663003,
+      "reason": "timing=0.001, payload=0.946, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 378.61402064734426,
+      "can_id": 545,
+      "risk_level": "LOW",
+      "score": 0.5360375165767678,
+      "reason": "timing=0.001, payload=0.959, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 379.2555267881013,
+      "can_id": 260,
+      "risk_level": "LOW",
+      "score": 0.4804357284573314,
+      "reason": "timing=0.001, payload=0.800, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 379.2750361812878,
+      "can_id": 316,
+      "risk_level": "LOW",
+      "score": 0.4774614093659657,
+      "reason": "timing=0.001, payload=0.791, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 379.3742719819666,
+      "can_id": 329,
+      "risk_level": "LOW",
+      "score": 0.46654362558899287,
+      "reason": "timing=0.001, payload=0.760, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 379.87507477316353,
+      "can_id": 545,
+      "risk_level": "LOW",
+      "score": 0.47217485738471543,
+      "reason": "timing=0.001, payload=0.776, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 380.5173158597976,
+      "can_id": 260,
+      "risk_level": "LOW",
+      "score": 0.4339725939798662,
+      "reason": "timing=0.001, payload=0.667, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 380.5371762917432,
+      "can_id": 316,
+      "risk_level": "LOW",
+      "score": 0.433973975017127,
+      "reason": "timing=0.001, payload=0.667, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 380.63736746428367,
+      "can_id": 329,
+      "risk_level": "LOW",
+      "score": 0.46151667844882893,
+      "reason": "timing=0.001, payload=0.746, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 381.1381755596326,
+      "can_id": 545,
+      "risk_level": "LOW",
+      "score": 0.4740829551606608,
+      "reason": "timing=0.001, payload=0.782, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 381.7782872368696,
+      "can_id": 260,
+      "risk_level": "LOW",
+      "score": 0.4918194028221995,
+      "reason": "timing=0.001, payload=0.832, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 381.7979104705493,
+      "can_id": 316,
+      "risk_level": "LOW",
+      "score": 0.5023326587747161,
+      "reason": "timing=0.001, payload=0.863, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 381.8970263270264,
+      "can_id": 329,
+      "risk_level": "LOW",
+      "score": 0.4806702599334767,
+      "reason": "timing=0.001, payload=0.800, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 382.3973847487211,
+      "can_id": 545,
+      "risk_level": "LOW",
+      "score": 0.46424625371430295,
+      "reason": "timing=0.001, payload=0.754, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 383.03639531616784,
+      "can_id": 260,
+      "risk_level": "LOW",
+      "score": 0.42988594973600813,
+      "reason": "timing=0.001, payload=0.656, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 383.0569097613402,
+      "can_id": 316,
+      "risk_level": "LOW",
+      "score": 0.4298875273126152,
+      "reason": "timing=0.001, payload=0.656, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 383.15700079874176,
+      "can_id": 329,
+      "risk_level": "LOW",
+      "score": 0.4573491950387901,
+      "reason": "timing=0.001, payload=0.734, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 383.65629806562674,
+      "can_id": 545,
+      "risk_level": "LOW",
+      "score": 0.45228585014030176,
+      "reason": "timing=0.001, payload=0.719, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 384.2945064581083,
+      "can_id": 260,
+      "risk_level": "LOW",
+      "score": 0.46190644765477074,
+      "reason": "timing=0.001, payload=0.747, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 384.3141411488867,
+      "can_id": 316,
+      "risk_level": "LOW",
+      "score": 0.47319916213978486,
+      "reason": "timing=0.001, payload=0.779, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 384.41405997887534,
+      "can_id": 329,
+      "risk_level": "LOW",
+      "score": 0.42716735478906614,
+      "reason": "timing=0.001, payload=0.648, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 629.9682876272319,
+      "can_id": 316,
+      "risk_level": "LOW",
+      "score": 0.41282757286969846,
+      "reason": "timing=0.001, payload=0.607, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 630.0674866986791,
+      "can_id": 329,
+      "risk_level": "LOW",
+      "score": 0.4128029938821346,
+      "reason": "timing=0.001, payload=0.607, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 630.5682346614972,
+      "can_id": 545,
+      "risk_level": "LOW",
+      "score": 0.41276058061003174,
+      "reason": "timing=0.001, payload=0.607, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 631.2074655309808,
+      "can_id": 260,
+      "risk_level": "LOW",
+      "score": 0.46142279437549394,
+      "reason": "timing=0.001, payload=0.746, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 631.227861699825,
+      "can_id": 316,
+      "risk_level": "LOW",
+      "score": 0.4027955150834912,
+      "reason": "timing=0.001, payload=0.578, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 631.3280981308793,
+      "can_id": 329,
+      "risk_level": "LOW",
+      "score": 0.4027634605947964,
+      "reason": "timing=0.001, payload=0.578, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 631.8279483318604,
+      "can_id": 545,
+      "risk_level": "LOW",
+      "score": 0.4133204243401717,
+      "reason": "timing=0.001, payload=0.608, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 632.4688143178204,
+      "can_id": 260,
+      "risk_level": "LOW",
+      "score": 0.40877885417200993,
+      "reason": "timing=0.001, payload=0.595, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 632.4891369525931,
+      "can_id": 316,
+      "risk_level": "LOW",
+      "score": 0.40883912827911983,
+      "reason": "timing=0.001, payload=0.595, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 632.58836396433,
+      "can_id": 329,
+      "risk_level": "LOW",
+      "score": 0.4084634384688295,
+      "reason": "timing=0.001, payload=0.594, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 633.0892541769142,
+      "can_id": 545,
+      "risk_level": "LOW",
+      "score": 0.4430635937674801,
+      "reason": "timing=0.001, payload=0.693, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 633.750706162981,
+      "can_id": 316,
+      "risk_level": "LOW",
+      "score": 0.4382238367106653,
+      "reason": "timing=0.001, payload=0.679, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 633.8512027366334,
+      "can_id": 329,
+      "risk_level": "LOW",
+      "score": 0.4381896981043526,
+      "reason": "timing=0.001, payload=0.679, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 634.3511052118864,
+      "can_id": 545,
+      "risk_level": "LOW",
+      "score": 0.5037772774996134,
+      "reason": "timing=0.001, payload=0.867, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 634.3603464257824,
+      "can_id": 260,
+      "risk_level": "LOW",
+      "score": 0.42311803154928035,
+      "reason": "timing=0.001, payload=0.636, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 635.1118757002043,
+      "can_id": 329,
+      "risk_level": "LOW",
+      "score": 0.40478371501320337,
+      "reason": "timing=0.001, payload=0.584, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 755.9396327847738,
+      "can_id": 260,
+      "risk_level": "LOW",
+      "score": 0.42443871893501806,
+      "reason": "timing=0.001, payload=0.640, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 755.9603466700005,
+      "can_id": 316,
+      "risk_level": "LOW",
+      "score": 0.4466696621250504,
+      "reason": "timing=0.001, payload=0.703, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 756.0600818750918,
+      "can_id": 329,
+      "risk_level": "LOW",
+      "score": 0.43625092850625624,
+      "reason": "timing=0.001, payload=0.674, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    },
+    {
+      "timestamp": 756.5602783751689,
+      "can_id": 545,
+      "risk_level": "LOW",
+      "score": 0.45823606502752956,
+      "reason": "timing=0.001, payload=0.737, ml=1.000, persistence=0.000, freq=2Hz, can_id_entropy=1.386"
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+VERSION ""
+
+
+NS_ : 
+    NS_DESC_
+    CM_
+    BA_DEF_
+    BA_
+    VAL_
+    CAT_DEF_
+    CAT_
+    FILTER
+    BA_DEF_DEF_
+    EV_DATA_
+    ENVVAR_DATA_
+    SGTYPE_
+    SGTYPE_VAL_
+    BA_DEF_SGTYPE_
+    BA_SGTYPE_
+    SIG_TYPE_REF_
+    VAL_TABLE_
+    SIG_GROUP_
+    SIG_VALTYPE_
+    SIGTYPE_VALTYPE_
+    BO_TX_BU_
+    BA_DEF_REL_
+    BA_REL_
+    BA_DEF_DEF_REL_
+    BU_SG_REL_
+    BU_EV_REL_
+    BU_BO_REL_
+    SG_MUL_VAL_
+
+BS_:
+
+BU_:
+
+
+BO_ 2550005883 Battery: 32 Vector__XXX
+ SG_ StateOfChargeBMS m652 : 39|8@0+ (0.4,0) [0|100] "%" Vector__XXX
+ SG_ Response m98M : 23|16@0+ (1,0) [0|0] "unit" Vector__XXX
+ SG_ Service M : 15|8@0+ (1,0) [0|0] "" Vector__XXX
+ SG_ Speed m62477 : 39|8@0+ (1,0) [0|0] "km/h" Vector__XXX
+ SG_ BattTempMain m10763 : 39|8@0+ (0.5,-40) [0|0] "degC" Vector__XXX
+ SG_ BattTempMin m7951 : 39|16@0+ (0.015625,0) [0|0] "degC" Vector__XXX
+ SG_ BattTempMax m7950 : 39|16@0+ (0.015625,0) [0|0] "degC" Vector__XXX
+ SG_ BattCoolingLiquidInlet m6301 : 55|16@0+ (0.015625,0) [0|0] "degC" Vector__XXX
+ SG_ BattCoolingLiquidOutlet m6301 : 39|16@0+ (0.015625,0) [0|0] "degC" Vector__XXX
+ SG_ BatteryCurrentHV m7741 : 39|32@0+ (0.01,-1500) [0|0] "A" Vector__XXX
+ SG_ BatteryVoltageHV m7739 : 39|16@0+ (0.25,0) [0|0] "V" Vector__XXX
+ SG_ BatteryTotalChargeHV m7730 : 79|32@0+ (0.00011650841202,0) [0|0] "kWh" Vector__XXX
+ SG_ BatteryTotalDischargeHV m7730 : 111|32@0- (0.00011650841202,0) [0|0] "kWh" Vector__XXX
+
+BO_ 2550005945 VoltageCurrent: 8 Vector__XXX
+ SG_ Voltage m18013 : 39|16@0+ (0.001953125,0) [0|100] "V" Vector__XXX
+ SG_ Response m98M : 23|16@0+ (1,0) [0|0] "unit" Vector__XXX
+ SG_ Service M : 15|8@0+ (1,0) [0|0] "" Vector__XXX
+ SG_ Current m18011 : 39|16@0+ (0.0625,0) [0|0] "A" Vector__XXX
+
+BO_ 2550005878 Odometer: 8 Vector__XXX
+ SG_ Odometer m10586 : 39|24@0+ (1,0) [0|100] "%" Vector__XXX
+ SG_ Response m98M : 23|16@0+ (1,0) [0|0] "unit" Vector__XXX
+ SG_ Service M : 15|8@0+ (1,0) [0|0] "" Vector__XXX
+ SG_ AuxPowerConsumption m25091 : 39|16@0+ (0.1,0) [0|0] "kW" Vector__XXX
+
+BO_ 1968 Temperatures: 8 Vector__XXX
+ SG_ OutdoorTemp m9737 : 39|8@0+ (0.5,-50) [0|100] "degC" Vector__XXX
+ SG_ Response m98M : 23|16@0+ (1,0) [0|0] "unit" Vector__XXX
+ SG_ Service M : 15|8@0+ (1,0) [0|0] "" Vector__XXX
+ SG_ IndoorTemp m9747 : 39|16@0+ (0.2,-40) [0|0] "degC" Vector__XXX
+ SG_ AccelerationPedalPos m62537 : 39|8@0+ (0.39215686275,0) [0|0] "%" Vector__XXX
+ SG_ Co2ContentInterior m17115 : 47|8@0+ (100,0) [0|0] "ppm" Vector__XXX
+
+
+
+BA_DEF_ SG_  "SignalIgnore" INT 0 1;
+BA_DEF_ BO_  "VFrameFormat" ENUM  "StandardCAN","ExtendedCAN","StandardCAN_FD","ExtendedCAN_FD","J1939PG";
+BA_DEF_ BO_  "MessageIgnore" INT 0 1;
+BA_DEF_  "BusType" STRING ;
+BA_DEF_  "ProtocolType" STRING ;
+BA_DEF_  "DatabaseCompiler" STRING ;
+BA_DEF_DEF_  "SignalIgnore" 0;
+BA_DEF_DEF_  "VFrameFormat" "";
+BA_DEF_DEF_  "MessageIgnore" 0;
+BA_DEF_DEF_  "BusType" "";
+BA_DEF_DEF_  "ProtocolType" "";
+BA_DEF_DEF_  "DatabaseCompiler" "CSS Electronics (wwww.csselectronics.com)";
+BA_ "BusType" "CAN";
+BA_ "ProtocolType" "OBD";
+BA_ "VFrameFormat" BO_ 2550005883 1;
+BA_ "SignalIgnore" SG_ 2550005883 Response 1;
+BA_ "SignalIgnore" SG_ 2550005883 Service 1;
+BA_ "VFrameFormat" BO_ 2550005945 1;
+BA_ "SignalIgnore" SG_ 2550005945 Response 1;
+BA_ "SignalIgnore" SG_ 2550005945 Service 1;
+BA_ "VFrameFormat" BO_ 2550005878 1;
+BA_ "SignalIgnore" SG_ 2550005878 Response 1;
+BA_ "SignalIgnore" SG_ 2550005878 Service 1;
+BA_ "VFrameFormat" BO_ 1968 0;
+BA_ "SignalIgnore" SG_ 1968 Response 1;
+BA_ "SignalIgnore" SG_ 1968 Service 1;
+
+SG_MUL_VAL_ 2550005883 StateOfChargeBMS Response 652-652;
+SG_MUL_VAL_ 2550005883 Response Service 98-98;
+SG_MUL_VAL_ 2550005883 Speed Response 62477-62477;
+SG_MUL_VAL_ 2550005883 BattTempMain Response 10763-10763;
+SG_MUL_VAL_ 2550005883 BattTempMin Response 7951-7951;
+SG_MUL_VAL_ 2550005883 BattTempMax Response 7950-7950;
+SG_MUL_VAL_ 2550005883 BattCoolingLiquidInlet Response 6301-6301;
+SG_MUL_VAL_ 2550005883 BattCoolingLiquidOutlet Response 6301-6301;
+SG_MUL_VAL_ 2550005883 BatteryCurrentHV Response 7741-7741;
+SG_MUL_VAL_ 2550005883 BatteryVoltageHV Response 7739-7739;
+SG_MUL_VAL_ 2550005883 BatteryTotalChargeHV Response 7730-7730;
+SG_MUL_VAL_ 2550005883 BatteryTotalDischargeHV Response 7730-7730;
+SG_MUL_VAL_ 2550005945 Voltage Response 18013-18013;
+SG_MUL_VAL_ 2550005945 Response Service 98-98;
+SG_MUL_VAL_ 2550005945 Current Response 18011-18011;
+SG_MUL_VAL_ 2550005878 Odometer Response 10586-10586;
+SG_MUL_VAL_ 2550005878 Response Service 98-98;
+SG_MUL_VAL_ 2550005878 AuxPowerConsumption Response 25091-25091;
+SG_MUL_VAL_ 1968 OutdoorTemp Response 9737-9737;
+SG_MUL_VAL_ 1968 Response Service 98-98;
+SG_MUL_VAL_ 1968 IndoorTemp Response 9747-9747;
+SG_MUL_VAL_ 1968 AccelerationPedalPos Response 62537-62537;
+SG_MUL_VAL_ 1968 Co2ContentInterior Response 17115-17115;

@@ -1,0 +1,22 @@
+<Application
+    x:Class="CANvision.Native.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:CANvision.Native.Converters">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="UI/Theme/ThemeResources.xaml" />
+                <ResourceDictionary Source="UI/Theme/ButtonStyles.xaml" />
+                <ResourceDictionary Source="UI/Theme/ViewTemplates.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <converters:GreaterThanConverter x:Key="GreaterThanConverter" />
+            <converters:ScaleConverter x:Key="ScaleConverter" />
+            <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
+            <converters:HexColorToBrushConverter x:Key="HexColorToBrushConverter" />
+            <converters:ProgressToArcDashConverter x:Key="ProgressToArcDashConverter" />
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

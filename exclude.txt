@@ -1,0 +1,5 @@
+bin\
+obj\
+.git\
+can_env\
+.tmp_py\

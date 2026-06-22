@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CANvision Native Garage - Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed-variant": "#003d5f",
+                        "on-primary-container": "#005d5d",
+                        "tertiary": "#63baff",
+                        "error": "#ff716c",
+                        "on-secondary-container": "#e5fcff",
+                        "primary-container": "#00ffff",
+                        "secondary": "#0deafc",
+                        "error-container": "#9f0519",
+                        "secondary-container": "#006972",
+                        "on-primary-fixed-variant": "#006262",
+                        "on-background": "#fafdfc",
+                        "primary-fixed": "#00f5f5",
+                        "on-tertiary-container": "#002a44",
+                        "on-primary-fixed": "#004343",
+                        "error-dim": "#d7383b",
+                        "tertiary-fixed": "#5bb8ff",
+                        "surface-variant": "#212727",
+                        "surface-container-low": "#101414",
+                        "outline-variant": "#454948",
+                        "on-error": "#490006",
+                        "surface-tint": "#c1fffe",
+                        "on-secondary-fixed-variant": "#005c63",
+                        "on-tertiary-fixed": "#001a2c",
+                        "tertiary-fixed-dim": "#37abf9",
+                        "primary-fixed-dim": "#00e6e6",
+                        "surface-container": "#151b1a",
+                        "on-primary": "#006767",
+                        "surface-container-lowest": "#000000",
+                        "tertiary-container": "#3badfc",
+                        "primary": "#c1fffe",
+                        "inverse-on-surface": "#525656",
+                        "secondary-fixed": "#0deafc",
+                        "surface-bright": "#272d2d",
+                        "surface-dim": "#0b0f0f",
+                        "surface": "#0b0f0f",
+                        "on-surface": "#fafdfc",
+                        "on-secondary-fixed": "#003d42",
+                        "primary-dim": "#00e6e6",
+                        "inverse-surface": "#f7faf9",
+                        "on-tertiary": "#003655",
+                        "background": "#0b0f0f",
+                        "secondary-dim": "#00dbec",
+                        "surface-container-highest": "#212727",
+                        "surface-container-high": "#1b2121",
+                        "tertiary-dim": "#2ea5f3",
+                        "on-surface-variant": "#a8acab",
+                        "on-error-container": "#ffa8a3",
+                        "outline": "#727676",
+                        "inverse-primary": "#006a6a",
+                        "secondary-fixed-dim": "#00dbec",
+                        "on-secondary": "#005158"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Manrope"],
+                        "label": ["Manrope"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>body {
+    background-color: #0b0f0f;
+    background-image: radial-gradient(circle at 50% 50%, rgba(0, 255, 255, 0.03) 0%, transparent 50%), linear-gradient(rgba(11, 15, 15, 0.9), rgba(11, 15, 15, 0.9)), url(https://lh3.googleusercontent.com/aida-public/AB6AXuA_c0MAXnYBMzMR_Bvgh3UVDFUogTQ4dLjQAjQMV9RuHVYVUwcVAz3ZZQYSWF12Iw9QJQv7BkptLAR5q7J9ll5T68UtvjMqLaHfJRom8uWq8VdEKf4byn3HhuKc2o_wVCR0Km3mia2E2ZxLYYLYq7RCOA3pQrZQH6vQdfnPBkXMtVO4AyvnqsluxVF3tBLhdTHQcWSwwOI66fa4PaZD7dk0b5UQfETGbYGbuINeOq3wHixxdq4TnIPKbvhKMH_TOz23NBwi3rX3QFNX);
+    background-size: cover;
+    background-attachment: fixed;
+    font-family: "Manrope", sans-serif
+    }
+.glass-panel {
+    background: rgba(21, 27, 26, 0.6);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 255, 255, 0.1)
+    }
+.hud-bracket-tl {
+    border-top: 2px solid #0ff;
+    border-left: 2px solid #0ff;
+    width: 10px;
+    height: 10px;
+    position: absolute;
+    top: -1px;
+    left: -1px
+    }
+.hud-bracket-br {
+    border-bottom: 2px solid #0ff;
+    border-right: 2px solid #0ff;
+    width: 10px;
+    height: 10px;
+    position: absolute;
+    bottom: -1px;
+    right: -1px
+    }
+.pulse-dot {
+    box-shadow: 0 0 8px #0ff
+    }
+.material-symbols-outlined {
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24
+    }</style>
+</head>
+<body class="text-on-surface selection:bg-primary-container selection:text-on-primary-container overflow-hidden h-screen">
+<!-- TopNavBar -->
+<nav class="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-10 py-6 bg-zinc-950/60 backdrop-blur-lg border-b border-cyan-500/20 shadow-[0_4px_20px_rgba(0,255,255,0.05)]">
+<div class="flex items-center gap-8">
+<div class="text-xl font-black tracking-tighter text-cyan-400 uppercase font-headline">CANvision Native Garage</div>
+<button class="bg-cyan-500/10 border border-cyan-500/40 px-4 py-2 flex items-center gap-2 hover:bg-cyan-500/20 hover:text-cyan-300 transition-all active:scale-95 duration-150 cursor-pointer">
+<span class="material-symbols-outlined text-sm">arrow_back</span>
+<span class="font-headline tracking-widest uppercase text-xs font-bold text-cyan-400">Back To Main Screen</span>
+</button>
+</div>
+<div class="hidden md:flex items-center gap-8">
+<a class="font-headline tracking-widest uppercase text-xs font-bold text-cyan-400 border-b-2 border-cyan-400 pb-2 transition-all duration-300" href="#">Dashboard</a>
+<a class="font-headline tracking-widest uppercase text-xs font-bold text-zinc-500 hover:text-zinc-200 pb-2 transition-all" href="#">Telemetry</a>
+<a class="font-headline tracking-widest uppercase text-xs font-bold text-zinc-500 hover:text-zinc-200 pb-2 transition-all" href="#">Diagnostics</a>
+<a class="font-headline tracking-widest uppercase text-xs font-bold text-zinc-500 hover:text-zinc-200 pb-2 transition-all" href="#">Log Playback</a>
+<a class="font-headline tracking-widest uppercase text-xs font-bold text-zinc-500 hover:text-zinc-200 pb-2 transition-all" href="#">Analytics</a>
+<a class="font-headline tracking-widest uppercase text-xs font-bold text-zinc-500 hover:text-zinc-200 pb-2 transition-all" href="#">Settings</a>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-3 bg-surface-container-high px-4 py-2 border border-outline-variant/20">
+<span class="material-symbols-outlined text-cyan-400" style="font-variation-settings: 'FILL' 1;">account_box</span>
+<span class="font-headline text-[10px] tracking-widest uppercase font-bold text-on-surface-variant">Admin_CMD_01</span>
+</div>
+</div>
+</nav>
+<!-- Main Content Grid -->
+<main class="pt-28 pb-10 px-10 h-full grid grid-cols-12 gap-6 overflow-hidden">
+<!-- Left: Vehicle Snapshot -->
+<section class="col-span-3 space-y-6">
+<div class="glass-panel p-6 relative">
+<div class="hud-bracket-tl"></div>
+<div class="hud-bracket-br"></div>
+<h3 class="font-headline text-xs tracking-[0.2em] uppercase text-on-surface-variant mb-6 flex items-center justify-between">
+                    Vehicle Snapshot
+                    <span class="flex h-2 w-2 rounded-full bg-primary-container pulse-dot animate-pulse"></span>
+</h3>
+<div class="space-y-4">
+<div class="bg-surface-container-low p-4 border-l-2 border-primary-container">
+<label class="font-headline text-[9px] uppercase tracking-tighter text-zinc-500 block mb-1">Active Profile</label>
+<div class="font-headline text-lg font-bold text-cyan-400">MODEL_S_PLAID_G2</div>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="bg-surface-container-low p-3 border border-outline-variant/10">
+<label class="font-headline text-[9px] uppercase tracking-tighter text-zinc-500 block mb-1">Connection State</label>
+<div class="font-bold text-sm text-on-surface">UPLINK_ESTABLISHED</div>
+</div>
+<div class="bg-surface-container-low p-3 border border-outline-variant/10">
+<label class="font-headline text-[9px] uppercase tracking-tighter text-zinc-500 block mb-1">Operation Mode</label>
+<div class="font-bold text-sm text-primary-container">REAL_TIME</div>
+</div>
+</div>
+</div>
+<div class="mt-8 space-y-3">
+<button class="w-full bg-cyan-500/10 border border-cyan-500/40 px-4 py-3 flex items-center justify-center gap-3 hover:bg-cyan-500/20 hover:text-cyan-300 transition-all active:scale-95 font-headline tracking-widest uppercase text-xs font-bold text-cyan-400">
+<span class="material-symbols-outlined text-base">play_arrow</span>
+                        Start Session
+                    </button>
+<button class="w-full bg-surface-container-high border border-outline-variant/30 px-4 py-3 flex items-center justify-center gap-3 hover:bg-surface-variant transition-all active:scale-95 font-headline tracking-widest uppercase text-xs font-bold text-zinc-400">
+<span class="material-symbols-outlined text-base">stop</span>
+                        Stop Session
+                    </button>
+</div>
+</div>
+<div class="glass-panel p-6">
+<h3 class="font-headline text-xs tracking-[0.2em] uppercase text-on-surface-variant mb-6">Quick Launch</h3>
+<div class="space-y-3">
+<button class="w-full bg-surface-container border border-cyan-500/20 px-4 py-3 flex items-center justify-between group hover:border-cyan-500/50 transition-all">
+<span class="font-headline tracking-widest uppercase text-[10px] font-bold text-zinc-300">Open Telemetry</span>
+<span class="material-symbols-outlined text-cyan-400 group-hover:translate-x-1 transition-transform">monitoring</span>
+</button>
+<button class="w-full bg-surface-container border border-cyan-500/20 px-4 py-3 flex items-center justify-between group hover:border-cyan-500/50 transition-all">
+<span class="font-headline tracking-widest uppercase text-[10px] font-bold text-zinc-300">Run Diagnostics</span>
+<span class="material-symbols-outlined text-cyan-400 group-hover:translate-x-1 transition-transform">biotech</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Center: Vehicle Preview -->
+<section class="col-span-6 flex flex-col gap-6">
+<div class="glass-panel flex-grow relative overflow-hidden flex flex-col items-center justify-center">
+<div class="absolute top-6 left-6 flex flex-col gap-1">
+<span class="font-headline text-[10px] tracking-widest uppercase font-bold text-cyan-500/60">Live Viewport</span>
+<span class="h-[1px] w-12 bg-cyan-500/40"></span>
+</div>
+<div class="relative w-full h-[240px] flex items-center justify-center mb-6">
+<div class="absolute inset-0 bg-gradient-to-t from-cyan-500/10 to-transparent"></div>
+<img alt="Vehicle Preview" class="w-3/4 object-contain mix-blend-screen opacity-80" data-alt="Futuristic electric sports car chassis with glowing blue light wireframe lines in a dark industrial garage setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC7Sbfep5cZhtDswjNtjkPlNDzJTy445baKUREicstFPXSmVqHsMVvZG6g-pmeaWHdNjlFdb3A7gdHcjJP1wkQSqPnjle2fMKDpbHK4gXDDPZR99SpYas-idrGJuZjq27vSn_44AWKMLPT_Mi1xqYwqusuwnnvcMnxEovsXv_BFAlsgGKFA6HnmPa8qX_sKuYCO3Qt48nacQGsQTyv6as79FxG5vV9hsLSMhoFZH5f9q8n637IKZ21lRoR6Hq4nwd6A54qxBw6YkL3a"/>
+<!-- HUD Elements overlaying image -->
+<div class="absolute top-0 right-10 flex flex-col items-end gap-2 text-right">
+<div class="text-4xl font-headline font-black text-cyan-400 tracking-tighter">88<span class="text-xl">%</span></div>
+<div class="font-headline text-[10px] tracking-widest uppercase font-bold text-zinc-500">Main Battery SOC</div>
+</div>
+</div>
+<div class="grid grid-cols-4 w-full px-8 pb-8 gap-4">
+<div class="bg-surface-container-low/50 border-t border-cyan-500/30 p-4">
+<label class="font-headline text-[9px] uppercase tracking-tighter text-zinc-500 block mb-1">Thermal State</label>
+<div class="flex items-center gap-2">
+<span class="text-sm font-bold">NOMINAL</span>
+<span class="text-[10px] text-cyan-400">32°C</span>
+</div>
+</div>
+<div class="bg-surface-container-low/50 border-t border-cyan-500/30 p-4">
+<label class="font-headline text-[9px] uppercase tracking-tighter text-zinc-500 block mb-1">Readiness</label>
+<div class="flex items-center gap-2 text-primary-container">
+<span class="material-symbols-outlined text-xs">check_circle</span>
+<span class="text-sm font-bold">STABLE</span>
+</div>
+</div>
+<div class="bg-surface-container-low/50 border-t border-cyan-500/30 p-4 col-span-2">
+<label class="font-headline text-[9px] uppercase tracking-tighter text-zinc-500 block mb-1">Last Sync Timestamp</label>
+<div class="font-mono text-xs text-on-surface-variant">2023-11-24T14:32:01.045Z</div>
+</div>
+</div>
+</div>
+<!-- Bottom Summary Grid -->
+<div class="grid grid-cols-6 gap-3 h-32">
+<div class="glass-panel p-4 flex flex-col justify-between border-l-2 border-primary-container">
+<span class="font-headline text-[9px] uppercase tracking-widest text-zinc-500">SOC</span>
+<span class="text-xl font-headline font-black text-on-surface">88<span class="text-xs text-zinc-500 ml-1">%</span></span>
+</div>
+<div class="glass-panel p-4 flex flex-col justify-between">
+<span class="font-headline text-[9px] uppercase tracking-widest text-zinc-500">RPM</span>
+<span class="text-xl font-headline font-black text-on-surface">0</span>
+</div>
+<div class="glass-panel p-4 flex flex-col justify-between">
+<span class="font-headline text-[9px] uppercase tracking-widest text-zinc-500">Speed</span>
+<span class="text-xl font-headline font-black text-on-surface">0<span class="text-xs text-zinc-500 ml-1">km/h</span></span>
+</div>
+<div class="glass-panel p-4 flex flex-col justify-between">
+<span class="font-headline text-[9px] uppercase tracking-widest text-zinc-500">Temp</span>
+<span class="text-xl font-headline font-black text-on-surface">24<span class="text-xs text-zinc-500 ml-1">°C</span></span>
+</div>
+<div class="glass-panel p-4 flex flex-col justify-between">
+<span class="font-headline text-[9px] uppercase tracking-widest text-zinc-500">Volt</span>
+<span class="text-xl font-headline font-black text-on-surface">401<span class="text-xs text-zinc-500 ml-1">v</span></span>
+</div>
+<div class="glass-panel p-4 flex flex-col justify-between">
+<span class="font-headline text-[9px] uppercase tracking-widest text-zinc-500">GPS</span>
+<span class="material-symbols-outlined text-cyan-400">location_on</span>
+</div>
+</div>
+</section>
+<!-- Right: Health Cards -->
+<section class="col-span-3 space-y-4">
+<h3 class="font-headline text-xs tracking-[0.2em] uppercase text-on-surface-variant px-2">Subsystem Health</h3>
+<div class="glass-panel p-5 flex items-center gap-4 group">
+<div class="h-12 w-12 bg-surface-container flex items-center justify-center border border-cyan-500/20 group-hover:border-cyan-500 transition-all">
+<span class="material-symbols-outlined text-cyan-400" style="font-variation-settings: 'FILL' 1;">battery_charging_full</span>
+</div>
+<div>
+<div class="font-headline text-[10px] tracking-widest uppercase font-bold text-zinc-500">Battery Health</div>
+<div class="text-sm font-bold text-on-surface">98.4% Efficiency</div>
+</div>
+</div>
+<div class="glass-panel p-5 flex items-center gap-4 group">
+<div class="h-12 w-12 bg-surface-container flex items-center justify-center border border-cyan-500/20 group-hover:border-cyan-500 transition-all">
+<span class="material-symbols-outlined text-cyan-400">settings_input_component</span>
+</div>
+<div>
+<div class="font-headline text-[10px] tracking-widest uppercase font-bold text-zinc-500">Inverter State</div>
+<div class="text-sm font-bold text-on-surface">Phase L1-L3 Active</div>
+</div>
+</div>
+<div class="glass-panel p-5 flex items-center gap-4 group">
+<div class="h-12 w-12 bg-surface-container flex items-center justify-center border border-cyan-500/20 group-hover:border-cyan-500 transition-all">
+<span class="material-symbols-outlined text-cyan-400">ac_unit</span>
+</div>
+<div>
+<div class="font-headline text-[10px] tracking-widest uppercase font-bold text-zinc-500">Cooling Circuit</div>
+<div class="text-sm font-bold text-on-surface">Flow: 4.2 L/min</div>
+</div>
+</div>
+<div class="glass-panel p-5 flex items-center gap-4 group">
+<div class="h-12 w-12 bg-surface-container flex items-center justify-center border border-cyan-500/20 group-hover:border-cyan-500 transition-all">
+<span class="material-symbols-outlined text-cyan-400">wifi_tethering</span>
+</div>
+<div>
+<div class="font-headline text-[10px] tracking-widest uppercase font-bold text-zinc-500">Communication</div>
+<div class="text-sm font-bold text-on-surface">Latency: 12ms</div>
+</div>
+</div>
+<!-- Mini System Log -->
+<div class="glass-panel flex-grow p-4 mt-4 h-full max-h-[160px] overflow-hidden flex flex-col">
+<div class="font-headline text-[9px] uppercase tracking-widest text-zinc-500 mb-2 border-b border-outline-variant/10 pb-2">Console_Output</div>
+<div class="space-y-1 font-mono text-[10px] text-cyan-400/70 overflow-y-auto">
+<div>[14:32:01] Initializing CAN bus...</div>
+<div>[14:32:02] Authenticating ECU_07...</div>
+<div class="text-zinc-500">[14:32:03] Stream handshake successful.</div>
+<div>[14:32:05] Heartbeat established.</div>
+</div>
+</div>
+</section>
+</main>
+<!-- UI Accents (HUD Corners) -->
+<div class="fixed bottom-6 left-6 pointer-events-none opacity-40">
+<div class="font-headline text-[9px] text-cyan-500/40 uppercase tracking-widest">Sys_Status: 0x00FF_OK</div>
+</div>
+<div class="fixed bottom-6 right-6 pointer-events-none opacity-40 text-right">
+<div class="font-headline text-[9px] text-cyan-500/40 uppercase tracking-widest">Version: 4.2.0-STABLE</div>
+</div>
+</body></html>

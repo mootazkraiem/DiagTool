@@ -1,0 +1,1 @@
+[{"timestamp": 0.0, "can_id": 0, "risk_level": "LOW", "score": 0.45000000000000007, "reason": "timing=1.000, payload=0.000, ml=0.500, persistence=0.000, freq=1000000Hz, can_id_entropy=0.000"}]

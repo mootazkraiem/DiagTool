@@ -1,0 +1,108 @@
+VERSION ""
+
+
+NS_ :
+    NS_DESC_
+    CM_
+    BA_DEF_
+    BA_
+    VAL_
+    CAT_DEF_
+    CAT_
+    FILTER
+    BA_DEF_DEF_
+    EV_DATA_
+    ENVVAR_DATA_
+    SGTYPE_
+    SGTYPE_VAL_
+    BA_DEF_SGTYPE_
+    BA_SGTYPE_
+    SIG_TYPE_REF_
+    VAL_TABLE_
+    SIG_GROUP_
+    SIG_VALTYPE_
+    SIGTYPE_VALTYPE_
+    BO_TX_BU_
+    BA_DEF_REL_
+    BA_REL_
+    BA_DEF_DEF_REL_
+    BU_SG_REL_
+    BU_EV_REL_
+    BU_BO_REL_
+    SG_MUL_VAL_
+
+BS_:
+
+BU_:
+
+
+BO_ 17 GnssStatus: 1 Vector__XXX
+ SG_ FixType : 0|3@1+ (1,0) [0|5] "" Vector__XXX
+ SG_ Satellites : 3|5@1+ (1,0) [0|31] "" Vector__XXX
+
+BO_ 18 GnssTime: 6 Vector__XXX
+ SG_ TimeValid : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ TimeConfirmed : 1|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ Epoch : 8|40@1+ (0.001,1577840400) [0|0] "sec" Vector__XXX
+
+BO_ 19 GnssPos: 8 Vector__XXX
+ SG_ PositionValid : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ Latitude : 1|28@1+ (1e-06,-90) [-90|90] "deg" Vector__XXX
+ SG_ Longitude : 29|29@1+ (1e-06,-180) [-180|180] "deg" Vector__XXX
+ SG_ PositionAccuracy : 58|6@1+ (1,0) [0|63] "m" Vector__XXX
+
+BO_ 20 GnssAltitude: 4 Vector__XXX
+ SG_ AltitudeValid : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ Altitude : 1|18@1+ (0.1,-6000) [-6000|20000] "m" Vector__XXX
+ SG_ AltitudeAccuracy : 19|13@1+ (1,0) [0|8000] "m" Vector__XXX
+
+BO_ 21 GnssAttitude: 8 Vector__XXX
+ SG_ AttitudeValid : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ Roll : 1|12@1+ (0.1,-180) [-180|180] "deg" Vector__XXX
+ SG_ RollAccuracy : 13|9@1+ (0.1,0) [0|50] "deg" Vector__XXX
+ SG_ Pitch : 22|12@1+ (0.1,-90) [-90|90] "deg" Vector__XXX
+ SG_ PitchAccuracy : 34|9@1+ (0.1,0) [0|50] "deg" Vector__XXX
+ SG_ Heading : 43|12@1+ (0.1,0) [0|360] "deg" Vector__XXX
+ SG_ HeadingAccuracy : 55|9@1+ (0.1,0) [0|50] "deg" Vector__XXX
+
+BO_ 22 GnssDistance: 8 Vector__XXX
+ SG_ DistanceValid : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ DistanceTrip : 1|22@1+ (1,0) [0|4194303] "m" Vector__XXX
+ SG_ DistanceAccuracy : 23|19@1+ (1,0) [0|524287] "m" Vector__XXX
+ SG_ DistanceTotal : 42|22@1+ (1,0) [0|4194303] "km" Vector__XXX
+
+BO_ 23 GnssSpeed: 5 Vector__XXX
+ SG_ SpeedValid : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ Speed : 1|20@1+ (0.001,0) [0|1048.575] "m/s" Vector__XXX
+ SG_ SpeedAccuracy : 21|19@1+ (0.001,0) [0|524.287] "m/s" Vector__XXX
+
+BO_ 24 GnssGeofence: 2 Vector__XXX
+ SG_ FenceValid : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ FenceCombined : 1|2@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ Fence1 : 8|2@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ Fence2 : 10|2@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ Fence3 : 12|2@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ Fence4 : 14|2@1+ (1,0) [0|1] "" Vector__XXX
+
+BO_ 25 ImuData: 8 Vector__XXX
+ SG_ ImuValid : 0|1@1+ (1,0) [0|1] "" Vector__XXX
+ SG_ AccelerationX : 1|10@1+ (0.125,-64) [-64|63.875] "m/s^2" Vector__XXX
+ SG_ AccelerationY : 11|10@1+ (0.125,-64) [-64|63.875] "m/s^2" Vector__XXX
+ SG_ AccelerationZ : 21|10@1+ (0.125,-64) [-64|63.875] "m/s^2" Vector__XXX
+ SG_ AngularRateX : 31|11@1+ (0.25,-256) [-256|255.75] "deg/s" Vector__XXX
+ SG_ AngularRateY : 42|11@1+ (0.25,-256) [-256|255.75] "deg/s" Vector__XXX
+ SG_ AngularRateZ : 53|11@1+ (0.25,-256) [-256|255.75] "deg/s" Vector__XXX
+
+
+
+BA_DEF_  "BusType" STRING;
+BA_DEF_  "ProtocolType" STRING;
+BA_DEF_ BO_  "MessageIgnore" INT 0 1;
+BA_DEF_ SG_  "SignalIgnore" INT 0 1;
+BA_DEF_DEF_  "BusType" "";
+BA_DEF_DEF_  "ProtocolType" "";
+BA_DEF_DEF_  "MessageIgnore" 0;
+BA_DEF_DEF_  "SignalIgnore" 0;
+BA_ "BusType" "CAN";
+BA_ "ProtocolType" "";
+

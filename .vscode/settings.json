@@ -1,0 +1,5 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}\\can_env_313\\Scripts\\python.exe",
+  "python.terminal.activateEnvironment": true,
+  "gitdoc.enabled": true
+}

@@ -1,0 +1,509 @@
+<UserControl
+    x:Class="CANvision.Native.UI.HomeView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid x:Name="RootGrid" Background="#080d0d">
+
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="CardFlipStates">
+
+                <!-- Default: both cards visible, normal content shown -->
+                <VisualState x:Name="ChooserMode">
+                    <Storyboard>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="LiveCard"
+                                                       Storyboard.TargetProperty="Visibility">
+                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="OfflineCard"
+                                                       Storyboard.TargetProperty="Visibility">
+                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <DoubleAnimation Storyboard.TargetName="LiveCard"
+                                         Storyboard.TargetProperty="Opacity"
+                                         To="1" Duration="0"/>
+                        <DoubleAnimation Storyboard.TargetName="OfflineCard"
+                                         Storyboard.TargetProperty="Opacity"
+                                         To="1" Duration="0"/>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="LiveNormal"
+                                                       Storyboard.TargetProperty="Visibility">
+                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="LiveConnectingPanel"
+                                                       Storyboard.TargetProperty="Visibility">
+                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Collapsed}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="OfflineNormal"
+                                                       Storyboard.TargetProperty="Visibility">
+                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="OfflineImportingPanel"
+                                                       Storyboard.TargetProperty="Visibility">
+                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Collapsed}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                    </Storyboard>
+                </VisualState>
+
+                <!-- Live session selected: offline card collapsed, live card shows progress -->
+                <VisualState x:Name="LiveConnecting">
+                    <Storyboard>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="OfflineCard"
+                                                       Storyboard.TargetProperty="Visibility">
+                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Collapsed}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="LiveNormal"
+                                                       Storyboard.TargetProperty="Visibility">
+                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Collapsed}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="LiveConnectingPanel"
+                                                       Storyboard.TargetProperty="Visibility">
+                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                    </Storyboard>
+                </VisualState>
+
+                <!-- Offline import selected: live card collapsed, offline card shows progress -->
+                <VisualState x:Name="OfflineImporting">
+                    <Storyboard>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="LiveCard"
+                                                       Storyboard.TargetProperty="Visibility">
+                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Collapsed}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="OfflineNormal"
+                                                       Storyboard.TargetProperty="Visibility">
+                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Collapsed}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="OfflineImportingPanel"
+                                                       Storyboard.TargetProperty="Visibility">
+                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
+                        </ObjectAnimationUsingKeyFrames>
+                    </Storyboard>
+                </VisualState>
+
+                <VisualStateGroup.Transitions>
+
+                    <!-- ChooserMode → LiveConnecting: offline fades, live card flips -->
+                    <VisualTransition From="ChooserMode" To="LiveConnecting">
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetName="OfflineCard"
+                                             Storyboard.TargetProperty="Opacity"
+                                             To="0" Duration="0:0:0.25"/>
+                            <DoubleAnimation Storyboard.TargetName="LiveCardScale"
+                                             Storyboard.TargetProperty="ScaleX"
+                                             From="1" To="0" Duration="0:0:0.15"/>
+                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="LiveNormal"
+                                                           Storyboard.TargetProperty="Visibility">
+                                <DiscreteObjectKeyFrame KeyTime="0:0:0.15" Value="{x:Static Visibility.Collapsed}"/>
+                            </ObjectAnimationUsingKeyFrames>
+                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="LiveConnectingPanel"
+                                                           Storyboard.TargetProperty="Visibility">
+                                <DiscreteObjectKeyFrame KeyTime="0:0:0.15" Value="{x:Static Visibility.Visible}"/>
+                            </ObjectAnimationUsingKeyFrames>
+                            <DoubleAnimation Storyboard.TargetName="LiveCardScale"
+                                             Storyboard.TargetProperty="ScaleX"
+                                             From="0" To="1" BeginTime="0:0:0.15" Duration="0:0:0.15"/>
+                        </Storyboard>
+                    </VisualTransition>
+
+                    <!-- LiveConnecting → ChooserMode: live card flips back, offline fades in -->
+                    <VisualTransition From="LiveConnecting" To="ChooserMode">
+                        <Storyboard>
+                            <!-- Restore OfflineCard visibility at t=0 so opacity fade-in works -->
+                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="OfflineCard"
+                                                           Storyboard.TargetProperty="Visibility">
+                                <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
+                            </ObjectAnimationUsingKeyFrames>
+                            <DoubleAnimation Storyboard.TargetName="LiveCardScale"
+                                             Storyboard.TargetProperty="ScaleX"
+                                             From="1" To="0" Duration="0:0:0.15"/>
+                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="LiveConnectingPanel"
+                                                           Storyboard.TargetProperty="Visibility">
+                                <DiscreteObjectKeyFrame KeyTime="0:0:0.15" Value="{x:Static Visibility.Collapsed}"/>
+                            </ObjectAnimationUsingKeyFrames>
+                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="LiveNormal"
+                                                           Storyboard.TargetProperty="Visibility">
+                                <DiscreteObjectKeyFrame KeyTime="0:0:0.15" Value="{x:Static Visibility.Visible}"/>
+                            </ObjectAnimationUsingKeyFrames>
+                            <DoubleAnimation Storyboard.TargetName="LiveCardScale"
+                                             Storyboard.TargetProperty="ScaleX"
+                                             From="0" To="1" BeginTime="0:0:0.15" Duration="0:0:0.15"/>
+                            <DoubleAnimation Storyboard.TargetName="OfflineCard"
+                                             Storyboard.TargetProperty="Opacity"
+                                             From="0" To="1" BeginTime="0:0:0.15" Duration="0:0:0.2"/>
+                        </Storyboard>
+                    </VisualTransition>
+
+                    <!-- ChooserMode → OfflineImporting: live fades, offline card flips -->
+                    <VisualTransition From="ChooserMode" To="OfflineImporting">
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetName="LiveCard"
+                                             Storyboard.TargetProperty="Opacity"
+                                             To="0" Duration="0:0:0.25"/>
+                            <DoubleAnimation Storyboard.TargetName="OfflineCardScale"
+                                             Storyboard.TargetProperty="ScaleX"
+                                             From="1" To="0" Duration="0:0:0.15"/>
+                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="OfflineNormal"
+                                                           Storyboard.TargetProperty="Visibility">
+                                <DiscreteObjectKeyFrame KeyTime="0:0:0.15" Value="{x:Static Visibility.Collapsed}"/>
+                            </ObjectAnimationUsingKeyFrames>
+                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="OfflineImportingPanel"
+                                                           Storyboard.TargetProperty="Visibility">
+                                <DiscreteObjectKeyFrame KeyTime="0:0:0.15" Value="{x:Static Visibility.Visible}"/>
+                            </ObjectAnimationUsingKeyFrames>
+                            <DoubleAnimation Storyboard.TargetName="OfflineCardScale"
+                                             Storyboard.TargetProperty="ScaleX"
+                                             From="0" To="1" BeginTime="0:0:0.15" Duration="0:0:0.15"/>
+                        </Storyboard>
+                    </VisualTransition>
+
+                    <!-- OfflineImporting → ChooserMode: offline card flips back, live fades in -->
+                    <VisualTransition From="OfflineImporting" To="ChooserMode">
+                        <Storyboard>
+                            <!-- Restore LiveCard visibility at t=0 so opacity fade-in works -->
+                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="LiveCard"
+                                                           Storyboard.TargetProperty="Visibility">
+                                <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
+                            </ObjectAnimationUsingKeyFrames>
+                            <DoubleAnimation Storyboard.TargetName="OfflineCardScale"
+                                             Storyboard.TargetProperty="ScaleX"
+                                             From="1" To="0" Duration="0:0:0.15"/>
+                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="OfflineImportingPanel"
+                                                           Storyboard.TargetProperty="Visibility">
+                                <DiscreteObjectKeyFrame KeyTime="0:0:0.15" Value="{x:Static Visibility.Collapsed}"/>
+                            </ObjectAnimationUsingKeyFrames>
+                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="OfflineNormal"
+                                                           Storyboard.TargetProperty="Visibility">
+                                <DiscreteObjectKeyFrame KeyTime="0:0:0.15" Value="{x:Static Visibility.Visible}"/>
+                            </ObjectAnimationUsingKeyFrames>
+                            <DoubleAnimation Storyboard.TargetName="OfflineCardScale"
+                                             Storyboard.TargetProperty="ScaleX"
+                                             From="0" To="1" BeginTime="0:0:0.15" Duration="0:0:0.15"/>
+                            <DoubleAnimation Storyboard.TargetName="LiveCard"
+                                             Storyboard.TargetProperty="Opacity"
+                                             From="0" To="1" BeginTime="0:0:0.15" Duration="0:0:0.2"/>
+                        </Storyboard>
+                    </VisualTransition>
+
+                </VisualStateGroup.Transitions>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+        <!-- Radial Glow -->
+        <Ellipse HorizontalAlignment="Center" VerticalAlignment="Center"
+                 Width="1000" Height="1000" IsHitTestVisible="False">
+            <Ellipse.Fill>
+                <RadialGradientBrush>
+                    <GradientStop Color="#1200FFFF" Offset="0"/>
+                    <GradientStop Color="Transparent" Offset="1"/>
+                </RadialGradientBrush>
+            </Ellipse.Fill>
+        </Ellipse>
+
+        <!-- Two-card chooser -->
+        <Grid>
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Center" VerticalAlignment="Center">
+
+                <!-- ── LIVE SESSION card ─────────────────────────────────── -->
+                <Border x:Name="LiveCard"
+                        Width="460" Height="400" Padding="48,40"
+                        Background="#EB040C0C" BorderBrush="#3300FFFF"
+                        BorderThickness="1" CornerRadius="4" Margin="8,0"
+                        RenderTransformOrigin="0.5,0.5">
+                    <Border.RenderTransform>
+                        <ScaleTransform x:Name="LiveCardScale" ScaleX="1"/>
+                    </Border.RenderTransform>
+                    <Grid>
+                        <!-- Corner brackets always visible -->
+                        <Path Data="M 0,32 L 0,0 L 32,0"
+                              Stroke="#5900FFFF" StrokeThickness="1"
+                              HorizontalAlignment="Left" VerticalAlignment="Top"
+                              Margin="-48,-40,0,0" IsHitTestVisible="False"/>
+                        <Path Data="M 32,0 L 32,32 L 0,32"
+                              Stroke="#5900FFFF" StrokeThickness="1"
+                              HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                              Margin="0,0,-48,-40" IsHitTestVisible="False"/>
+
+                        <!-- Face A: Normal card content -->
+                        <Grid x:Name="LiveNormal">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Text="MODE 01"
+                                       Foreground="#CC00FFFF" FontSize="10"
+                                       FontFamily="Space Grotesk" Margin="0,0,0,20"/>
+
+                            <TextBlock Grid.Row="1" Text="LIVE SESSION"
+                                       Foreground="#ffffff" FontSize="38" FontWeight="Bold"
+                                       FontFamily="Space Grotesk">
+                                <TextBlock.Effect>
+                                    <DropShadowEffect Color="#00ffff" BlurRadius="20"
+                                                      Opacity="0.4" ShadowDepth="0"/>
+                                </TextBlock.Effect>
+                            </TextBlock>
+
+                            <TextBlock Grid.Row="2" Foreground="#8a9a9a" FontSize="13"
+                                       FontFamily="Manrope" TextWrapping="Wrap"
+                                       LineHeight="23.4" VerticalAlignment="Center"
+                                       Margin="0,20,0,0"
+                                       Text="Real-time CAN bus monitoring with live anomaly detection, signal decoding, and AI-powered threat analysis."/>
+
+                            <TextBlock Grid.Row="3" FontSize="10" FontFamily="Manrope"
+                                       Margin="0,0,0,20">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Text" Value="● BACKEND OFFLINE"/>
+                                        <Setter Property="Foreground" Value="#5900FFFF"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding BackendStatusText}" Value="CONNECTED">
+                                                <Setter Property="Text" Value="● BACKEND CONNECTED"/>
+                                                <Setter Property="Foreground" Value="#56F0AC"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+
+                            <Button Grid.Row="4"
+                                    IsEnabled="{Binding CanStartLive}"
+                                    Style="{StaticResource HudActionButtonStyle}"
+                                    HorizontalAlignment="Stretch"
+                                    Content="START LIVE SESSION"
+                                    Command="{Binding LaunchOnlineDiagnosisCommand}"/>
+                        </Grid>
+
+                        <!-- Face B: Connecting progress panel -->
+                        <Grid x:Name="LiveConnectingPanel" Visibility="Collapsed">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Text="MODE 01"
+                                       Foreground="#CC00FFFF" FontSize="10"
+                                       FontFamily="Space Grotesk" Margin="0,0,0,20"/>
+
+                            <TextBlock Grid.Row="1" Text="ESTABLISHING LINK"
+                                       Foreground="#ffffff" FontSize="28" FontWeight="Bold"
+                                       FontFamily="Space Grotesk">
+                                <TextBlock.Effect>
+                                    <DropShadowEffect Color="#00ffff" BlurRadius="20"
+                                                      Opacity="0.6" ShadowDepth="0"/>
+                                </TextBlock.Effect>
+                            </TextBlock>
+
+                            <StackPanel Grid.Row="2" VerticalAlignment="Center" Margin="0,24,0,0">
+                                <ProgressBar IsIndeterminate="True" Height="2"
+                                             Foreground="#00FFFF" Background="#0D2020"
+                                             BorderThickness="0" Margin="0,0,0,20"/>
+                                <TextBlock FontSize="11" FontFamily="Manrope" Margin="0,0,0,8">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="BACKEND   OFFLINE"/>
+                                            <Setter Property="Foreground" Value="#5900FFFF"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding BackendStatusText}" Value="CONNECTED">
+                                                    <Setter Property="Text" Value="BACKEND   CONNECTED"/>
+                                                    <Setter Property="Foreground" Value="#56F0AC"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Text="INTERFACE   INITIALIZING..."
+                                           FontSize="11" FontFamily="Manrope"
+                                           Foreground="#5900FFFF"/>
+                            </StackPanel>
+
+                            <TextBlock Grid.Row="3" Text=" " Margin="0,0,0,20"/>
+
+                            <Button Grid.Row="4"
+                                    Style="{StaticResource HudActionButtonStyle}"
+                                    HorizontalAlignment="Stretch"
+                                    Content="CANCEL"
+                                    Command="{Binding CancelLiveSessionCommand}"/>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- ── OFFLINE IMPORT card ──────────────────────────────── -->
+                <Border x:Name="OfflineCard"
+                        Width="460" Height="400" Padding="48,40"
+                        Background="#EB040C0C" BorderBrush="#3300FFFF"
+                        BorderThickness="1" CornerRadius="4" Margin="8,0"
+                        RenderTransformOrigin="0.5,0.5">
+                    <Border.RenderTransform>
+                        <ScaleTransform x:Name="OfflineCardScale" ScaleX="1"/>
+                    </Border.RenderTransform>
+                    <Grid>
+                        <!-- Corner brackets always visible -->
+                        <Path Data="M 0,32 L 0,0 L 32,0"
+                              Stroke="#5900FFFF" StrokeThickness="1"
+                              HorizontalAlignment="Left" VerticalAlignment="Top"
+                              Margin="-48,-40,0,0" IsHitTestVisible="False"/>
+                        <Path Data="M 32,0 L 32,32 L 0,32"
+                              Stroke="#5900FFFF" StrokeThickness="1"
+                              HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                              Margin="0,0,-48,-40" IsHitTestVisible="False"/>
+
+                        <!-- Face A: Normal card content -->
+                        <Grid x:Name="OfflineNormal">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Text="MODE 02"
+                                       Foreground="#CC00FFFF" FontSize="10"
+                                       FontFamily="Space Grotesk" Margin="0,0,0,20"/>
+
+                            <TextBlock Grid.Row="1" Text="OFFLINE IMPORT"
+                                       Foreground="#ffffff" FontSize="38" FontWeight="Bold"
+                                       FontFamily="Space Grotesk">
+                                <TextBlock.Effect>
+                                    <DropShadowEffect Color="#00ffff" BlurRadius="20"
+                                                      Opacity="0.4" ShadowDepth="0"/>
+                                </TextBlock.Effect>
+                            </TextBlock>
+
+                            <TextBlock Grid.Row="2" Foreground="#8a9a9a" FontSize="13"
+                                       FontFamily="Manrope" TextWrapping="Wrap"
+                                       LineHeight="23.4" VerticalAlignment="Center"
+                                       Margin="0,20,0,0"
+                                       Text="Import a recorded CAN log file and run forensic ML analysis to detect anomalies and generate AI-powered attack explanations."/>
+
+                            <TextBlock Grid.Row="3" FontSize="10" FontFamily="Manrope"
+                                       Margin="0,0,0,20" Text="{Binding HealthModelText}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#5900FFFF"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding CanDiveIn}" Value="True">
+                                                <Setter Property="Foreground" Value="#56F0AC"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+
+                            <Button Grid.Row="4"
+                                    Style="{StaticResource HudActionButtonStyle}"
+                                    HorizontalAlignment="Stretch"
+                                    Content="IMPORT LOG FILE"
+                                    Command="{Binding ImportReplayCommand}"/>
+                        </Grid>
+
+                        <!-- Face B: Importing/analysis progress panel -->
+                        <Grid x:Name="OfflineImportingPanel" Visibility="Collapsed">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Text="MODE 02"
+                                       Foreground="#CC00FFFF" FontSize="10"
+                                       FontFamily="Space Grotesk" Margin="0,0,0,20"/>
+
+                            <TextBlock Grid.Row="1" Text="ANALYZING FILE"
+                                       Foreground="#ffffff" FontSize="28" FontWeight="Bold"
+                                       FontFamily="Space Grotesk">
+                                <TextBlock.Effect>
+                                    <DropShadowEffect Color="#00ffff" BlurRadius="20"
+                                                      Opacity="0.6" ShadowDepth="0"/>
+                                </TextBlock.Effect>
+                            </TextBlock>
+
+                            <StackPanel Grid.Row="2" VerticalAlignment="Center" Margin="0,24,0,0">
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ProgressBar Grid.Column="0"
+                                                 Value="{Binding AnalysisProgressPercent, Mode=OneWay}"
+                                                 Maximum="100" Height="2"
+                                                 Foreground="#00FFFF" Background="#0D2020"
+                                                 BorderThickness="0" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding AnalysisProgressText}"
+                                               FontSize="10" FontFamily="Manrope"
+                                               Foreground="#00FFFF" Margin="8,0,0,0"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+                                <TextBlock Text="{Binding AnalysisStatusText}"
+                                           FontSize="11" FontFamily="Manrope"
+                                           Foreground="#5900FFFF" Margin="0,0,0,6"/>
+                                <TextBlock Text="{Binding AnalysisFramesText}"
+                                           FontSize="10" FontFamily="Manrope"
+                                           Foreground="#2A4A4A"/>
+                            </StackPanel>
+
+                            <TextBlock Grid.Row="3" Text=" " Margin="0,0,0,20"/>
+
+                            <TextBlock Grid.Row="4"
+                                       Text="PROCESSING — PLEASE WAIT"
+                                       FontSize="10" FontFamily="Space Grotesk"
+                                       FontWeight="SemiBold"
+                                       Foreground="#2A5A5A"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+            </StackPanel>
+        </Grid>
+
+        <!-- Bottom Status Bar -->
+        <Grid VerticalAlignment="Bottom" Margin="16" Height="30">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Orientation="Vertical" VerticalAlignment="Bottom">
+                <TextBlock Text="SLOT_8" FontSize="9" Foreground="#4a5568" FontFamily="Manrope"/>
+                <TextBlock Text="OCY-ALPHA" FontSize="11" Foreground="#a0aec0"
+                           FontWeight="Bold" FontFamily="Manrope"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+                <StackPanel Margin="0,0,32,0">
+                    <TextBlock Text="AUTH STATUS" FontSize="9" Foreground="#4a5568" FontFamily="Manrope"/>
+                    <TextBlock Text="SECURED ACCESS" FontSize="11" Foreground="#a0aec0"
+                               FontWeight="Bold" FontFamily="Manrope"/>
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="PROTOCOL" FontSize="9" Foreground="#4a5568" FontFamily="Manrope"/>
+                    <TextBlock Text="DIRECT-NEURAL LINK" FontSize="11" Foreground="#a0aec0"
+                               FontWeight="Bold" FontFamily="Manrope"/>
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Grid.Column="2" Orientation="Vertical" VerticalAlignment="Bottom"
+                        HorizontalAlignment="Right">
+                <TextBlock Text="BACKEND" FontSize="9" Foreground="#4a5568"
+                           FontFamily="Manrope" HorizontalAlignment="Right"/>
+                <TextBlock Text="{Binding BackendStatusText}" FontSize="11"
+                           Foreground="#a0aec0" FontWeight="Bold" FontFamily="Manrope"
+                           HorizontalAlignment="Right"/>
+            </StackPanel>
+        </Grid>
+
+    </Grid>
+</UserControl>

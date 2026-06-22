@@ -1,0 +1,33 @@
+{
+  "replay_source": "C:\\Users\\benkr\\OneDrive\\can_project\\assets\\Validation\\validation_gear_replay.csv",
+  "total_frames_processed": 29999,
+  "total_alerts": 1,
+  "alerts_per_1000_frames": 0.03333444448148272,
+  "critical_alert_rate": 0.0,
+  "high_alert_rate": 0.0,
+  "alerts_per_severity": {
+    "LOW": 1
+  },
+  "alerts_per_reason": {
+    "timing_burst": 1
+  },
+  "alerts_per_can_id": {
+    "0x0": 1
+  },
+  "alerts_per_risk_level": {
+    "LOW": 1
+  },
+  "max_fusion_score_observed": 0.45000000000000007,
+  "average_fusion_score_observed": 0.44998666622241557,
+  "runtime_duration_sec": 3.0564939999967464,
+  "fps": 9814.840140380427,
+  "alert_records": [
+    {
+      "timestamp": 0.0,
+      "can_id": 0,
+      "risk_level": "LOW",
+      "score": 0.45000000000000007,
+      "reason": "timing=1.000, payload=0.000, ml=0.500, persistence=0.000, freq=1000000Hz, can_id_entropy=0.000"
+    }
+  ]
+}
