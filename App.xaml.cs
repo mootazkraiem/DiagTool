@@ -162,6 +162,47 @@ public partial class App : Application
         return null;
     }
 
+    private void KillOrphanedBackendProcesses()
+    {
+        try
+        {
+            // Find PIDs listening on port 8765 via netstat and kill them.
+            var psi = new ProcessStartInfo("netstat", "-ano")
+            {
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+            };
+            using var ps = Process.Start(psi);
+            if (ps is null) return;
+            var output = ps.StandardOutput.ReadToEnd();
+            ps.WaitForExit(3000);
+
+            foreach (var line in output.Split('\n'))
+            {
+                if (!line.Contains(":8765") || !line.Contains("LISTENING")) continue;
+                var parts = line.Trim().Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 5 || !int.TryParse(parts[parts.Length - 1], out var pid) || pid <= 4) continue;
+                try
+                {
+                    using var victim = Process.GetProcessById(pid);
+                    if (victim.ProcessName.Contains("python", StringComparison.OrdinalIgnoreCase))
+                    {
+                        victim.Kill();
+                        logger?.Info($"Killed orphaned backend process PID {pid}.");
+                    }
+                }
+                catch { /* process already gone */ }
+            }
+
+            System.Threading.Thread.Sleep(400);
+        }
+        catch (Exception ex)
+        {
+            logger?.Info($"KillOrphanedBackendProcesses skipped: {ex.Message}");
+        }
+    }
+
     private void EnsureBackendAvailable()
     {
         if (logger is null) return;
@@ -171,6 +212,9 @@ public partial class App : Application
             logger.Info("Python backend already available on 127.0.0.1:8765.");
             return;
         }
+
+        // Port is occupied by an unresponsive orphaned Python process — kill it before starting fresh.
+        KillOrphanedBackendProcesses();
 
         var projectRoot = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", ".."));
         var pythonExe = FindPythonExecutable(projectRoot);

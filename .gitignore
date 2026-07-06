@@ -1,3 +1,6 @@
+# Secrets
+.env
+
 # Python
 can_env_313_test/
 .venv/
@@ -33,6 +36,19 @@ assets/Skoda Enyaq/
 assets/toyota_supra_mk4_a80/
 assets/transmit_lists/
 assets/opendbc-master/
-build_verify/
+build_verify*/
+.dotnet_cli/
+.dotnet_cli_home/
 *.MF4
 backend/ml/processed_dataset.csv
+backend/ml/ids_v1/
+assets/data.zip
+assets/road.zip
+assets/9) Car-Hacking Dataset.zip
+
+# Runtime data (not source — grows during operation)
+backend/db/canvision.db
+backend/db/canvision.db-shm
+backend/db/canvision.db-wal
+backend/ml/outputs/alerts/
+backend/outputs/

@@ -139,23 +139,14 @@ class CanStore:
         if df.empty:
             return 0
 
-        byte_cols = [c for c in ["b0","b1","b2","b3","b4","b5","b6","b7"] if c in df.columns]
-        anomaly_col = "anomaly" if "anomaly" in df.columns else None
-
-        rows = []
-        for _, row in df.iterrows():
-            raw = [int(row.get(c, 0)) for c in byte_cols]
-            while len(raw) < 8:
-                raw.append(0)
-            anom = int(row[anomaly_col]) if anomaly_col else 1
-            rows.append((
-                session_id,
-                float(row.get("timestamp", 0.0)),
-                int(row.get("can_id", 0)),
-                raw[0], raw[1], raw[2], raw[3],
-                raw[4], raw[5], raw[6], raw[7],
-                anom,
-            ))
+        byte_col_names = ["b0","b1","b2","b3","b4","b5","b6","b7"]
+        insert = pd.DataFrame()
+        insert["timestamp"] = df["timestamp"].astype(float) if "timestamp" in df.columns else 0.0
+        insert["can_id"]    = df["can_id"].astype(int)    if "can_id"    in df.columns else 0
+        for c in byte_col_names:
+            insert[c] = df[c].fillna(0).astype(int) if c in df.columns else 0
+        insert["anomaly"] = df["anomaly"].astype(int) if "anomaly" in df.columns else 1
+        rows = [(session_id, *t) for t in insert.itertuples(index=False, name=None)]
 
         sql = """INSERT INTO live_frames
                     (session_id, timestamp, can_id, b0,b1,b2,b3,b4,b5,b6,b7, anomaly)
@@ -187,8 +178,8 @@ class CanStore:
                     str(ctx.get("can_id", "unknown")),
                     str(ctx.get("severity", "WARNING")),
                     float(ctx.get("anomaly_score", 0.0)),
-                    str(ctx.get("temporal_pattern", "")),
-                    str(ctx.get("top_feature", "")),
+                    str(ctx.get("attack_type", "")),
+                    str(ctx.get("reason", "")),
                     str(ctx.get("temporal_pattern", "normal")),
                     int(bool(ctx.get("plausibility_passed", True))),
                     int(bool(ctx.get("timing_anomaly", False))),

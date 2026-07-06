@@ -8,11 +8,27 @@ public sealed class AppLogger
 {
     private readonly object sync = new();
 
+    private const long MaxLogBytes = 10 * 1024 * 1024; // 10 MB
+
     public AppLogger()
     {
         var logDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
         Directory.CreateDirectory(logDirectory);
         LogFilePath = Path.Combine(logDirectory, "canvision-native.log");
+        RotateIfNeeded();
+    }
+
+    private void RotateIfNeeded()
+    {
+        try
+        {
+            if (!File.Exists(LogFilePath) || new FileInfo(LogFilePath).Length <= MaxLogBytes)
+                return;
+            var backup = LogFilePath + ".bak";
+            if (File.Exists(backup)) File.Delete(backup);
+            File.Move(LogFilePath, backup);
+        }
+        catch { /* rotation is best-effort */ }
     }
 
     public string LogFilePath { get; }

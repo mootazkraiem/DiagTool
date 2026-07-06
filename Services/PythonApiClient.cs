@@ -16,7 +16,7 @@ public sealed class PythonApiClient
 {
     private const string DefaultEndpoint = "http://127.0.0.1:8765/vehicle";
 
-    private readonly HttpClient httpClient = new();
+    private readonly HttpClient httpClient = new() { Timeout = TimeSpan.FromMinutes(5) };
     private readonly AppLogger logger;
     private readonly string endpoint;
     private readonly string apiBase;
@@ -532,6 +532,12 @@ public sealed class PythonApiClient
 
             var json = await response.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<T>(json);
+        }
+        catch (Exception exception) when (exception is System.Net.Http.HttpRequestException || exception is OperationCanceledException)
+        {
+            // Connection refused / timeout — expected when backend is starting. One-line only.
+            logger.Info($"Python API unavailable: {relativePath} ({exception.GetType().Name})");
+            return default;
         }
         catch (Exception exception)
         {

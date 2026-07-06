@@ -366,6 +366,7 @@ public sealed class HomeViewModel : SectionViewModel
     private bool isChoosingMode = true;
     private bool isLiveConnecting;
     private bool isOfflineImporting;
+    private bool backendOnline;
 
     public HomeViewModel(
         VehicleDataService vehicleDataService,
@@ -403,6 +404,10 @@ public sealed class HomeViewModel : SectionViewModel
         vehicleDataService.AlertHistoryUpdated += _ => OnPropertyChanged(nameof(TotalAlertsText));
 
         _ = RefreshHealthAsync();
+        // Poll every 2 s until connected, then keep polling to detect backend restarts.
+        var healthCheckTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
+        healthCheckTimer.Tick += async (_, _) => await RefreshHealthAsync().ConfigureAwait(true);
+        healthCheckTimer.Start();
     }
 
     public string HealthModelText
@@ -434,15 +439,31 @@ public sealed class HomeViewModel : SectionViewModel
         try
         {
             var h = await pythonApiClient.GetSystemHealthDetailAsync(CancellationToken.None).ConfigureAwait(true);
-            if (h is null) return;
-            HealthModelText  = h.ModelLoaded ? $"LOADED ({h.ModelClusters} clusters)" : "NOT LOADED";
-            HealthLlmText    = string.IsNullOrWhiteSpace(h.LlmProvider) ? "--" : h.LlmProvider.ToUpperInvariant();
-            HealthUptimeText = h.UptimeSeconds < 60
-                ? $"{h.UptimeSeconds:F0}s"
-                : $"{h.UptimeSeconds / 60:F0}m {h.UptimeSeconds % 60:F0}s";
-            HealthFpsText    = $"{h.LiveFps:F1}";
+            var wasOnline = backendOnline;
+            backendOnline = h is not null;
+            if (h is not null)
+            {
+                HealthModelText  = h.ModelLoaded ? $"LOADED ({h.ModelClusters} clusters)" : "NOT LOADED";
+                HealthLlmText    = string.IsNullOrWhiteSpace(h.LlmProvider) ? "--" : h.LlmProvider.ToUpperInvariant();
+                HealthUptimeText = h.UptimeSeconds < 60
+                    ? $"{h.UptimeSeconds:F0}s"
+                    : $"{h.UptimeSeconds / 60:F0}m {h.UptimeSeconds % 60:F0}s";
+                HealthFpsText    = $"{h.LiveFps:F1}";
+            }
+            if (wasOnline != backendOnline)
+            {
+                OnPropertyChanged(nameof(BackendStatusText));
+                OnPropertyChanged(nameof(CanStartLive));
+                LaunchOnlineDiagnosisCommand.NotifyCanExecuteChanged();
+
+                if (backendOnline && !VehicleDataService.IsRunning)
+                {
+                    _ = VehicleDataService.StartSimulatorAsync();
+                    VehicleDataService.Start();
+                }
+            }
         }
-        catch { }
+        catch { backendOnline = false; }
     }
 
     public event Action? AnalysisCompleted;
@@ -471,7 +492,7 @@ public sealed class HomeViewModel : SectionViewModel
         private set => SetProperty(ref isOfflineImporting, value);
     }
 
-    public bool CanStartLive => BackendStatusText == "CONNECTED" && !isLiveConnecting;
+    public bool CanStartLive => backendOnline && !isLiveConnecting;
 
     public IRelayCommand ShowOfflineImportCommand     { get; }
     public IRelayCommand BackToChoiceCommand          { get; }
@@ -608,7 +629,7 @@ public sealed class HomeViewModel : SectionViewModel
                 : "--";
 
     public string BackendStatusText =>
-        string.Equals(Snapshot.Source, "python-api", StringComparison.OrdinalIgnoreCase)
+        backendOnline || string.Equals(Snapshot.Source, "python-api", StringComparison.OrdinalIgnoreCase)
             ? "CONNECTED"
             : "OFFLINE";
 
@@ -655,14 +676,32 @@ public sealed class HomeViewModel : SectionViewModel
 
         IsOfflineImporting = true;
 
+        using var analyzeTimeout = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(90));
         try
         {
+            // Start Python batch analysis in parallel with C# parsing, but only when backend is up.
+            // The 90-second CTS above caps the wait so a slow /analyze call never blocks the UI indefinitely.
+            var analyzeTask = backendOnline
+                ? pythonApiClient.AnalyzeLogsAsync(new[] { dialog.FileName }, analyzeTimeout.Token)
+                : Task.FromResult<PythonAnalyzeResponse?>(null);
+
+            // Parse frames in C# for animation/signal display; skip per-frame HTTP inference
             AnalysisStatusText = "PARSING FRAMES";
-            var parseResult = await canLogImportService.ParseFileAsync(dialog.FileName).ConfigureAwait(true);
+            AnalysisProgressPercent = 0;
+            var parseProgress = new Progress<double>(pct =>
+            {
+                AnalysisProgressPercent = Clamp(pct * 0.4, 0, 40); // parse phase = 0–40%
+            });
+
+            var parseResult = await Task.Run(
+                () => canLogImportService.ParseFileAsync(dialog.FileName, skipMlScoring: true, parseProgress: parseProgress, cancellationToken: CancellationToken.None),
+                CancellationToken.None
+            ).ConfigureAwait(true);
+
             var packets = parseResult.Packets.ToList();
             AnalysisTotalFrames = packets.Count;
             AnalysisProcessedFrames = 0;
-            AnalysisProgressPercent = 0;
+            AnalysisProgressPercent = packets.Count > 0 ? 40 : 0;
             AnalysisCurrentScore = 0;
             AnalysisCurrentCanId = "0x000";
 
@@ -672,50 +711,51 @@ public sealed class HomeViewModel : SectionViewModel
             VehicleDataService.LoadReplayPackets(replayName, packets);
             VehicleDataService.BeginReplayAnalysis();
 
-            if (packets.Count == 0)
-            {
-                AnalysisStatusText = "NO PARSABLE FRAMES";
-                IsOfflineImporting = false;
-                return;
-            }
-
-            IsAnalysisRunning = true;
-            AnalysisStatusText = "EXTRACTING FEATURES";
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            AnalysisStatusText = "RUNNING ML ANALYSIS";
-            var analyzeTask = pythonApiClient.AnalyzeLogsAsync(new[] { dialog.FileName }, CancellationToken.None);
 
-            var steps = Math.Max(80, Math.Min(220, packets.Count));
-            var delayMs = packets.Count > 12000 ? 12 : 20;
-
-            for (var step = 0; step < steps; step++)
+            if (packets.Count > 0)
             {
-                var fraction = steps <= 1 ? 1.0 : step / (double)(steps - 1);
-                var index = (int)Math.Round(fraction * (packets.Count - 1));
-                index = Math.Max(0, Math.Min(packets.Count - 1, index));
-                var packet = packets[index];
-                var score = ResolvePacketScore(packet);
+                IsAnalysisRunning = true;
+                AnalysisStatusText = "RUNNING ML ANALYSIS";
 
-                AnalysisProcessedFrames = index + 1;
-                AnalysisProgressPercent = Clamp(((index + 1) / (double)packets.Count) * 100.0, 0, 100);
-                AnalysisCurrentScore = score;
-                AnalysisCurrentCanId = $"0x{packet.Frame.CanId:X3}";
+                var steps = Math.Max(80, Math.Min(220, packets.Count));
+                var delayMs = packets.Count > 12000 ? 12 : 20;
 
-                VehicleDataService.PublishPlaybackPacket(packet);
-                var fps = stopwatch.Elapsed.TotalSeconds <= 0
-                    ? 0
-                    : AnalysisProcessedFrames / stopwatch.Elapsed.TotalSeconds;
-                VehicleDataService.UpdateReplayRuntime(
-                    AnalysisProcessedFrames,
-                    packet.Frame.CanId,
-                    score,
-                    fps,
-                    VehicleDataService.RuntimeLatencyMs);
+                for (var step = 0; step < steps; step++)
+                {
+                    var fraction = steps <= 1 ? 1.0 : step / (double)(steps - 1);
+                    var index = (int)Math.Round(fraction * (packets.Count - 1));
+                    index = Math.Max(0, Math.Min(packets.Count - 1, index));
+                    var packet = packets[index];
+                    var score = ResolvePacketScore(packet);
 
-                await Task.Delay(delayMs).ConfigureAwait(true);
+                    AnalysisProcessedFrames = index + 1;
+                    // animation phase = 40–90%
+                    AnalysisProgressPercent = Clamp(40 + ((index + 1) / (double)packets.Count) * 50.0, 40, 90);
+                    AnalysisCurrentScore = score;
+                    AnalysisCurrentCanId = $"0x{packet.Frame.CanId:X3}";
+
+                    VehicleDataService.PublishPlaybackPacket(packet);
+                    var fps = stopwatch.Elapsed.TotalSeconds <= 0
+                        ? 0
+                        : AnalysisProcessedFrames / stopwatch.Elapsed.TotalSeconds;
+                    VehicleDataService.UpdateReplayRuntime(
+                        AnalysisProcessedFrames,
+                        packet.Frame.CanId,
+                        score,
+                        fps,
+                        VehicleDataService.RuntimeLatencyMs);
+
+                    await Task.Delay(delayMs).ConfigureAwait(true);
+                }
+            }
+            else
+            {
+                AnalysisStatusText = "NO FRAMES PARSED — WAITING FOR BACKEND ANALYSIS";
             }
 
             AnalysisStatusText = "GENERATING DETECTIONS";
+            AnalysisProgressPercent = 90;
             var analysisResponse = await analyzeTask.ConfigureAwait(true);
             AnalysisStatusText = "BUILDING INTELLIGENCE";
             var metrics = await pythonApiClient.GetMetricsAsync(CancellationToken.None).ConfigureAwait(true);
@@ -727,17 +767,22 @@ public sealed class HomeViewModel : SectionViewModel
 
             var detectedAttack = ResolveAttackType(analysisResponse, apiAnomalies, SelectedAttackType);
             var confidence = ResolveConfidence(analysisResponse, apiAnomalies, packets.Count);
-            var latencyMs = (analysisResponse?.Summary?.ElapsedMs ?? 0) > 0
-                ? analysisResponse!.Summary!.ElapsedMs
-                : (metrics?.AvgAnalyzeLatencyMs ?? stopwatch.Elapsed.TotalMilliseconds);
-            var finalFps = stopwatch.Elapsed.TotalSeconds <= 0 ? 0 : packets.Count / stopwatch.Elapsed.TotalSeconds;
-            var finalPacket = packets[packets.Count - 1];
-            VehicleDataService.UpdateReplayRuntime(
-                packets.Count,
-                finalPacket.Frame.CanId,
-                ResolvePacketScore(finalPacket),
-                finalFps,
-                latencyMs);
+
+            if (packets.Count > 0)
+            {
+                var latencyMs = (analysisResponse?.Summary?.ElapsedMs ?? 0) > 0
+                    ? analysisResponse!.Summary!.ElapsedMs
+                    : (metrics?.AvgAnalyzeLatencyMs ?? stopwatch.Elapsed.TotalMilliseconds);
+                var finalFps = stopwatch.Elapsed.TotalSeconds <= 0 ? 0 : packets.Count / stopwatch.Elapsed.TotalSeconds;
+                var finalPacket = packets[packets.Count - 1];
+                VehicleDataService.UpdateReplayRuntime(
+                    packets.Count,
+                    finalPacket.Frame.CanId,
+                    ResolvePacketScore(finalPacket),
+                    finalFps,
+                    latencyMs);
+            }
+
             VehicleDataService.CompleteReplayAnalysis(detectedAttack, confidence, Array.Empty<RuntimeAlertEvent>());
             AnalysisStatusText = $"ANALYSIS COMPLETE — {detectedAttack}";
             AnalysisProgressPercent = 100;
@@ -3012,19 +3057,25 @@ public sealed class LogPlaybackViewModel : SectionViewModel
 
     private async Task LoadVehiclesAsync()
     {
-        try
+        for (int attempt = 0; attempt < 15; attempt++)
         {
-            var response = await VehicleDataService.GetVehicleListAsync();
-            if (response?.Vehicles == null) return;
-            VehicleItems.Clear();
-            foreach (var v in response.Vehicles)
-                VehicleItems.Add(v);
-            if (string.IsNullOrEmpty(_selectedVehicleId) && VehicleItems.Count > 0)
-                SelectedVehicleId = VehicleItems[0].Id;
-        }
-        catch (Exception ex)
-        {
-            logger.Error("LoadVehiclesAsync failed.", ex);
+            if (attempt > 0)
+                await Task.Delay(2000);
+            try
+            {
+                var response = await VehicleDataService.GetVehicleListAsync();
+                if (response?.Vehicles == null) continue;
+                VehicleItems.Clear();
+                foreach (var v in response.Vehicles)
+                    VehicleItems.Add(v);
+                if (string.IsNullOrEmpty(_selectedVehicleId) && VehicleItems.Count > 0)
+                    SelectedVehicleId = VehicleItems[0].Id;
+                return;
+            }
+            catch (Exception ex)
+            {
+                logger.Error("LoadVehiclesAsync failed.", ex);
+            }
         }
     }
 
@@ -4251,17 +4302,23 @@ public sealed class SettingsViewModel : SectionViewModel
 
     private async Task LoadHardwareVehiclesAsync()
     {
-        try
+        for (int attempt = 0; attempt < 15; attempt++)
         {
-            var result = await VehicleDataService.GetVehicleListAsync().ConfigureAwait(true);
-            if (result is null) return;
-            HardwareVehicleItems.Clear();
-            foreach (var v in result.Vehicles)
-                HardwareVehicleItems.Add(v);
-            if (HardwareVehicleItems.Count > 0 && string.IsNullOrEmpty(SelectedHwVehicleId))
-                SelectedHwVehicleId = HardwareVehicleItems[0].Id;
+            if (attempt > 0)
+                await Task.Delay(2000).ConfigureAwait(true);
+            try
+            {
+                var result = await VehicleDataService.GetVehicleListAsync().ConfigureAwait(true);
+                if (result is null) continue;
+                HardwareVehicleItems.Clear();
+                foreach (var v in result.Vehicles)
+                    HardwareVehicleItems.Add(v);
+                if (HardwareVehicleItems.Count > 0 && string.IsNullOrEmpty(SelectedHwVehicleId))
+                    SelectedHwVehicleId = HardwareVehicleItems[0].Id;
+                return;
+            }
+            catch { /* backend may be starting */ }
         }
-        catch { /* backend may be starting */ }
     }
 
     private async Task ConnectHardwareAsync()
@@ -4312,17 +4369,23 @@ public sealed class SettingsViewModel : SectionViewModel
 
     private async Task InitHardwareAsync()
     {
-        try
+        for (int attempt = 0; attempt < 15; attempt++)
         {
-            var check = await VehicleDataService.GetHardwareCheckAsync().ConfigureAwait(true);
-            if (check is null) return;
-            PythonCanAvailable = check.PythonCanAvailable;
-            PythonCanWarning = check.PythonCanAvailable
-                ? $"python-can {check.PythonCanVersion} · pyserial {(check.PyserialAvailable ? "OK" : "missing")}"
-                : "python-can NOT installed — run: pip install python-can pyserial";
-            await RefreshPortsAsync().ConfigureAwait(true);
+            if (attempt > 0)
+                await Task.Delay(2000).ConfigureAwait(true);
+            try
+            {
+                var check = await VehicleDataService.GetHardwareCheckAsync().ConfigureAwait(true);
+                if (check is null) continue;
+                PythonCanAvailable = check.PythonCanAvailable;
+                PythonCanWarning = check.PythonCanAvailable
+                    ? $"python-can {check.PythonCanVersion} · pyserial {(check.PyserialAvailable ? "OK" : "missing")}"
+                    : "python-can NOT installed — run: pip install python-can pyserial";
+                await RefreshPortsAsync().ConfigureAwait(true);
+                return;
+            }
+            catch { /* backend may still be starting */ }
         }
-        catch { /* backend may still be starting */ }
     }
 
     private async Task RefreshPortsAsync()
@@ -4345,16 +4408,22 @@ public sealed class SettingsViewModel : SectionViewModel
 
     private async Task RefreshModelInfoAsync()
     {
-        try
+        for (int attempt = 0; attempt < 15; attempt++)
         {
-            var health = await pythonApiClient.GetSystemHealthDetailAsync(CancellationToken.None).ConfigureAwait(true);
-            if (health is null) { ModelStatusText = "BACKEND OFFLINE"; return; }
-            DetectionModelText = health.ModelLoaded ? "IsolationForest + KMeans" : "MODEL NOT LOADED";
-            ModelClustersText  = health.ModelLoaded ? $"{health.ModelClusters} clusters" : "--";
-            LlmProviderText    = string.IsNullOrWhiteSpace(health.LlmProvider) ? "NONE" : health.LlmProvider.ToUpperInvariant();
-            ModelStatusText    = health.ModelLoaded ? "ACTIVE" : "OFFLINE";
+            if (attempt > 0)
+                await Task.Delay(2000).ConfigureAwait(true);
+            try
+            {
+                var health = await pythonApiClient.GetSystemHealthDetailAsync(CancellationToken.None).ConfigureAwait(true);
+                if (health is null) { ModelStatusText = "BACKEND OFFLINE"; continue; }
+                DetectionModelText = health.ModelLoaded ? "IsolationForest + KMeans" : "MODEL NOT LOADED";
+                ModelClustersText  = health.ModelLoaded ? $"{health.ModelClusters} clusters" : "--";
+                LlmProviderText    = string.IsNullOrWhiteSpace(health.LlmProvider) ? "NONE" : health.LlmProvider.ToUpperInvariant();
+                ModelStatusText    = health.ModelLoaded ? "ACTIVE" : "OFFLINE";
+                return;
+            }
+            catch { ModelStatusText = "BACKEND OFFLINE"; }
         }
-        catch { ModelStatusText = "BACKEND OFFLINE"; }
     }
 
     protected override void OnDataUpdated(VehicleSnapshot snapshot)

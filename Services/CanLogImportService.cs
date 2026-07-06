@@ -30,7 +30,7 @@ public sealed class CanLogImportService
         this.pythonApiClient = pythonApiClient;
     }
 
-    public async Task<CanImportResult> ParseFileAsync(string filePath, bool skipMlScoring = false, CancellationToken cancellationToken = default)
+    public async Task<CanImportResult> ParseFileAsync(string filePath, bool skipMlScoring = false, IProgress<double>? parseProgress = null, CancellationToken cancellationToken = default)
     {
         var frames = new List<CanFrame>();
         var packets = new List<PlaybackPacket>();
@@ -44,10 +44,28 @@ public sealed class CanLogImportService
         var previousTimestamp = 0.0;
         var snapshot = VehicleSnapshot.Default();
 
-        foreach (var line in File.ReadLines(filePath))
+        long fileSize = 0;
+        try { fileSize = new FileInfo(filePath).Length; } catch { }
+        var lastProgressTicks = DateTime.UtcNow.Ticks;
+
+        using var reader = new StreamReader(filePath, System.Text.Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 4096);
+        string? rawLine;
+        while ((rawLine = reader.ReadLine()) != null)
         {
             cancellationToken.ThrowIfCancellationRequested();
             total++;
+
+            if (parseProgress != null && fileSize > 0)
+            {
+                var now = DateTime.UtcNow.Ticks;
+                if (now - lastProgressTicks >= 1_000_000L) // 100 ms
+                {
+                    parseProgress.Report(reader.BaseStream.Position * 100.0 / fileSize);
+                    lastProgressTicks = now;
+                }
+            }
+
+            var line = rawLine;
             if (!TryParseFrame(line, out var frameRecord))
             {
                 skipped++;
@@ -102,6 +120,7 @@ public sealed class CanLogImportService
                 primaryText));
         }
 
+        parseProgress?.Report(100.0);
         logger.Info($"CAN import completed: file={Path.GetFileName(filePath)} total={total} parsed={parsed} skipped={skipped}");
         return new CanImportResult(frames, snapshots, events, packets, total, parsed, skipped);
     }
@@ -486,25 +505,41 @@ public sealed class CanLogImportService
         frame = default;
         var parts = line.Split(',');
         if (parts.Length < 3)
-        {
             return false;
-        }
 
-        if (!double.TryParse(parts[0], NumberStyles.Float, CultureInfo.InvariantCulture, out var ts))
-        {
+        if (!double.TryParse(parts[0].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var ts))
             return false;
-        }
 
         var canText = parts[1].Trim();
         if (canText.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
-        {
             canText = canText.Substring(2);
-        }
         if (!int.TryParse(canText, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var canId))
-        {
             return false;
+
+        // SavvyCAN format: Time Stamp, ID, Extended(false/true), Dir(Rx/Tx), Bus, LEN, D1..D8
+        if (parts.Length >= 7)
+        {
+            var p2 = parts[2].Trim();
+            var p3 = parts[3].Trim();
+            if ((p2.Equals("false", StringComparison.OrdinalIgnoreCase) || p2.Equals("true", StringComparison.OrdinalIgnoreCase)) &&
+                (p3.Equals("Rx", StringComparison.OrdinalIgnoreCase) || p3.Equals("Tx", StringComparison.OrdinalIgnoreCase)))
+            {
+                var dataBytes = new byte[8];
+                var dlc = 0;
+                if (int.TryParse(parts[5].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var d))
+                    dlc = Math.Min(8, d);
+                for (var i = 0; i < dlc && i + 6 < parts.Length; i++)
+                {
+                    if (byte.TryParse(parts[i + 6].Trim(), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var b))
+                        dataBytes[i] = b;
+                }
+                var savvyHex = BitConverter.ToString(dataBytes, 0, dlc).Replace("-", string.Empty);
+                frame = new CanFrameRecord(ts, canId, dataBytes, savvyHex);
+                return true;
+            }
         }
 
+        // Generic format: timestamp, can_id, hex_data columns (concatenated)
         var dataHex = string.Concat(parts.Skip(2)).Replace(" ", string.Empty);
         var bytes = ParseBytes(dataHex);
         frame = new CanFrameRecord(ts, canId, bytes, NormalizeHex(dataHex));

@@ -14,6 +14,13 @@ import subprocess
 import glob
 import os
 
+# Load .env from project root so GOOGLE_API_KEY and others survive across restarts
+try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).resolve().parents[2] / ".env", override=False)
+except ImportError:
+    pass
+
 import pandas as pd
 import uvicorn
 from fastapi import FastAPI, File, HTTPException, UploadFile
@@ -550,6 +557,37 @@ def get_metrics() -> MetricsResponse:
     )
 
 
+def _run_post_ml_pipeline(
+    predicted: "pd.DataFrame",
+) -> "tuple[pd.DataFrame, dict, dict, str]":
+    """Run all CPU-bound post-ML steps in a thread-pool worker.
+
+    Returns (annotated_predicted, timing_baseline, freq_baseline, session_id).
+    """
+    t0 = float(predicted["timestamp"].min()) if not predicted.empty else 0.0
+    time_mask     = predicted["timestamp"] <= t0 + 30.0
+    model_normal  = predicted["anomaly"] == 1
+    baseline_mask = time_mask | model_normal
+
+    timing_baseline = _fingerprint.build_baseline(predicted, baseline_mask)
+    freq_baseline   = _temporal.build_frequency_baseline(predicted, baseline_mask)
+    can_whitelist   = _whitelist.build(predicted, learn_window_sec=30.0)
+
+    predicted = _fingerprint.annotate(predicted, timing_baseline)
+    predicted = _temporal.detect_patterns(predicted, freq_baseline)
+    predicted = _whitelist.check(predicted, can_whitelist)
+    predicted = _correlation.check(predicted)
+
+    try:
+        sid = _store.new_session(source="replay")
+        _store.write_frames(sid, predicted)
+    except Exception as _db_exc:
+        logger.warning("DB write failed (non-fatal): %s", _db_exc)
+        sid = "no-db"
+
+    return predicted, timing_baseline, freq_baseline, sid
+
+
 @app.post(
     "/analyze",
     response_model=AnalyzeResponse,
@@ -613,33 +651,9 @@ async def analyze(files: List[UploadFile] = File(...))  -> AnalyzeResponse:
     _loop = asyncio.get_event_loop()
     featured  = await _loop.run_in_executor(None, FeatureEngineer.build, unified)
     predicted = await _loop.run_in_executor(None, engine.predict, featured)
-
-    # ── Session baseline auto-learning: use first 30s as clean window ────────
-    t0 = float(predicted["timestamp"].min()) if not predicted.empty else 0.0
-    time_mask   = predicted["timestamp"] <= t0 + 30.0
-    # Combine time-window mask with model normal mask for a robust baseline
-    model_normal = predicted["anomaly"] == 1
-    baseline_mask = time_mask | model_normal
-
-    timing_baseline = _fingerprint.build_baseline(predicted, baseline_mask)
-    freq_baseline   = _temporal.build_frequency_baseline(predicted, baseline_mask)
-
-    # ── Build CAN ID whitelist from first 30s ─────────────────────────────────
-    can_whitelist = _whitelist.build(predicted, learn_window_sec=30.0)
-
-    # ── Annotate all frames ───────────────────────────────────────────────────
-    predicted = _fingerprint.annotate(predicted, timing_baseline)
-    predicted = _temporal.detect_patterns(predicted, freq_baseline)
-    predicted = _whitelist.check(predicted, can_whitelist)
-    predicted = _correlation.check(predicted)
-
-    # ── Persist frames to DB ──────────────────────────────────────────────────
-    try:
-        _sid = _store.new_session(source="replay")
-        _store.write_frames(_sid, predicted)
-    except Exception as _db_exc:
-        logger.warning("DB write failed (non-fatal): %s", _db_exc)
-        _sid = "no-db"
+    predicted, timing_baseline, freq_baseline, _sid = await _loop.run_in_executor(
+        None, _run_post_ml_pipeline, predicted
+    )
 
     contexts = engine.build_anomaly_context(predicted)
 
@@ -1873,13 +1887,31 @@ def api_settings_get() -> dict[str, Any]:
 class ChatRequest(BaseModel):
     message: str
     alert: dict = Field(default_factory=dict)
+    session_id: str = ""
+    clear_history: bool = False
+
+
+_chat_histories: dict[str, list[dict[str, str]]] = {}
+_MAX_HISTORY_TURNS = 10  # 10 pairs = 20 messages
 
 
 @app.post("/api/chat")
 def api_chat(body: ChatRequest) -> dict[str, Any]:
     try:
         from backend.ml.explainer.llm import chat_reply
-        reply = chat_reply(body.alert, body.message)
+
+        session_key = body.session_id or str(body.alert.get("can_id", "default"))
+        if body.clear_history:
+            _chat_histories.pop(session_key, None)
+
+        history = _chat_histories.setdefault(session_key, [])
+        reply = chat_reply(body.alert, body.message, history=history)
+
+        history.append({"role": "user", "content": body.message})
+        history.append({"role": "assistant", "content": reply})
+        if len(history) > _MAX_HISTORY_TURNS * 2:
+            _chat_histories[session_key] = history[-(_MAX_HISTORY_TURNS * 2):]
+
         return {"status": "ok", "reply": reply}
     except Exception as exc:
         logger.error("[CHAT] Failed: %s", exc)
