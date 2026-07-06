@@ -41235,3 +41235,5 @@ timestamp,can_id,risk_level,score,reason
 1783298378.209329,1490,LOW,0.40043386372327877,"timing=0.067, payload=0.506, ml=1.000, persistence=0.000, freq=11Hz, can_id_entropy=1.386"
 1783298380.9468472,1490,LOW,0.4182309875590182,"timing=0.136, payload=0.487, ml=1.000, persistence=0.000, freq=7Hz, can_id_entropy=1.386"
 1783298381.056001,1767,LOW,0.4191060378345829,"timing=0.140, payload=0.486, ml=1.000, persistence=0.000, freq=7Hz, can_id_entropy=1.386"
+1783298382.2838979,1490,LOW,0.40806904384649667,"timing=0.153, payload=0.441, ml=1.000, persistence=0.000, freq=6Hz, can_id_entropy=1.386"
+1783298382.996466,418,LOW,0.40856123894059077,"timing=0.162, payload=0.434, ml=1.000, persistence=0.000, freq=6Hz, can_id_entropy=1.386"
