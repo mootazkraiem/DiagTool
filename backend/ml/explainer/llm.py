@@ -213,22 +213,31 @@ def _signal_context(can_id: str) -> str:
 # ── Public API ────────────────────────────────────────────────────────────────
 
 def explain_alert(alert: dict[str, Any]) -> dict[str, str]:
-    """Return summary/detail/recommendation/kb_match_label for the given alert."""
+    """Return summary/detail/recommendation/kb_match_label/mode for the given alert.
+
+    "mode" tells the caller — and, ultimately, the UI — which engine actually
+    produced the text: "gemini" | "ollama" | "rule_based". The UI must not
+    present rule_based output as if it were generative AI (see explain_alert
+    callers in server.py and the CANvision Anomaly Intel panel).
+    """
     ctx = build_context(alert)
     sig_ctx = _signal_context(str(alert.get("can_id", "")))
     web_ctx = _web_search(_build_search_query(alert, ctx))
 
     result = _try_gemini(alert, ctx, sig_ctx, web_ctx)
     if result:
+        result["mode"] = "gemini"
         _persist(alert, result)
         return result
 
     result = _try_ollama(alert, ctx, sig_ctx)
     if result:
+        result["mode"] = "ollama"
         _persist(alert, result)
         return result
 
     result = _template(alert, ctx, sig_ctx, web_ctx)
+    result["mode"] = "rule_based"
     _persist(alert, result)
     return result
 
@@ -252,8 +261,13 @@ def chat_reply(
     alert: dict[str, Any],
     message: str,
     history: list[dict[str, str]] | None = None,
-) -> str:
-    """Return a detailed analyst reply, optionally using prior conversation history."""
+) -> tuple[str, str]:
+    """Return (reply_text, mode) for the given chat message.
+
+    "mode" is "gemini" | "ollama" | "rule_based" — same contract as
+    explain_alert(). The UI must not present a rule_based reply as if it were
+    generative AI.
+    """
     ctx = build_context(alert)
     sig_ctx = _signal_context(str(alert.get("can_id", "")))
     msg_lower = message.lower()
@@ -266,11 +280,11 @@ def chat_reply(
 
     result = _try_gemini_chat(alert, ctx, sig_ctx, message, history or [], web_ctx)
     if result:
-        return result
+        return result, "gemini"
     result = _try_ollama_chat(alert, ctx, sig_ctx, message)
     if result:
-        return result
-    return _template_chat(alert, ctx, sig_ctx, message, web_ctx)
+        return result, "ollama"
+    return _template_chat(alert, ctx, sig_ctx, message, web_ctx), "rule_based"
 
 
 # ── Prompt builders ───────────────────────────────────────────────────────────

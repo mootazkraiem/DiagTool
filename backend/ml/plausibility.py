@@ -97,6 +97,7 @@ def check(can_id_hex: str, raw_bytes: list[int]) -> dict[str, Any]:
     if not signals:
         return {"checked": True, "passed": True, "violations": [], "decoded_signals": []}
 
+    system_name = entry.get("system", "")
     raw = bytes(raw_bytes[:8])
     violations: list[dict] = []
     decoded: list[dict] = []
@@ -106,12 +107,24 @@ def check(can_id_hex: str, raw_bytes: list[int]) -> dict[str, Any]:
         unit = sig.get("unit", "")
         lo = sig.get("min_normal")
         hi = sig.get("max_normal")
+        nominal = sig.get("nominal", 0.0)
 
         value = _decode_signal(raw, sig)
         if value is None:
             continue
 
-        decoded.append({"signal": name, "value": round(value, 3), "unit": unit})
+        out_of_range = bool(lo is not None and hi is not None and (value < lo or value > hi))
+        decoded.append({
+            "signal": name,
+            "system": system_name,
+            "value": round(value, 3),
+            "unit": unit,
+            "out_of_range": out_of_range,
+            "delta": round(value - float(nominal), 3),
+            "nominal": float(nominal),
+            "min_normal": float(lo) if lo is not None else 0.0,
+            "max_normal": float(hi) if hi is not None else 0.0,
+        })
 
         if lo is not None and hi is not None:
             if value < lo or value > hi:

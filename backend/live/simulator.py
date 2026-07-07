@@ -30,14 +30,26 @@ _DOS_DURATION_SEC = 4       # burst length
 _DOS_FIRST_DELAY  = 30      # seconds before first burst
 
 
+_FUSION_LAYER_KEYS = {"timing", "payload", "ml", "persistence"}
+
+
 def _dominant_layer(reason: str) -> str:
+    # Only compare the four inputs that actually feed ScoringEngine.score()/fusion_score
+    # (backend/ml/runtime/scoring_engine.py). The reason string also carries diagnostic-only
+    # fields "freq" (raw Hz) and "can_id_entropy" (raw bits) that were never part of fusion
+    # scoring but, being numerically much larger than the 0-2 range of the real layer scores,
+    # always won the old unfiltered max(). Same defect and fix as backend/api/server.py's
+    # _dominant_layer/_reason_bucket.
     vals: dict[str, float] = {}
     for part in str(reason).split(","):
         if "=" not in part:
             continue
         k, v = part.split("=", 1)
+        k = k.strip().lower()
+        if k not in _FUSION_LAYER_KEYS:
+            continue
         try:
-            vals[k.strip().lower()] = float(v.strip())
+            vals[k] = float(v.strip())
         except ValueError:
             continue
     if not vals:

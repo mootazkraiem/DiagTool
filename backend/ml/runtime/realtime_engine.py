@@ -41,8 +41,11 @@ class CanFrame:
 
 
 class RealtimeEngine:
-    def __init__(self, cfg: RuntimeConfig = DEFAULT_CONFIG) -> None:
+    def __init__(self, cfg: RuntimeConfig = DEFAULT_CONFIG, vehicle_id: str = "") -> None:
         self.cfg = cfg
+        # Which per-vehicle model bundle to score against (see RuntimeModelStore.score).
+        # Empty/unknown vehicle_id falls back to "general" — same as prior behavior.
+        self.vehicle_id = vehicle_id or "general"
         self.state = StateManager(cfg.interval_window, cfg.payload_window, cfg.score_window, cfg.transition_window)
         self.scoring = ScoringEngine(
             cfg.temporal_short_window,
@@ -106,7 +109,7 @@ class RealtimeEngine:
             if st.ml_frame_count % _ML_STRIDE == 0:
                 features = compute_model_features(st, frame.timestamp, frame.payload, can_id_entropy)
                 vehicle_state = self._models.classify_state(features)
-                model_score = self._models.score(vehicle_state, features)
+                model_score = self._models.score(vehicle_state, features, vehicle=self.vehicle_id)
                 if model_score is not None:
                     st.last_ml_norm = min(2.0, max(0.0, model_score))
                 else:

@@ -120,12 +120,19 @@ class RuntimeModelStore:
         self._vehicles = vehicles
 
     def classify_state(self, feature_vec: dict[str, float]) -> str:
-        """Classify vehicle state from feature vector using KMeans."""
+        """Classify vehicle state from feature vector using KMeans.
+
+        state_scaler.transform() is required here: kmeans_state_model.joblib was fit on
+        RobustScaler-scaled features (backend.ml.training.state_based_pipeline fits the
+        scaler and the KMeans together), so raw feature values are a different coordinate
+        space than what the cluster centers represent.
+        """
         if self._kmeans is None or self._state_scaler is None:
             return "parking"
         x = np.array([[feature_vec.get(f, 0.0) for f in self._state_feats]], dtype=np.float32)
         try:
-            label = int(self._kmeans.predict(x)[0])
+            x_scaled = self._state_scaler.transform(x)
+            label = int(self._kmeans.predict(x_scaled)[0])
             return self._state_mapping.get(label, "parking")
         except Exception:
             return "parking"
@@ -196,18 +203,18 @@ def load_models(assets_root: Path | None = None) -> RuntimeModelStore:
         if mapping_path.exists():
             state_mapping = {int(k): v for k, v in json.loads(mapping_path.read_text(encoding="utf-8")).items()}
 
-        # State feature list — use the same REQUIRED_FEATURES the training pipeline trained on.
-        # We load from general/feature_sets.json (which stores what was actually trained).
-        state_feats: list[str] = []
-        general_fs_path = model_root / "general" / "feature_sets.json"
-        if general_fs_path.exists():
-            fs = json.loads(general_fs_path.read_text(encoding="utf-8"))
-            # Use the first available state's feature list for KMeans state classification
-            for feats in fs.values():
-                state_feats = feats
-                break
-        if not state_feats:
-            state_feats = RUNTIME_FEATURE_ORDER[:12]  # safe fallback
+        # State feature list — MUST match backend.ml.training.state_based_pipeline's
+        # REQUIRED_FEATURES/STATE_FEATS exactly, since that is what kmeans_state_model.joblib
+        # and state_scaler.joblib were actually fit on (14 features, RUNTIME_FEATURE_ORDER).
+        #
+        # This used to be read from general/feature_sets.json instead — that file stores the
+        # (smaller, per-state) feature subset used by the *scoring* IsolationForest, not the
+        # shared state classifier. Feeding an 11-feature vector into a KMeans model trained on
+        # 14 raised `ValueError: X has 11 features, but KMeans is expecting 14 features`, which
+        # classify_state()'s broad except-clause silently swallowed, always returning "parking"
+        # regardless of the vehicle's actual state (confirmed: 99.93% "parking" across an entire
+        # real 1-hour driving session). Using the correct, full feature list fixes this.
+        state_feats: list[str] = RUNTIME_FEATURE_ORDER
 
         # General models
         general = _try_load_bundle(model_root / "general")

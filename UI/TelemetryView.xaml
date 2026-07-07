@@ -195,11 +195,11 @@
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <Button Grid.Column="0" Margin="0,0,5,0" Style="{StaticResource TransportButton}" Command="{Binding FreezeStreamCommand}" Content="⏮"/>
-                            <Button Grid.Column="1" Margin="0,0,5,0" Style="{StaticResource TransportButton}" Command="{Binding ResumeStreamCommand}" Content="▶"/>
-                            <Button Grid.Column="2" Margin="0,0,5,0" Style="{StaticResource TransportButton}" Command="{Binding FreezeStreamCommand}" Content="⏸"/>
-                            <Button Grid.Column="3" Margin="0,0,5,0" Style="{StaticResource TransportButton}" Command="{Binding FreezeStreamCommand}" Content="■"/>
-                            <Button Grid.Column="4" Style="{StaticResource TransportButton}" Command="{Binding ResumeStreamCommand}" Content="⏭"/>
+                            <Button Grid.Column="0" Margin="0,0,5,0" Style="{StaticResource TransportButton}" Command="{Binding FreezeStreamCommand}" Content="⏮" IsEnabled="{Binding HasReplayLoaded}" ToolTip="Import a replay log first"/>
+                            <Button Grid.Column="1" Margin="0,0,5,0" Style="{StaticResource TransportButton}" Command="{Binding ResumeStreamCommand}" Content="▶" IsEnabled="{Binding HasReplayLoaded}" ToolTip="Import a replay log first"/>
+                            <Button Grid.Column="2" Margin="0,0,5,0" Style="{StaticResource TransportButton}" Command="{Binding FreezeStreamCommand}" Content="⏸" IsEnabled="{Binding HasReplayLoaded}" ToolTip="Import a replay log first"/>
+                            <Button Grid.Column="3" Margin="0,0,5,0" Style="{StaticResource TransportButton}" Command="{Binding FreezeStreamCommand}" Content="■" IsEnabled="{Binding HasReplayLoaded}" ToolTip="Import a replay log first"/>
+                            <Button Grid.Column="4" Style="{StaticResource TransportButton}" Command="{Binding ResumeStreamCommand}" Content="⏭" IsEnabled="{Binding HasReplayLoaded}" ToolTip="Import a replay log first"/>
                         </Grid>
                     </StackPanel>
                 </Border>

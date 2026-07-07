@@ -31,6 +31,30 @@ def _normalise_id(can_id: str | int) -> str:
     return s
 
 
+def _extract_bits(bytes_: list[int], start_bit: int, length: int, big_endian: bool) -> int | None:
+    """Extract `length` bits starting at `start_bit` from a byte payload.
+
+    big_endian=True: start_bit counts from the MSB of the whole payload (Motorola-style).
+    big_endian=False: start_bit counts from the LSB of the whole payload (Intel-style).
+    Returns None if the requested bit range doesn't fit in the payload.
+    """
+    total_bits = len(bytes_) * 8
+    if length <= 0 or start_bit < 0 or start_bit + length > total_bits:
+        return None
+
+    raw = 0
+    for i in range(length):
+        bit_pos = start_bit + i
+        byte_idx = bit_pos // 8
+        if big_endian:
+            bit_in_byte = 7 - (bit_pos % 8)
+            raw = (raw << 1) | ((bytes_[byte_idx] >> bit_in_byte) & 1)
+        else:
+            bit_in_byte = bit_pos % 8
+            raw |= ((bytes_[byte_idx] >> bit_in_byte) & 1) << i
+    return raw
+
+
 def decode(can_id: str | int, bytes_: list[int]) -> list[dict[str, Any]]:
     """Decode a single CAN frame into a list of named signal readings.
 
@@ -47,22 +71,24 @@ def decode(can_id: str | int, bytes_: list[int]) -> list[dict[str, Any]]:
     results: list[dict[str, Any]] = []
 
     for sig in entry["signals"]:
-        decode_type: str = sig.get("decode", "uint8")
-        byte_indices: list[int] = sig["bytes"]
+        decode_type: str = sig.get("decode", "uint8_be")
+        start_bit: int = int(sig.get("start_bit", 0))
+        length: int = int(sig.get("length", 8))
         scale: float = float(sig["scale"])
         offset: float = float(sig["offset"])
         min_n: float = float(sig["min_normal"])
         max_n: float = float(sig["max_normal"])
         nominal: float = float(sig["nominal"])
 
-        # Guard: make sure we have enough bytes
-        if not byte_indices or max(byte_indices) >= len(bytes_):
+        big_endian = decode_type.endswith("_be")
+        signed = decode_type.startswith("int")
+
+        raw = _extract_bits(bytes_, start_bit, length, big_endian)
+        if raw is None:
             continue
 
-        if decode_type == "uint16_be":
-            raw = (bytes_[byte_indices[0]] << 8) | bytes_[byte_indices[1]]
-        else:
-            raw = bytes_[byte_indices[0]]
+        if signed and raw & (1 << (length - 1)):
+            raw -= 1 << length
 
         value = round(raw * scale + offset, 3)
         out_of_range = value < min_n or value > max_n

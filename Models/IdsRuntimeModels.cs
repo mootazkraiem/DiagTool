@@ -13,6 +13,7 @@ public sealed class AlertDetailItem : ObservableObject
     private string kbMatchLabel = string.Empty;
     private bool isLoading;
     private bool hasExplanation;
+    private string explanationMode = "rule_based";
 
     public int    Index         { get; set; }
     public string Time          { get; set; } = string.Empty;
@@ -109,6 +110,28 @@ public sealed class AlertDetailItem : ObservableObject
 
     public bool CanExplain => !HasExplanation && !IsLoading;
 
+    /// <summary>Raw engine identifier from the backend: "gemini" | "ollama" | "rule_based".</summary>
+    public string ExplanationMode
+    {
+        get => explanationMode;
+        set
+        {
+            SetProperty(ref explanationMode, value);
+            OnPropertyChanged(nameof(ExplanationModeLabel));
+            OnPropertyChanged(nameof(IsGenerativeAi));
+        }
+    }
+
+    /// <summary>Honest, user-facing label — never claims AI when the backend used the rule-based fallback.</summary>
+    public string ExplanationModeLabel => explanationMode switch
+    {
+        "gemini"  => "GEMINI AI",
+        "ollama"  => "LOCAL AI (OLLAMA)",
+        _         => "RULE-BASED (NO LLM CONFIGURED)",
+    };
+
+    public bool IsGenerativeAi => explanationMode is "gemini" or "ollama";
+
     public IAsyncRelayCommand? ExplainCommand { get; set; }
 }
 
@@ -126,6 +149,16 @@ public sealed class ChatMessage : ObservableObject
         get => text;
         set => SetProperty(ref text, value);
     }
+
+    /// <summary>"gemini" | "ollama" | "rule_based" — only meaningful when Role == "ai".</summary>
+    public string Mode { get; set; } = "rule_based";
+
+    public string ModeLabel => Mode switch
+    {
+        "gemini" => "GEMINI AI",
+        "ollama" => "LOCAL AI (OLLAMA)",
+        _        => "RULE-BASED",
+    };
 }
 
 public sealed class TimelineMarker

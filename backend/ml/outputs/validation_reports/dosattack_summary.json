@@ -1,0 +1,33 @@
+{
+  "replay_source": "assets\\data\\OpelAstra\\dosattack.log",
+  "total_frames_processed": 250000,
+  "total_alerts": 1,
+  "alerts_per_1000_frames": 0.004,
+  "critical_alert_rate": 0.0,
+  "high_alert_rate": 0.0,
+  "alerts_per_severity": {
+    "LOW": 1
+  },
+  "alerts_per_reason": {
+    "timing_burst": 1
+  },
+  "alerts_per_can_id": {
+    "0x0": 1
+  },
+  "alerts_per_risk_level": {
+    "LOW": 1
+  },
+  "max_fusion_score_observed": 0.457830493430161,
+  "average_fusion_score_observed": 0.45782876814101137,
+  "runtime_duration_sec": 870.8227404999998,
+  "fps": 287.0848318183074,
+  "alert_records": [
+    {
+      "timestamp": 0.0,
+      "can_id": 0,
+      "risk_level": "LOW",
+      "score": 0.457830493430161,
+      "reason": "timing=1.000, payload=0.000, ml=0.539, persistence=0.000, freq=1000000Hz, can_id_entropy=0.000"
+    }
+  ]
+}

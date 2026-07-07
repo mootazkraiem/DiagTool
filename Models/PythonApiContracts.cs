@@ -228,6 +228,9 @@ public sealed class ExplainAlertResponse
     [JsonProperty("layer_temporal")]           public double LayerTemporal        { get; set; }
     [JsonProperty("cached")]                   public bool   Cached               { get; set; }
     [JsonProperty("kb_match_label")]           public string KbMatchLabel         { get; set; } = string.Empty;
+    /// <summary>Which engine produced Summary/Detail/Recommendation: "gemini" | "ollama" | "rule_based".
+    /// The UI must show this honestly and never present "rule_based" text as generative AI.</summary>
+    [JsonProperty("mode")]                     public string Mode                 { get; set; } = "rule_based";
     [JsonProperty("decoded_signals")]          public List<DecodedSignalItem> DecodedSignals { get; set; } = new();
     [JsonProperty("plausibility_passed")]      public bool   PlausibilityPassed   { get; set; } = true;
     [JsonProperty("plausibility_violations")]  public List<PlausibilityViolation> PlausibilityViolations { get; set; } = new();
@@ -252,6 +255,8 @@ public sealed class ChatResponse
 {
     [JsonProperty("status")]  public string Status { get; set; } = string.Empty;
     [JsonProperty("reply")]   public string Reply  { get; set; } = string.Empty;
+    /// <summary>"gemini" | "ollama" | "rule_based" — which engine produced Reply.</summary>
+    [JsonProperty("mode")]    public string Mode   { get; set; } = "rule_based";
 }
 
 public sealed class RecordStatusResponse
@@ -372,6 +377,19 @@ public sealed class OfflineAnalyzeStartResponse
 
     [JsonProperty("session_id")]
     public string SessionId { get; set; } = string.Empty;
+}
+
+// ---------------------------------------------------------------------------
+// MF4 -> CSV conversion bridge  (POST /api/mf4/convert)
+// ---------------------------------------------------------------------------
+
+public sealed class Mf4ConvertResponse
+{
+    [JsonProperty("status")]
+    public string Status { get; set; } = string.Empty;
+
+    [JsonProperty("csv_path")]
+    public string CsvPath { get; set; } = string.Empty;
 }
 
 public sealed class OfflineSessionStatus

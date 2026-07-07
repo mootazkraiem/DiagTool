@@ -185,7 +185,7 @@ def _run(session_id: str) -> None:
         if s.total_frames == 0:
             raise ValueError("No frames extracted from file")
 
-        engine = RealtimeEngine(VALIDATION_CONFIG)
+        engine = RealtimeEngine(VALIDATION_CONFIG, vehicle_id=s.vehicle_id)
         mgr = get_dbc_manager()
         records: list[FrameRecord] = []
 
@@ -276,34 +276,16 @@ def _load_file(path: Path) -> Iterator[tuple[float, int, tuple]]:
 
 
 def _load_mf4(path: Path) -> Iterator[tuple[float, int, tuple]]:
-    from asammdf import MDF
-    import re
+    # Reuses the same multi-channel-group-aware extractor as the standalone MF4->CSV
+    # converter (backend.data_processing.mf4_to_csv_converter) — a single
+    # mdf.to_dataframe() call only surfaces the first CAN_DataFrame channel group,
+    # silently dropping every frame recorded on additional bus channels/groups,
+    # which is exactly where the real traffic lives in multi-bus CANedge loggers.
+    from backend.data_processing.mf4_to_csv_converter import _extract_raw_rows
 
-    mdf = MDF(str(path))
-    df = mdf.to_dataframe()
-    cols = [str(c) for c in df.columns]
-    lower = {c.lower(): c for c in cols}
-
-    id_col   = next((lower[k] for k in lower if "id" in k), None)
-    data_col = next((lower[k] for k in lower if "data" in k or "byte" in k), None)
-    ts_col   = next((lower[k] for k in lower if "time" in k or "stamp" in k), None)
-
-    if id_col is None or data_col is None:
-        raise ValueError(f"MF4 missing CAN columns. Available: {cols[:10]}")
-
-    for row in df.itertuples(index=True):
-        try:
-            ts = float(getattr(row, "Index")) if ts_col is None else float(getattr(row, ts_col.replace(".", "_")))
-            raw_id = getattr(row, id_col.replace(".", "_").replace(" ", "_"))
-            raw_data = getattr(row, data_col.replace(".", "_").replace(" ", "_"))
-
-            can_id = int(float(str(raw_id).strip()))
-            tokens = re.findall(r'\d+', str(raw_data))
-            bs = [int(t) & 0xFF for t in tokens][:8]
-            bs += [0] * (8 - len(bs))
-            yield ts, can_id, tuple(bs)
-        except Exception:
-            continue
+    for row, _corrected in _extract_raw_rows(path):
+        ts, can_id, *bs = row
+        yield float(ts), int(can_id), tuple(bs)
 
 
 def _load_csv(path: Path) -> Iterator[tuple[float, int, tuple]]:

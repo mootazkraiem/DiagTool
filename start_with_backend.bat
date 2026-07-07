@@ -9,11 +9,17 @@ echo.
 
 setlocal enabledelayedexpansion
 
+REM Prefer the project virtual environment if present (matches App.xaml.cs's
+REM own FindPythonExecutable auto-detection), otherwise fall back to PATH.
+set "PYTHON_EXE=python"
+if exist "%CD%\can_env\Scripts\python.exe" set "PYTHON_EXE=%CD%\can_env\Scripts\python.exe"
+
 REM Check if Python is available
-python --version >nul 2>&1
+"%PYTHON_EXE%" --version >nul 2>&1
 if %errorlevel% neq 0 (
     echo [ERROR] Python is not installed or not in PATH
-    echo Please install Python 3.9+ and ensure it's in your PATH
+    echo Please install Python 3.9+ and ensure it's in your PATH,
+    echo or create the can_env virtual environment described in SETUP.md
     pause
     exit /b 1
 )
@@ -22,8 +28,9 @@ echo [1/3] Starting Python backend server...
 echo The backend server will run on http://127.0.0.1:8765
 echo.
 
-REM Start the backend server in a new window
-start "CANvision Backend Server" cmd /k "cd /d %CD% && python main.py"
+REM Start the real FastAPI backend (same entry point App.xaml.cs launches
+REM automatically) - NOT main.py, which is an unrelated legacy prototype.
+start "CANvision Backend Server" cmd /k "cd /d %CD% && "%PYTHON_EXE%" -m uvicorn backend.api.server:app --host 127.0.0.1 --port 8765"
 
 REM Wait for backend to start
 echo [2/3] Waiting for backend to initialize (10 seconds)...

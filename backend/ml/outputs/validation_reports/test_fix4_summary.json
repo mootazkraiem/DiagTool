@@ -1,0 +1,16 @@
+{
+  "replay_source": "C:\\Users\\benkr\\AppData\\Local\\Temp\\claude\\c--Users-benkr-OneDrive-can-project\\60b658f9-40cf-4afd-849e-c4621392806b\\scratchpad\\test_fix4.log",
+  "total_frames_processed": 3,
+  "total_alerts": 0,
+  "alerts_per_1000_frames": 0.0,
+  "critical_alert_rate": 0.0,
+  "high_alert_rate": 0.0,
+  "alerts_per_severity": {},
+  "alerts_per_reason": {},
+  "alerts_per_can_id": {},
+  "alerts_per_risk_level": {},
+  "max_fusion_score_observed": 0.35000000000000003,
+  "average_fusion_score_observed": 0.23333333333333336,
+  "runtime_duration_sec": 0.0013650000000779983,
+  "fps": 2197.8021976766117
+}

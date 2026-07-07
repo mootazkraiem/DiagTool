@@ -1,6 +1,7 @@
 using System.Windows.Threading;
 using CANvision.Native.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 
@@ -235,6 +236,11 @@ public sealed class VehicleDataService : ObservableObject
     public async Task<OfflineSummaryResponse?> GetOfflineSummaryAsync(string sessionId)
         => await pythonApiClient.GetOfflineSummaryAsync(sessionId, CancellationToken.None);
 
+    // ── MF4 -> CSV conversion bridge ──────────────────────────────────────────
+
+    public async Task<string?> ConvertMf4ToCsvAsync(string mf4FilePath)
+        => await pythonApiClient.ConvertMf4Async(mf4FilePath, CancellationToken.None);
+
     // ── Live hardware CAN interface ───────────────────────────────────────────
 
     public async Task<bool> ConnectHardwareAsync(string interfaceType, string channel, int bitrate, string vehicleId)
@@ -269,12 +275,18 @@ public sealed class VehicleDataService : ObservableObject
         logger.Info($"[VDS] Replay loaded: {name} ({packets.Count} packets)");
     }
 
-    public async Task TriggerBackendReplayAsync(string filePath)
+    public async Task TriggerBackendReplayAsync(string filePath, string vehicleId = "")
     {
         lock (sync) { mlAnalysisState = "QUEUED"; }
+        // Guarantee the polling timer (OnRefreshTick) is running so replay-status/alerts
+        // ever get picked up. Some callers (e.g. the Home offline-import flow) call
+        // VehicleDataService.Stop() before importing and never call Start() again,
+        // which otherwise permanently strands the ANALYZING state with no poller left
+        // to notice the backend replay complete and fetch /api/replay/alerts.
+        Start();
         try
         {
-            var result = await pythonApiClient.StartReplayAsync(filePath, 0, CancellationToken.None);
+            var result = await pythonApiClient.StartReplayAsync(filePath, 0, vehicleId, CancellationToken.None);
             lock (sync) { mlAnalysisState = result != null ? "ANALYZING" : "ERROR"; }
         }
         catch (Exception ex)
@@ -442,7 +454,9 @@ public sealed class VehicleDataService : ObservableObject
         isRefreshing = true;
         try
         {
+            var sw = Stopwatch.StartNew();
             var snap = await pythonApiClient.GetLatestSnapshotAsync(CancellationToken.None);
+            sw.Stop();
             if (snap is null) return;
 
             lock (sync) { currentSnapshot = snap; }
@@ -454,7 +468,10 @@ public sealed class VehicleDataService : ObservableObject
             if (snap.AnomalyScore > 0 || snap.LiveFps > 0)
             {
                 double fps = snap.LiveFps > 0 ? snap.LiveFps : 2.0;
-                double latencyMs = 1000.0 / fps;
+                // Real measured round-trip time for this /vehicle poll, not the old
+                // 1000/fps formula (that was the inter-frame period, not latency —
+                // it exploded toward infinity whenever fps was small).
+                double latencyMs = sw.Elapsed.TotalMilliseconds;
                 UpdateReplayRuntime(fallbackFrameCounter, snap.LiveCanId, snap.AnomalyScore, fps, latencyMs);
             }
 

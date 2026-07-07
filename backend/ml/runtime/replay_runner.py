@@ -6,85 +6,66 @@ import sys
 import time
 from pathlib import Path
 
-import pandas as pd
 import numpy as np
 
 try:
     from backend.ml.runtime.ids_statistics import IDSStatistics
     from backend.ml.runtime.realtime_engine import CanFrame, RealtimeEngine
+    from backend.offline.session_analyzer import _load_file
 except ModuleNotFoundError:
     sys.path.append(str(Path(__file__).resolve().parents[3]))
     from backend.ml.runtime.ids_statistics import IDSStatistics
     from backend.ml.runtime.realtime_engine import CanFrame, RealtimeEngine
+    from backend.offline.session_analyzer import _load_file
 
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
     p.add_argument("--input", type=Path, required=True)
     p.add_argument("--limit", type=int, default=0)
+    p.add_argument("--vehicle", type=str, default="", help="Vehicle profile id (e.g. kia_ev6) — selects the matching trained model bundle; falls back to 'general' when omitted")
     p.add_argument("--no-debug", action="store_true", help="Disable debug output for faster processing")
     return p.parse_args()
-
-
-def _extract_payload(row_dict: dict) -> tuple[int, ...]:
-    """Extract payload from row - optimized for speed."""
-    # Try byte columns first (b0-b7)
-    cols = [f"b{i}" for i in range(8)]
-    if all(c in row_dict for c in cols):
-        try:
-            return tuple(int(row_dict[c] if pd.notna(row_dict[c]) else 0) & 0xFF for c in cols)
-        except (ValueError, TypeError):
-            pass
-    
-    # Try data column with hex string
-    if "data" in row_dict and isinstance(row_dict["data"], str):
-        try:
-            parts = row_dict["data"].strip().split()
-            vals = [int(x, 16) for x in parts[:8]]
-            vals += [0] * (8 - len(vals))
-            return tuple(vals[:8])
-        except (ValueError, IndexError):
-            pass
-    
-    return (0, 0, 0, 0, 0, 0, 0, 0)
 
 
 def main() -> None:
     try:
         args = parse_args()
-        print(f"[REPLAY] Loading CSV from {args.input}", file=sys.stderr)
+        print(f"[REPLAY] Loading {args.input} via canonical format-aware loader", file=sys.stderr)
         start_load = time.perf_counter()
-        df = pd.read_csv(args.input, low_memory=False)
+        # Reuses backend.offline.session_analyzer's format-aware _load_file() dispatcher
+        # (mf4/asc/log/txt/csv) instead of a hardcoded pd.read_csv(). The Log Playback file
+        # picker lets users open .log/.asc/.txt/.trc directly (only .mf4 is pre-converted to
+        # CSV in C# before replay), and those were previously passed straight to
+        # pd.read_csv(), which parses candump/ASC/PCAN text lines as one malformed column,
+        # silently producing all-zero timestamps/can_ids/payloads. Sharing the same loader
+        # as the offline-analyze path guarantees every replay format enters detection through
+        # the identical canonical (timestamp, can_id, payload) stream.
+        records = list(_load_file(args.input))
         load_time = time.perf_counter() - start_load
-        print(f"[REPLAY] CSV loaded, rows={len(df)}, load_time={load_time:.2f}s", file=sys.stderr)
-        
-        print(f"[REPLAY] Initializing RealtimeEngine", file=sys.stderr)
-        engine = RealtimeEngine()
+        print(f"[REPLAY] Loaded, rows={len(records)}, load_time={load_time:.2f}s", file=sys.stderr)
+
+        print(f"[REPLAY] Initializing RealtimeEngine (vehicle={args.vehicle or 'general'})", file=sys.stderr)
+        engine = RealtimeEngine(vehicle_id=args.vehicle)
         print(f"[REPLAY] RealtimeEngine initialized", file=sys.stderr)
-        
+
         print(f"[REPLAY] Initializing IDSStatistics", file=sys.stderr)
         stats = IDSStatistics(args.input)
         print(f"[REPLAY] IDSStatistics initialized", file=sys.stderr)
-        
-        # Use itertuples() instead of iterrows() - much faster!
+
         seen, alerts = 0, 0
         all_alert_records: list[dict] = []
         start_process = time.perf_counter()
         last_progress = start_process
-        
-        # Convert to list of dicts for faster access (or use numpy operations)
-        records = df.to_dict('records')
-        
+
         # Apply limit to records if specified
         if args.limit and args.limit > 0:
             records = records[:args.limit]
-        
+
         # Pre-allocate arrays for better performance
-        timestamps = np.array([record.get("timestamp", 0.0) for record in records], dtype=np.float64)
-        can_ids = np.array([record.get("can_id", 0) for record in records], dtype=np.int32)
-        
-        # Pre-extract payloads for faster access
-        payloads = [_extract_payload(record) for record in records]
+        timestamps = np.array([r[0] for r in records], dtype=np.float64)
+        can_ids = np.array([r[1] for r in records], dtype=np.int32)
+        payloads = [r[2] for r in records]
         
         print(f"[REPLAY] Starting processing of {len(records)} frames", file=sys.stderr)
         partial_out = Path("backend/ml/outputs/validation_reports/partial_alerts.json")

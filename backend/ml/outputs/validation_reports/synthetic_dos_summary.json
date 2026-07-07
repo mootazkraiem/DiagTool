@@ -1,0 +1,33 @@
+{
+  "replay_source": "C:\\Users\\benkr\\AppData\\Local\\Temp\\claude\\c--Users-benkr-OneDrive-can-project\\60b658f9-40cf-4afd-849e-c4621392806b\\scratchpad\\synthetic_dos.csv",
+  "total_frames_processed": 700,
+  "total_alerts": 1,
+  "alerts_per_1000_frames": 1.4285714285714286,
+  "critical_alert_rate": 0.0,
+  "high_alert_rate": 0.0,
+  "alerts_per_severity": {
+    "LOW": 1
+  },
+  "alerts_per_reason": {
+    "timing_burst": 1
+  },
+  "alerts_per_can_id": {
+    "0x100": 1
+  },
+  "alerts_per_risk_level": {
+    "LOW": 1
+  },
+  "max_fusion_score_observed": 0.457830493430161,
+  "average_fusion_score_observed": 0.35597550832081065,
+  "runtime_duration_sec": 1.7048534999994445,
+  "fps": 410.59246439663474,
+  "alert_records": [
+    {
+      "timestamp": 10.001,
+      "can_id": 256,
+      "risk_level": "LOW",
+      "score": 0.457830493430161,
+      "reason": "timing=1.000, payload=0.000, ml=0.539, persistence=0.000, freq=5000Hz, can_id_entropy=-0.000"
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import dataclasses
 import io
 import json
 import logging
@@ -56,6 +57,7 @@ from backend.hardware.can_interface import CanHardwareReader
 from backend.decoding.vehicle_profiles import list_all as list_vehicle_profiles
 from backend.decoding.dbc_manager import get_manager as get_dbc_manager
 from backend.offline import session_analyzer as offline_analyzer
+from backend.data_processing.mf4_to_csv_converter import convert_mf4_to_csv
 
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(name)s | %(message)s")
@@ -213,6 +215,7 @@ class ValidationScoreResponse(BaseModel):
 class ReplayStartRequest(BaseModel):
     input_path: str
     limit: int = 0
+    vehicle_id: str = ""
 
 
 class SimulatorGenerateRequest(BaseModel):
@@ -438,9 +441,91 @@ def health() -> HealthResponse:
     )
 
 
+# Best-effort mapping from arbitrary DBC signal names to the canonical
+# VehicleSnapshot fields the UI displays. Vehicle DBCs use manufacturer-
+# specific signal names (there is no standardized cross-vehicle naming), so
+# this is necessarily partial: only signals whose name matches a known
+# keyword are mapped; everything else keeps its last known real value rather
+# than being fabricated. This is a disclosed limitation, not invented data.
+_HW_SIGNAL_FIELD_MAP: list[tuple[str, str]] = [
+    ("state_of_charge", "SOC"),
+    ("soc", "SOC"),
+    ("voltage", "BatteryVoltage"),
+    ("battery_temp", "BatteryTemp"),
+    ("batterytemp", "BatteryTemp"),
+    ("motor_temp", "MotorTemp"),
+    ("motortemp", "MotorTemp"),
+    ("inverter_temp", "InverterTemp"),
+    ("invertertemp", "InverterTemp"),
+    ("rpm", "MotorRPM"),
+    ("speed", "VehicleSpeed"),
+    ("current", "BatteryCurrent"),
+]
+
+_hw_last_snapshot_fields: dict[str, Any] = {}
+
+
+def _map_hardware_signals(signals: list[dict[str, Any]]) -> dict[str, Any]:
+    for sig in signals:
+        name_low = str(sig.get("name", "")).lower()
+        for keyword, field in _HW_SIGNAL_FIELD_MAP:
+            if keyword in name_low:
+                _hw_last_snapshot_fields[field] = sig.get("value", 0)
+                break
+    return _hw_last_snapshot_fields
+
+
+def _vehicle_snapshot_from_hardware() -> dict[str, Any]:
+    """Build the /vehicle response from real hardware-fed frames.
+
+    Only called when hw_reader.is_connected is True. Unlike the synthetic
+    branch below, this never fabricates a frame — it reads whatever the real
+    CanHardwareReader thread has already scored and buffered.
+    """
+    with runtime_lock:
+        latest = live_signals_buffer[-1] if live_signals_buffer else None
+
+    fields = dict(_hw_last_snapshot_fields)
+    can_id_str = "0x000"
+    anomaly_score = hw_reader.current_score
+    if latest is not None:
+        can_id_str = str(latest.get("can_id", "0x000"))
+        anomaly_score = float(latest.get("anomaly_score", anomaly_score))
+        fields = _map_hardware_signals(latest.get("signals", []))
+
+    try:
+        can_id_int = int(can_id_str, 16)
+    except ValueError:
+        can_id_int = 0
+
+    return {
+        **fields,
+        # "source" stays "python-api" (not e.g. "hardware") so the existing
+        # C# CONNECTED / LIVE FASTAPI display logic — which does a literal
+        # string match on "python-api" in several places — keeps working
+        # unchanged; hardware-vs-simulator is distinguished via the separate
+        # "live_mode" field below instead of overloading this one.
+        "source": "python-api",
+        "live_mode": "hardware",
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "anomaly_score": anomaly_score,
+        "live_fps": float(runtime_stats.as_dict().get("fps", 0.0)),
+        "live_can_id": can_id_int,
+        "battery": int(round(fields.get("SOC", 0))),
+        "temperature": int(round(fields.get("BatteryTemp", 0.0))),
+        "motor_status": "OK",
+    }
+
+
 @app.get("/vehicle")
 def vehicle_snapshot() -> dict[str, Any]:
     global _vehicle_tick
+
+    # A connected real CAN adapter takes priority: never overwrite genuine
+    # hardware frames with the synthetic generator below.
+    if hw_reader.is_connected:
+        return _vehicle_snapshot_from_hardware()
+
     snapshot = generator.generate()
     ts = time.time()
 
@@ -480,18 +565,18 @@ def vehicle_snapshot() -> dict[str, Any]:
         b3 = int(snapshot.get("BatteryCoolingState", 0)) & 0xFF
         payload = (b0, b1, b2, b3, 0, 0, 0, 0)
 
-    out = runtime_engine.process_frame(CanFrame(timestamp=ts, can_id=can_id, payload=payload))
-    runtime_stats.on_frame()
-    runtime_stats.on_score(float(out["score"]["fusion_score"]))
-    signal_item = {
-        "timestamp": ts,
-        "can_id": _to_hex(can_id),
-        "b0": payload[0], "b1": payload[1], "b2": payload[2], "b3": payload[3],
-        "b4": payload[4], "b5": payload[5], "b6": payload[6], "b7": payload[7],
-        "anomaly_score": float(out["score"]["fusion_score"]),
-        "severity": str(out["score"]["risk_level"]),
-    }
     with runtime_lock:
+        out = runtime_engine.process_frame(CanFrame(timestamp=ts, can_id=can_id, payload=payload))
+        runtime_stats.on_frame()
+        runtime_stats.on_score(float(out["score"]["fusion_score"]))
+        signal_item = {
+            "timestamp": ts,
+            "can_id": _to_hex(can_id),
+            "b0": payload[0], "b1": payload[1], "b2": payload[2], "b3": payload[3],
+            "b4": payload[4], "b5": payload[5], "b6": payload[6], "b7": payload[7],
+            "anomaly_score": float(out["score"]["fusion_score"]),
+            "severity": str(out["score"]["risk_level"]),
+        }
         live_signals_buffer.append(signal_item)
         if len(live_signals_buffer) > 2000:
             del live_signals_buffer[:-2000]
@@ -520,6 +605,7 @@ def vehicle_snapshot() -> dict[str, Any]:
     response_payload = {
         **snapshot,
         "source": "python-api",
+        "live_mode": "simulator",
         "updated_at": datetime.now(timezone.utc).isoformat(),
         "anomaly_score": float(out["score"]["fusion_score"]),
         "live_fps": float(runtime_stats.as_dict().get("fps", 0.0)),
@@ -660,8 +746,16 @@ async def analyze(files: List[UploadFile] = File(...))  -> AnalyzeResponse:
     # Build a lookup (timestamp, can_id_dec) → row index for enrichment
     predicted_reset = predicted.reset_index(drop=True)
 
+    # Each LLM explanation can take up to ~160s in the worst case (Gemini
+    # timeout + 4 sequential Ollama model timeouts before falling back to a
+    # template). Run it off the event loop so a slow/unreachable LLM backend
+    # can't freeze every other concurrent request (health checks, /vehicle
+    # polling, etc.), and cap how many alerts get a full LLM call so a large
+    # uploaded log can't turn into an effectively unbounded request.
+    _MAX_LLM_EXPLAIN_PER_ANALYZE = 25
+
     explained_results: list[AnalyzeResult] = []
-    for context in contexts:
+    for _explain_idx, context in enumerate(contexts):
         # ── Enrich with raw byte columns for plausibility ──────────────────
         can_id_hex = str(context.get("can_id", "unknown"))
         ts = float(context.get("timestamp", 0.0))
@@ -746,12 +840,53 @@ async def analyze(files: List[UploadFile] = File(...))  -> AnalyzeResponse:
             "reason":                    f"top_feature={top_f}, cluster={context.get('cluster', 0)}",
             "dominant_detection_layer":  layer_primary,
         }
-        explanation = llm_explain_alert(alert_adapted)
+        if _explain_idx < _MAX_LLM_EXPLAIN_PER_ANALYZE:
+            explanation = await _loop.run_in_executor(None, llm_explain_alert, alert_adapted)
+        else:
+            explanation = {
+                "summary": f"{alert_adapted['severity']} on {alert_adapted['can_id']} — score {score:.3f}.",
+                "detail": (
+                    f"Detection layer(s): {', '.join(layers)}. {alert_adapted['reason']}. "
+                    "Full AI explanation was skipped for this alert to keep analysis of "
+                    "large logs responsive; re-run /api/explain on it individually for a full write-up."
+                ),
+                "recommendation": "Review the raw CAN frame and cross-reference against the vehicle's DBC signal map.",
+                "kb_match_label": "",
+                "mode": "rule_based",
+            }
         explained_results.append(AnalyzeResult(context=context, explanation=explanation))
 
-    # Deduplicate burst alerts before grouping into incidents
+    # Deduplicate burst alerts, then rebuild explained_results from the SAME
+    # deduped list (matched by context identity) so the "anomalies" array
+    # returned to the UI stays index-aligned with _last_analyze_results —
+    # otherwise /api/explain/{alert_index} would resolve to the wrong alert
+    # after any burst collapses.
+    context_by_id = {id(r.context): r for r in explained_results}
     all_contexts = [r.context for r in explained_results]
     all_contexts = _dedup.deduplicate(all_contexts)
+
+    deduped_results: list[AnalyzeResult] = []
+    for ctx in all_contexts:
+        prior = context_by_id.get(id(ctx))
+        if prior is not None:
+            deduped_results.append(prior)
+        else:
+            # A burst-summary context synthesized by dedup — no per-frame LLM
+            # explanation was ever generated for it, so build a lightweight one.
+            deduped_results.append(AnalyzeResult(
+                context=ctx,
+                explanation={
+                    "summary": str(ctx.get("burst_label", "Burst of alerts detected")),
+                    "detail": (
+                        f"{int(ctx.get('suppressed_count', 0))} alerts on "
+                        f"{ctx.get('can_id', 'unknown')} were collapsed into this summary. "
+                        f"Peak anomaly score {float(ctx.get('anomaly_score', 0.0)):.3f}."
+                    ),
+                    "recommendation": "Investigate the source of the high-frequency traffic burst.",
+                    "kb_match_label": str(ctx.get("temporal_pattern", "")),
+                },
+            ))
+    explained_results = deduped_results
 
     # Group into incidents
     incidents = _alert_grouper.group(all_contexts)
@@ -878,6 +1013,7 @@ async def inject_attack(req: InjectRequest, files: List[UploadFile] = File(...))
             ctx["plausibility_checked"] = plaus["checked"]
             ctx["plausibility_passed"] = plaus["passed"]
             ctx["plausibility_violations"] = plaus["violations"]
+            ctx["decoded_signals"] = plaus.get("decoded_signals", [])
             t_score = float(row.get("timing_score", 0.0))
             ctx.update(_fingerprint.summarize_anomaly(can_id_hex, t_score, timing_baseline))
             t_pattern = str(row.get("temporal_pattern", "normal"))
@@ -885,10 +1021,15 @@ async def inject_attack(req: InjectRequest, files: List[UploadFile] = File(...))
             ctx.update(_temporal.summarize_anomaly(can_id_hex, t_pattern, t_pscore, freq_baseline,
                                                    float(row.get("msg_frequency", 0.0))))
 
+    contexts = _dedup.deduplicate(contexts)
     incidents = _alert_grouper.group(contexts)
     with _incidents_lock:
         _last_incidents.clear()
         _last_incidents.extend(incidents)
+        # Keep /api/explain/{alert_index} pointing at THIS injection's alerts
+        # instead of stale data left over from the last /analyze call.
+        _last_analyze_results.clear()
+        _last_analyze_results.extend(contexts)
 
     return JSONResponse(content={
         "injection_summary": inj_summary,
@@ -1161,14 +1302,26 @@ def _to_hex(can_id: int) -> str:
     return f"0x{int(can_id):03X}"
 
 
+_FUSION_LAYER_KEYS = {"timing", "payload", "ml", "persistence"}
+
+
 def _dominant_layer(reason: str) -> str:
+    # Only compare the four inputs that actually feed ScoringEngine.score()/fusion_score
+    # (backend/ml/runtime/scoring_engine.py). The reason string also carries diagnostic-only
+    # fields "freq" (raw Hz, e.g. 50-8000) and "can_id_entropy" (raw bits) that were never
+    # part of fusion scoring but, being numerically much larger than the 0-2 range of the
+    # real layer scores, always won the old unfiltered max() — mislabeling almost every
+    # alert's dominant detection layer as "freq" or "can_id_entropy".
     vals: dict[str, float] = {}
     for part in str(reason).split(","):
         if "=" not in part:
             continue
         k, v = part.split("=", 1)
+        k = k.strip()
+        if k not in _FUSION_LAYER_KEYS:
+            continue
         try:
-            vals[k.strip()] = float(v.strip())
+            vals[k] = float(v.strip())
         except ValueError:
             continue
     if not vals:
@@ -1185,8 +1338,8 @@ def api_live_start() -> dict[str, Any]:
     with runtime_lock:
         live_signals_buffer.clear()
         live_alerts_buffer.clear()
-    runtime_engine.state.reset()
-    runtime_stats.reset()
+        runtime_engine.state.reset()
+        runtime_stats.reset()
     live_simulator.start()
     started_at = datetime.now(timezone.utc).isoformat()
     return {"status": "ok", "session_started_at": started_at, "mode": "simulated"}
@@ -1291,8 +1444,11 @@ def api_explain_alert(alert_index: int) -> dict[str, Any]:
 
     if replay_ctx is not None:
         can_id_str = str(replay_ctx.get("can_id", ""))
-        decoded_signals = list(replay_ctx.get("decoded_signals", {}).values()) if isinstance(
-            replay_ctx.get("decoded_signals"), dict) else []
+        decoded_signals = (
+            replay_ctx["decoded_signals"]
+            if isinstance(replay_ctx.get("decoded_signals"), list)
+            else []
+        )
 
         cache_key = f"replay-{can_id_str}-{replay_ctx.get('anomaly_score', 0):.4f}"
         layers = _parse_layer_values(str(replay_ctx.get("reason", "")))
@@ -1355,6 +1511,7 @@ def api_explain_alert(alert_index: int) -> dict[str, Any]:
             "detail":                  replay_ctx.get("detail", explanation.get("detail", "")),
             "recommendation":          recommended_response or explanation.get("recommendation", ""),
             "kb_match_label":          explanation.get("kb_match_label", ""),
+            "mode":                    explanation.get("mode", "rule_based"),
             "layer_timing":            layers.get("timing", float(replay_ctx.get("timing_score", 0.0))),
             "layer_payload":           layers.get("payload", 0.0),
             "layer_ml":                layers.get("ml", float(replay_ctx.get("anomaly_score", 0.0))),
@@ -1413,6 +1570,7 @@ def api_explain_alert(alert_index: int) -> dict[str, Any]:
         "detail":          explanation.get("detail", ""),
         "recommendation":  explanation.get("recommendation", ""),
         "kb_match_label":  explanation.get("kb_match_label", ""),
+        "mode":            explanation.get("mode", "rule_based"),
         "layer_timing":    layers.get("timing", 0.0),
         "layer_payload":   layers.get("payload", 0.0),
         "layer_ml":        layers.get("ml", 0.0),
@@ -1475,6 +1633,8 @@ def api_replay_start(req: ReplayStartRequest) -> dict[str, Any]:
     cmd = [sys.executable, "-m", "backend.ml.runtime.replay_runner", "--input", str(input_path)]
     if req.limit > 0:
         cmd.extend(["--limit", str(req.limit)])
+    if req.vehicle_id:
+        cmd.extend(["--vehicle", req.vehicle_id])
     
     logger.info(f"[REPLAY] Command: {' '.join(cmd)}")
     # Capture stdout and stderr to pipes so we can see errors
@@ -1589,13 +1749,21 @@ def api_replay_alerts(limit: int = 500) -> dict[str, Any]:
     records = payload.get("alert_records", [])[:max(1, min(limit, 1000))]
 
     def _reason_bucket(reason_text: str) -> str:
+        # Restrict to the four keys that actually feed ScoringEngine.score()'s fusion_score
+        # (backend/ml/runtime/scoring_engine.py); "freq" (raw Hz) and "can_id_entropy" (raw
+        # bits) are diagnostic-only fields in the reason string and, being numerically much
+        # larger than the 0-2 range of real layer scores, previously won this max() almost
+        # every time — mislabeling the alert's attack_type/dominant_detection_layer.
         vals: dict[str, float] = {}
         for part in reason_text.split(","):
             if "=" not in part:
                 continue
             k, v = part.split("=", 1)
+            k = k.strip()
+            if k not in _FUSION_LAYER_KEYS:
+                continue
             try:
-                vals[k.strip()] = float(v.strip())
+                vals[k] = float(v.strip())
             except ValueError:
                 continue
         if not vals:
@@ -1611,7 +1779,7 @@ def api_replay_alerts(limit: int = 500) -> dict[str, Any]:
         items.append({
             "timestamp": float(r.get("timestamp", 0.0)),
             "severity": str(r.get("risk_level", "LOW")),
-            "attack_type": str(r.get("risk_level", "LOW")),
+            "attack_type": reason,                        # bucketed classification, not severity
             "can_id": f"0x{can_id:X}",
             "score": float(r.get("score", 0.0)),
             "dominant_detection_layer": reason,          # bucketed label for display
@@ -1633,13 +1801,21 @@ def api_replay_partial_alerts() -> dict[str, Any]:
         return {"status": "ok", "items": []}
 
     def _reason_bucket(reason_text: str) -> str:
+        # Restrict to the four keys that actually feed ScoringEngine.score()'s fusion_score
+        # (backend/ml/runtime/scoring_engine.py); "freq" (raw Hz) and "can_id_entropy" (raw
+        # bits) are diagnostic-only fields in the reason string and, being numerically much
+        # larger than the 0-2 range of real layer scores, previously won this max() almost
+        # every time — mislabeling the alert's attack_type/dominant_detection_layer.
         vals: dict[str, float] = {}
         for part in reason_text.split(","):
             if "=" not in part:
                 continue
             k, v = part.split("=", 1)
+            k = k.strip()
+            if k not in _FUSION_LAYER_KEYS:
+                continue
             try:
-                vals[k.strip()] = float(v.strip())
+                vals[k] = float(v.strip())
             except ValueError:
                 continue
         if not vals:
@@ -1650,14 +1826,15 @@ def api_replay_partial_alerts() -> dict[str, Any]:
     items = []
     for r in records:
         reason_text = str(r.get("reason", ""))
+        bucket = _reason_bucket(reason_text)
         can_id = int(r.get("can_id", 0))
         items.append({
             "timestamp": float(r.get("timestamp", 0.0)),
             "severity": str(r.get("risk_level", "LOW")),
-            "attack_type": str(r.get("risk_level", "LOW")),
+            "attack_type": bucket,                        # bucketed classification, not severity
             "can_id": f"0x{can_id:X}",
             "score": float(r.get("score", 0.0)),
-            "dominant_detection_layer": _reason_bucket(reason_text),
+            "dominant_detection_layer": bucket,
             "reason": reason_text,
         })
     return {"status": "ok", "items": items}
@@ -1675,7 +1852,12 @@ def api_simulator_generate(req: SimulatorGenerateRequest) -> dict[str, Any]:
         "--intensity", str(req.intensity),
         "--out", str(output_path),
     ]
-    subprocess.run(cmd, check=True)
+    try:
+        subprocess.run(cmd, check=True)
+    except (subprocess.CalledProcessError, OSError) as exc:
+        simulator_status["state"] = "idle"
+        simulator_status["error"] = str(exc)
+        raise HTTPException(status_code=500, detail=f"Simulator generation failed: {exc}")
     simulator_status["state"] = "idle"
     simulator_status["last_output"] = str(output_path)
     return {"status": "ok", "output_path": str(output_path), "attack": req.attack, "frames": req.frames, "intensity": req.intensity}
@@ -1752,6 +1934,61 @@ def api_offline_summary(session_id: str) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# MF4 -> CSV bridge (transparent decoding so MF4 reaches the same replay /
+# detection / AI-explanation / export pipeline CSV already uses — no
+# duplicate parsing, reuses backend.data_processing.mf4_to_csv_converter).
+# ---------------------------------------------------------------------------
+
+_MF4_CACHE_DIR = Path("backend/ml/outputs/mf4_converted")
+
+
+class Mf4ConvertRequest(BaseModel):
+    file_path: str
+
+
+@app.post("/api/mf4/convert")
+def api_mf4_convert(req: Mf4ConvertRequest) -> dict[str, Any]:
+    """Decode + convert an MF4 recording to CSV so it can flow through the
+    existing CSV-based replay/detection/explanation/export pipeline unchanged.
+
+    Caches by (source path, mtime) so re-opening the same file doesn't
+    re-decode it every time. Returns the CSV path for the caller to use in
+    place of the original .mf4 path for every downstream call.
+    """
+    import hashlib
+
+    src = Path(req.file_path)
+    if not src.exists():
+        raise HTTPException(status_code=400, detail=f"File not found: {req.file_path}")
+    if src.suffix.lower() != ".mf4":
+        raise HTTPException(status_code=400, detail=f"Not an MF4 file: {req.file_path}")
+
+    _MF4_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    fingerprint = hashlib.sha1(
+        f"{src.resolve()}::{src.stat().st_mtime}".encode("utf-8"), usedforsecurity=False
+    ).hexdigest()[:16]
+    csv_path = _MF4_CACHE_DIR / f"{src.stem}_{fingerprint}.csv"
+
+    if not csv_path.exists():
+        logger.info("[MF4] Converting %s -> %s", src, csv_path)
+        try:
+            convert_mf4_to_csv(src, csv_path)
+        except Exception as exc:
+            logger.exception("[MF4] Conversion failed for %s", src)
+            if csv_path.exists():
+                csv_path.unlink(missing_ok=True)
+            raise HTTPException(status_code=500, detail=f"MF4 conversion failed: {exc}")
+
+    if not csv_path.exists() or csv_path.stat().st_size == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="MF4 conversion produced no frames — file may use an unsupported MF4 layout.",
+        )
+
+    return {"status": "ok", "csv_path": str(csv_path.resolve())}
+
+
+# ---------------------------------------------------------------------------
 # Live hardware endpoints (real CAN adapter — ELM327 / PEAK PCAN / etc.)
 # ---------------------------------------------------------------------------
 
@@ -1780,8 +2017,9 @@ def api_live_hardware_connect(req: HardwareConnectRequest) -> dict[str, Any]:
     with runtime_lock:
         live_signals_buffer.clear()
         live_alerts_buffer.clear()
-    runtime_engine.state.reset()
-    runtime_stats.reset()
+        runtime_engine.state.reset()
+        runtime_stats.reset()
+    _hw_last_snapshot_fields.clear()
 
     try:
         hw_reader.connect(
@@ -1790,7 +2028,7 @@ def api_live_hardware_connect(req: HardwareConnectRequest) -> dict[str, Any]:
             bitrate=req.bitrate,
             vehicle_id=req.vehicle_id,
         )
-    except RuntimeError as exc:
+    except (RuntimeError, ValueError, ModuleNotFoundError) as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
     return {
@@ -1905,14 +2143,14 @@ def api_chat(body: ChatRequest) -> dict[str, Any]:
             _chat_histories.pop(session_key, None)
 
         history = _chat_histories.setdefault(session_key, [])
-        reply = chat_reply(body.alert, body.message, history=history)
+        reply, reply_mode = chat_reply(body.alert, body.message, history=history)
 
         history.append({"role": "user", "content": body.message})
         history.append({"role": "assistant", "content": reply})
         if len(history) > _MAX_HISTORY_TURNS * 2:
             _chat_histories[session_key] = history[-(_MAX_HISTORY_TURNS * 2):]
 
-        return {"status": "ok", "reply": reply}
+        return {"status": "ok", "reply": reply, "mode": reply_mode}
     except Exception as exc:
         logger.error("[CHAT] Failed: %s", exc)
         return {"status": "error", "reply": "AI engine unavailable. Check server logs."}
@@ -1925,7 +2163,8 @@ def api_settings_set(payload: dict[str, Any]) -> dict[str, Any]:
     if "alert_threshold" in payload:
         val = max(0.0, min(float(payload["alert_threshold"]), 1.0))
         runtime_settings["alert_threshold"] = val
-        runtime_engine.cfg.alert_threshold = val
+        with runtime_lock:
+            runtime_engine.cfg = dataclasses.replace(runtime_engine.cfg, alert_threshold=val)
     if "export_folder" in payload:
         runtime_settings["export_folder"] = str(payload["export_folder"])
     return {"status": "ok", "settings": runtime_settings}

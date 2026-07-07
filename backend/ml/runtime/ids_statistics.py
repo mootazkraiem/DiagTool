@@ -50,17 +50,27 @@ class IDSStatistics:
         reason_text = str(alert.get("reason", "unknown"))
         self.alerts_per_reason[self._reason_bucket(reason_text)] += 1
 
+    _FUSION_LAYER_KEYS = {"timing", "payload", "ml", "persistence"}
+
     @staticmethod
     def _reason_bucket(reason_text: str) -> str:
         # Parse the inline reason string emitted by runtime engine and map to dominant cause.
+        # Only the four inputs that actually feed ScoringEngine.score()/fusion_score
+        # (backend/ml/runtime/scoring_engine.py) are compared. The reason string also carries
+        # diagnostic-only fields "freq" (raw Hz) and "can_id_entropy" (raw bits) that were
+        # never part of fusion scoring but, being numerically much larger than the 0-2 range
+        # of the real layer scores, always won the old unfiltered max().
         vals: dict[str, float] = {}
         for part in reason_text.split(","):
             part = part.strip()
             if "=" not in part:
                 continue
             k, v = part.split("=", 1)
+            k = k.strip()
+            if k not in IDSStatistics._FUSION_LAYER_KEYS:
+                continue
             try:
-                vals[k.strip()] = float(v.strip())
+                vals[k] = float(v.strip())
             except ValueError:
                 continue
         if not vals:

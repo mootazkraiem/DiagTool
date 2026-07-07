@@ -38,14 +38,26 @@ _INTERFACE_MAP: dict[str, str] = {
 _BUFFER_MAX = 2000
 
 
+_FUSION_LAYER_KEYS = {"timing", "payload", "ml", "persistence"}
+
+
 def _dominant_layer(reason: str) -> str:
+    # Only compare the four inputs that actually feed ScoringEngine.score()/fusion_score
+    # (backend/ml/runtime/scoring_engine.py). The reason string also carries diagnostic-only
+    # fields "freq" (raw Hz) and "can_id_entropy" (raw bits) that were never part of fusion
+    # scoring but, being numerically much larger than the 0-2 range of the real layer scores,
+    # always won the old unfiltered max(). Same defect and fix as backend/api/server.py's
+    # _dominant_layer/_reason_bucket.
     vals: dict[str, float] = {}
     for part in str(reason).split(","):
         if "=" not in part:
             continue
         k, v = part.split("=", 1)
+        k = k.strip().lower()
+        if k not in _FUSION_LAYER_KEYS:
+            continue
         try:
-            vals[k.strip().lower()] = float(v.strip())
+            vals[k] = float(v.strip())
         except ValueError:
             continue
     if not vals:
@@ -121,11 +133,23 @@ class CanHardwareReader:
         self.bitrate = bitrate
         if vehicle_id:
             self._vehicle_id = vehicle_id
+        # Score against the matching trained model bundle for this vehicle instead
+        # of always falling back to "general" (same fix as the replay paths).
+        self._engine.vehicle_id = self._vehicle_id or "general"
         self.error = ""
 
-        bus_kwargs: dict[str, Any] = {"bustype": bustype, "bitrate": bitrate}
+        bus_kwargs: dict[str, Any] = {"interface": bustype, "bitrate": bitrate}
         if channel:
             bus_kwargs["channel"] = channel
+
+        if self._bus is not None:
+            # Defensive: a prior session may have left a stale handle open
+            # (e.g. after a recv() error) without going through disconnect().
+            try:
+                self._bus.shutdown()
+            except Exception:
+                pass
+            self._bus = None
 
         try:
             self._bus = can.interface.Bus(**bus_kwargs)
@@ -164,6 +188,10 @@ class CanHardwareReader:
             self._bus = None
 
         self.is_connected = False
+        # Reset the shared engine back to "general" so the synthetic /vehicle
+        # endpoint (resumed after disconnect) doesn't keep scoring generic demo
+        # data against this hardware session's vehicle-specific model.
+        self._engine.vehicle_id = "general"
         logger.info(
             "[HW] Disconnected  frames=%d  alerts=%d",
             self.frames_received, self.alert_count
@@ -200,6 +228,12 @@ class CanHardwareReader:
                 logger.error("[HW] recv error: %s", exc)
                 self.error = str(exc)
                 self.is_connected = False
+                if self._bus is not None:
+                    try:
+                        self._bus.shutdown()
+                    except Exception:
+                        pass
+                    self._bus = None
                 break
 
             if msg is None:

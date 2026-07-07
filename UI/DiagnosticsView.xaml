@@ -408,7 +408,7 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
                         <DockPanel>
-                            <TextBlock Text="ERROR CONSOLE" Style="{StaticResource Title}"/>
+                            <TextBlock Text="IDS EVENT LOG" Style="{StaticResource Title}"/>
                             <TextBlock DockPanel.Dock="Right" Text="{Binding TotalEventsText, StringFormat='{}{0} EVENTS'}" Style="{StaticResource Meta}"/>
                         </DockPanel>
                         <Grid Grid.Row="1" Margin="0,10,0,5">
@@ -588,7 +588,7 @@
                     <Button Content="RECONNECT ADAPTER" Style="{StaticResource TinyButton}" Command="{Binding QuickScanCommand}" Margin="2,0"/>
                     <Button Content="RESTART TELEMETRY SERVICE" Style="{StaticResource TinyButton}" Command="{Binding RunFullScanCommand}" Margin="2,0"/>
                     <Button Content="RESTART DETECTION ENGINE" Style="{StaticResource TinyButton}" Command="{Binding StopScanCommand}" Margin="2,0"/>
-                    <Button Content="RESTART ALL SERVICES" Style="{StaticResource TinyButton}" Command="{Binding RunFullScanCommand}" Margin="2,0"/>
+                    <Button Content="RESTART ALL SERVICES" Style="{StaticResource TinyButton}" Command="{Binding RestartAllServicesCommand}" Margin="2,0"/>
                     <Button Content="RELOAD MODEL" Style="{StaticResource TinyButton}" Command="{Binding SaveSnapshotCommand}" Margin="2,0"/>
                     <Button Content="CLEAR ERROR LOG" Style="{StaticResource TinyButton}" Command="{Binding ClearAlertsCommand}" Margin="2,0" Foreground="#FF716C"/>
                 </UniformGrid>

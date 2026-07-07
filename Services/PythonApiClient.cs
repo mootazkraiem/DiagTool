@@ -271,7 +271,7 @@ public sealed class PythonApiClient
         }
     }
 
-    public async Task<ReplayStartResponse?> StartReplayAsync(string inputPath, int limit, CancellationToken cancellationToken)
+    public async Task<ReplayStartResponse?> StartReplayAsync(string inputPath, int limit, string vehicleId, CancellationToken cancellationToken)
     {
         try
         {
@@ -279,6 +279,7 @@ public sealed class PythonApiClient
             {
                 ["input_path"] = inputPath,
                 ["limit"] = limit,
+                ["vehicle_id"] = vehicleId ?? string.Empty,
             };
             using var content = new StringContent(payload.ToString(Formatting.None), Encoding.UTF8, "application/json");
             using var response = await httpClient.PostAsync(BuildUrl("api/replay/start"), content, cancellationToken);
@@ -463,6 +464,35 @@ public sealed class PythonApiClient
 
     public async Task<OfflineSummaryResponse?> GetOfflineSummaryAsync(string sessionId, CancellationToken cancellationToken)
         => await GetJsonAsync<OfflineSummaryResponse>($"api/offline/summary/{sessionId}", cancellationToken);
+
+    // ── MF4 -> CSV conversion bridge ─────────────────────────────────────────
+    // Decodes an MF4 recording to CSV via the existing asammdf-based converter
+    // so the caller can feed the resulting path into the normal CSV replay
+    // pipeline unchanged (no separate MF4 code path to maintain downstream).
+
+    public async Task<string?> ConvertMf4Async(string filePath, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var payload = new JObject { ["file_path"] = filePath };
+            using var content = new StringContent(payload.ToString(Formatting.None), Encoding.UTF8, "application/json");
+            using var response = await httpClient.PostAsync(BuildUrl("api/mf4/convert"), content, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                logger.Error($"MF4 conversion returned {(int)response.StatusCode}: {body}");
+                return null;
+            }
+            var json = await response.Content.ReadAsStringAsync();
+            var parsed = JsonConvert.DeserializeObject<Mf4ConvertResponse>(json);
+            return string.IsNullOrWhiteSpace(parsed?.CsvPath) ? null : parsed!.CsvPath;
+        }
+        catch (Exception exception)
+        {
+            logger.Error("ConvertMf4Async failed.", exception);
+            return null;
+        }
+    }
 
     // ── Aggregated decoded signals ───────────────────────────────────────────
 

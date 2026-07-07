@@ -355,6 +355,17 @@ public sealed class CanLogImportService
 
     private DateTime BuildTimestamp(double seconds)
     {
+        // candump's default "-l" format (CandumpPattern/CandumpNoParenPattern) records an
+        // absolute Unix epoch timestamp, e.g. "(1700000000.123456)". Other supported formats
+        // (ASC, SavvyCAN/generic CSV) use small trace-relative offsets from the start of the
+        // capture. Distinguish the two by magnitude: anything past roughly year-2001 in epoch
+        // seconds can only be an absolute timestamp, never a relative offset.
+        const double EpochSecondsThreshold = 1_000_000_000;
+        if (seconds >= EpochSecondsThreshold)
+        {
+            return DateTimeOffset.FromUnixTimeMilliseconds((long)Math.Round(seconds * 1000.0)).UtcDateTime;
+        }
+
         var baseTime = DateTime.UtcNow.Date;
         return baseTime.AddSeconds(seconds);
     }

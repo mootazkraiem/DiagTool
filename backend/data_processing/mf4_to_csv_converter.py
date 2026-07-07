@@ -115,63 +115,58 @@ def _parse_data_bytes(value: object) -> tuple[list[int], bool]:
 
 
 def _extract_raw_rows(mf4_path: Path) -> Iterable[tuple[list[object], bool]]:
+    """Extract (timestamp, can_id, b0..b7) rows from every populated CAN_DataFrame
+    channel group in the file.
+
+    CANedge/Vector MDF4 recordings from multi-bus loggers store each logical CAN
+    channel as its OWN channel group (one per bus/frame-type), most of which are
+    empty templates. A single mdf.to_dataframe() call merges all groups into one
+    wide, timestamp-aligned frame with suffixed duplicate columns (ID, ID_0, ID_1,
+    ...) — reading only the first "id"/"data" column match silently drops every
+    frame from the other groups, which is often where the real traffic lives.
+    Iterating groups directly avoids that and yields every real frame exactly once.
+    """
     mdf = MDF(str(mf4_path))
-    df = mdf.to_dataframe()
 
-    cols = list(df.columns)
-
-    # 🔥 Safe column filtering (with fallback)
-    filtered_cols = []
-    for c in cols:
-        c_low = str(c).lower()
-        if (
-            "id" in c_low
-            or "data" in c_low
-            or "byte" in c_low
-            or "time" in c_low
-        ):
-            filtered_cols.append(c)
-
-    if len(filtered_cols) >= 2:
-        df = df[filtered_cols]
-
-    cols = list(df.columns)
-    lower_map = {str(c).lower(): c for c in cols}
-
-    ts_col = None
-    for key in ("timestamps", "timestamp", "time"):
-        if key in lower_map:
-            ts_col = lower_map[key]
-            break
-
-    id_col = None
-    bytes_col = None
-
-    for c in cols:
-        c_low = str(c).lower()
-        if id_col is None and ("id" in c_low):
-            id_col = c
-        if bytes_col is None and ("data" in c_low or "byte" in c_low):
-            bytes_col = c
-
-    if id_col is None or bytes_col is None:
-        raise ValueError(f"missing CAN columns; available columns: {cols[:20]}")
-
-    if ts_col is not None:
-        iterator = df[[ts_col, id_col, bytes_col]].itertuples(index=False, name=None)
-    else:
-        iterator = (
-            (idx, r[0], r[1])
-            for idx, r in zip(df.index, df[[id_col, bytes_col]].itertuples(index=False, name=None))
+    rows: list[tuple[float, object, object]] = []
+    for group_index, group in enumerate(mdf.groups):
+        if group.channel_group.cycles_nr == 0:
+            continue
+        names = [ch.name for ch in group.channels]
+        id_name = next((n for n in names if n.lower().endswith(".id")), None)
+        bytes_name = next(
+            (n for n in names if "databytes" in n.lower().replace("_", "")), None
         )
+        if id_name is None or bytes_name is None:
+            continue  # not a CAN_DataFrame group (e.g. LIN/error/remote-frame groups)
 
-    for timestamp, can_id_raw, data_bytes_raw in iterator:
+        gdf = mdf.get_group(group_index)
+        id_col = next(c for c in gdf.columns if c.endswith("." + id_name.split(".")[-1]))
+        bytes_col = next(c for c in gdf.columns if c.endswith("." + bytes_name.split(".")[-1]))
+        for ts, can_id_raw, data_bytes_raw in zip(
+            gdf.index.to_numpy(), gdf[id_col], gdf[bytes_col]
+        ):
+            rows.append((float(ts), can_id_raw, data_bytes_raw))
+
+    rows.sort(key=lambda r: r[0])
+
+    for timestamp, can_id_raw, data_bytes_raw in rows:
         try:
             can_id = _normalize_can_id(can_id_raw)
             b, corrected = _parse_data_bytes(data_bytes_raw)
-            yield [float(timestamp), can_id, *b], corrected
+            yield [timestamp, can_id, *b], corrected
         except Exception:
             continue
+
+
+def convert_mf4_to_csv(mf4_path: Path, csv_path: Path) -> None:
+    """Public single-file MF4 -> CSV conversion (decode + write).
+
+    Thin wrapper around the same row-extraction/writing logic used by the
+    batch dataset converter, so callers (e.g. the API server) reuse the
+    exact asammdf-based decode path instead of duplicating it.
+    """
+    _convert_one_file(mf4_path, csv_path)
 
 
 def _convert_one_file(mf4_path: Path, csv_path: Path) -> None:

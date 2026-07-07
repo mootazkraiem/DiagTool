@@ -142,7 +142,10 @@ class CanStore:
         byte_col_names = ["b0","b1","b2","b3","b4","b5","b6","b7"]
         insert = pd.DataFrame()
         insert["timestamp"] = df["timestamp"].astype(float) if "timestamp" in df.columns else 0.0
-        insert["can_id"]    = df["can_id"].astype(int)    if "can_id"    in df.columns else 0
+        insert["can_id"]    = (
+            pd.to_numeric(df["can_id"], errors="coerce").fillna(0).astype(int)
+            if "can_id" in df.columns else 0
+        )
         for c in byte_col_names:
             insert[c] = df[c].fillna(0).astype(int) if c in df.columns else 0
         insert["anomaly"] = df["anomaly"].astype(int) if "anomaly" in df.columns else 1
@@ -152,14 +155,20 @@ class CanStore:
                     (session_id, timestamp, can_id, b0,b1,b2,b3,b4,b5,b6,b7, anomaly)
                  VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"""
 
+        should_retrain = False
         with self._lock, self._connect() as conn:
             conn.executemany(sql, rows)
 
-        # Count new normal frames and maybe trigger retraining
-        new_normal = sum(1 for r in rows if r[-1] == 1)
-        self._new_normal_since_retrain += new_normal
-        if self._new_normal_since_retrain >= RETRAIN_THRESHOLD and self._retrain_cb:
-            self._new_normal_since_retrain = 0
+            # Count new normal frames and maybe trigger retraining. Done under
+            # the same lock as the insert so two concurrent writers can't both
+            # observe a pre-reset counter and both fire the retrain callback.
+            new_normal = sum(1 for r in rows if r[-1] == 1)
+            self._new_normal_since_retrain += new_normal
+            if self._new_normal_since_retrain >= RETRAIN_THRESHOLD and self._retrain_cb:
+                self._new_normal_since_retrain = 0
+                should_retrain = True
+
+        if should_retrain:
             threading.Thread(target=self._retrain_cb, daemon=True).start()
 
         return len(rows)

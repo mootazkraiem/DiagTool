@@ -200,8 +200,12 @@ def preprocess_pipeline(df: pd.DataFrame, scaler: object = None, fit: bool = Fal
             continue
         valid_groups.append(group)
     if not valid_groups:
-        raise ValueError("All CAN IDs have zero variance")
-    feat_df = pd.concat(valid_groups, ignore_index=True)
+        logger.warning(
+            "All CAN IDs have zero variance in byte_diff/time_diff; "
+            "skipping the variance filter and using all rows unfiltered"
+        )
+    else:
+        feat_df = pd.concat(valid_groups, ignore_index=True)
 
     # 4) normalize per can_id (after clip/log)
     feat_df = normalize_per_can_id(feat_df)

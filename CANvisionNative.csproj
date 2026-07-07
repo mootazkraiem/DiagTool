@@ -21,7 +21,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="assets\**\*">
+    <!--
+      Only assets\6k+-D+copy+-+High+Contrast.webp is actually loaded at runtime
+      (via pack://siteoforigin in UI/SettingsView.xaml). Everything else under
+      assets\ (ML datasets/models/dbc files) is read directly from the project
+      root by the Python backend process, never from this build's output dir,
+      so it must NOT be globbed wholesale here — assets\ contains ~7GB of
+      gitignored training data that should never end up in bin\.
+    -->
+    <Content Include="assets\6k+-D+copy+-+High+Contrast.webp">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="data\**\*">

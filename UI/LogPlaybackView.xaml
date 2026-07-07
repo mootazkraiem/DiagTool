@@ -210,11 +210,11 @@
 
                 <!-- Transport controls -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Style="{StaticResource TBtn}" Command="{Binding RewindCommand}"  Content="⏮" Margin="0,0,3,0"/>
-                    <Button Style="{StaticResource TBtn}" Command="{Binding PlayCommand}"    Content="▶"  Margin="0,0,3,0"/>
-                    <Button Style="{StaticResource TBtn}" Command="{Binding PauseCommand}"  Content="⏸" Margin="0,0,3,0"/>
-                    <Button Style="{StaticResource TBtn}" Command="{Binding StopCommand}"   Content="■"  Margin="0,0,3,0"/>
-                    <Button Style="{StaticResource TBtn}" Command="{Binding ForwardCommand}" Content="⏭"/>
+                    <Button Style="{StaticResource TBtn}" Command="{Binding RewindCommand}"  Content="⏮" Margin="0,0,3,0" IsEnabled="{Binding HasReplayLoaded}" ToolTip="Import a replay log first"/>
+                    <Button Style="{StaticResource TBtn}" Command="{Binding PlayCommand}"    Content="▶"  Margin="0,0,3,0" IsEnabled="{Binding HasReplayLoaded}" ToolTip="Import a replay log first"/>
+                    <Button Style="{StaticResource TBtn}" Command="{Binding PauseCommand}"  Content="⏸" Margin="0,0,3,0" IsEnabled="{Binding HasReplayLoaded}" ToolTip="Import a replay log first"/>
+                    <Button Style="{StaticResource TBtn}" Command="{Binding StopCommand}"   Content="■"  Margin="0,0,3,0" IsEnabled="{Binding HasReplayLoaded}" ToolTip="Import a replay log first"/>
+                    <Button Style="{StaticResource TBtn}" Command="{Binding ForwardCommand}" Content="⏭" IsEnabled="{Binding HasReplayLoaded}" ToolTip="Import a replay log first"/>
                 </StackPanel>
 
                 <!-- Speed buttons -->

@@ -1,0 +1,16 @@
+{
+  "replay_source": "C:\\Users\\benkr\\OneDrive\\can_project\\assets\\Validation\\ZZZ_jury_wrong_format.log",
+  "total_frames_processed": 0,
+  "total_alerts": 0,
+  "alerts_per_1000_frames": 0.0,
+  "critical_alert_rate": 0.0,
+  "high_alert_rate": 0.0,
+  "alerts_per_severity": {},
+  "alerts_per_reason": {},
+  "alerts_per_can_id": {},
+  "alerts_per_risk_level": {},
+  "max_fusion_score_observed": 0.0,
+  "average_fusion_score_observed": 0.0,
+  "runtime_duration_sec": 0.0015672000008635223,
+  "fps": 0.0
+}

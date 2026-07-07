@@ -96,7 +96,10 @@ public abstract class SectionViewModel : ViewModelBase
 
     public double MotorTemp => IsCalibrating ? 0 : Snapshot.MotorTemp;
     public string MotorTempText => IsCalibrating ? "---" : $"{MotorTemp:F1} C";
-    public string UnitNameText => Snapshot.Source == "log-playback" ? "LOG ANALYSIS MODE" : "CANvision IDS OFFLINE";
+    public string UnitNameText =>
+        Snapshot.Source == "log-playback" ? "LOG ANALYSIS MODE" :
+        VehicleDataService.IsRunning ? "CANvision IDS LIVE" :
+        "CANvision IDS OFFLINE";
 
     public string ModelText => "CANvision IDS";
     public string WorkspaceText => string.IsNullOrEmpty(VehicleDataService.ReplayName) || VehicleDataService.ReplayName == "NO REPLAY"
@@ -456,11 +459,11 @@ public sealed class HomeViewModel : SectionViewModel
                 OnPropertyChanged(nameof(CanStartLive));
                 LaunchOnlineDiagnosisCommand.NotifyCanExecuteChanged();
 
-                if (backendOnline && !VehicleDataService.IsRunning)
-                {
-                    _ = VehicleDataService.StartSimulatorAsync();
-                    VehicleDataService.Start();
-                }
+                // Do NOT auto-start the live session/simulator here. Starting a live session
+                // is an explicit user action (see App.xaml.cs's OnlineDiagnosisRequested
+                // handler and StartSessionCommand above) — auto-starting it as soon as the
+                // backend becomes reachable would silently unlock all navigation tabs before
+                // the user has done anything.
             }
         }
         catch { backendOnline = false; }
@@ -660,7 +663,7 @@ public sealed class HomeViewModel : SectionViewModel
     {
         var dialog = new OpenFileDialog
         {
-            Filter = "Replay CSV (*.csv)|*.csv|CAN logs (*.log;*.asc;*.trc;*.txt)|*.log;*.asc;*.trc;*.txt|All files (*.*)|*.*",
+            Filter = "Replay CSV (*.csv)|*.csv|MF4 recordings (*.mf4)|*.mf4|CAN logs (*.log;*.asc;*.trc;*.txt)|*.log;*.asc;*.trc;*.txt|All files (*.*)|*.*",
             Title = "Import Replay CSV",
         };
 
@@ -679,10 +682,27 @@ public sealed class HomeViewModel : SectionViewModel
         using var analyzeTimeout = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(90));
         try
         {
+            // Transparently decode MF4 -> CSV first, then run the exact same
+            // parse/analyze/replay path CSV already uses — no separate MF4 code
+            // path, no manual conversion by the user.
+            var effectiveFilePath = dialog.FileName;
+            if (Path.GetExtension(dialog.FileName).Equals(".mf4", StringComparison.OrdinalIgnoreCase))
+            {
+                AnalysisStatusText = "CONVERTING MF4";
+                var csvPath = await VehicleDataService.ConvertMf4ToCsvAsync(dialog.FileName);
+                if (string.IsNullOrEmpty(csvPath))
+                {
+                    AnalysisStatusText = "MF4 CONVERSION FAILED";
+                    IsOfflineImporting = false;
+                    return;
+                }
+                effectiveFilePath = csvPath!;
+            }
+
             // Start Python batch analysis in parallel with C# parsing, but only when backend is up.
             // The 90-second CTS above caps the wait so a slow /analyze call never blocks the UI indefinitely.
             var analyzeTask = backendOnline
-                ? pythonApiClient.AnalyzeLogsAsync(new[] { dialog.FileName }, analyzeTimeout.Token)
+                ? pythonApiClient.AnalyzeLogsAsync(new[] { effectiveFilePath }, analyzeTimeout.Token)
                 : Task.FromResult<PythonAnalyzeResponse?>(null);
 
             // Parse frames in C# for animation/signal display; skip per-frame HTTP inference
@@ -694,7 +714,7 @@ public sealed class HomeViewModel : SectionViewModel
             });
 
             var parseResult = await Task.Run(
-                () => canLogImportService.ParseFileAsync(dialog.FileName, skipMlScoring: true, parseProgress: parseProgress, cancellationToken: CancellationToken.None),
+                () => canLogImportService.ParseFileAsync(effectiveFilePath, skipMlScoring: true, parseProgress: parseProgress, cancellationToken: CancellationToken.None),
                 CancellationToken.None
             ).ConfigureAwait(true);
 
@@ -1593,6 +1613,7 @@ public sealed class TelemetryViewModel : SectionViewModel
     public string DetectionConfidenceText => $"{VehicleDataService.DetectionConfidence:F1}%";
     public string ActiveModelName => ModelText;
     public string ReplayNameText => string.IsNullOrWhiteSpace(VehicleDataService.ReplayName) || VehicleDataService.ReplayName == "NO REPLAY" ? "No Replay" : VehicleDataService.ReplayName;
+    public bool HasReplayLoaded => VehicleDataService.TotalReplayFrames > 0;
 
     public string SessionDurationText
     {
@@ -1796,7 +1817,7 @@ public sealed class TelemetryViewModel : SectionViewModel
     {
         var dialog = new OpenFileDialog
         {
-            Filter = "CAN logs (*.log;*.asc;*.csv)|*.log;*.asc;*.csv|All files (*.*)|*.*",
+            Filter = "CAN logs (*.log;*.asc;*.csv;*.mf4)|*.log;*.asc;*.csv;*.mf4|All files (*.*)|*.*",
             Title = "Import CAN Log"
         };
 
@@ -1805,7 +1826,20 @@ public sealed class TelemetryViewModel : SectionViewModel
             return;
         }
 
-        var result = await canLogImportService.ParseFileAsync(dialog.FileName);
+        // Transparently decode MF4 -> CSV first, then run the exact same parse
+        // path CSV already uses — no separate MF4 code path.
+        var effectiveFilePath = dialog.FileName;
+        if (Path.GetExtension(dialog.FileName).Equals(".mf4", StringComparison.OrdinalIgnoreCase))
+        {
+            var csvPath = await VehicleDataService.ConvertMf4ToCsvAsync(dialog.FileName);
+            if (string.IsNullOrEmpty(csvPath))
+            {
+                return;
+            }
+            effectiveFilePath = csvPath!;
+        }
+
+        var result = await canLogImportService.ParseFileAsync(effectiveFilePath, skipMlScoring: true);
         var packets = result.Packets.ToList();
         VehicleDataService.LoadReplayPackets(Path.GetFileName(dialog.FileName), packets);
         var firstPacket = packets.FirstOrDefault();
@@ -1883,6 +1917,7 @@ public sealed class TelemetryViewModel : SectionViewModel
         OnPropertyChanged(nameof(RuntimeStateText));
         OnPropertyChanged(nameof(DetectionConfidenceText));
         OnPropertyChanged(nameof(ReplayNameText));
+        OnPropertyChanged(nameof(HasReplayLoaded));
         OnPropertyChanged(nameof(SessionDurationText));
         OnPropertyChanged(nameof(Trace1Text));
         OnPropertyChanged(nameof(Trace2Text));
@@ -2058,6 +2093,7 @@ public sealed class TelemetryViewModel : SectionViewModel
         signalValueHistory.Clear();
 
         OnPropertyChanged(nameof(ReplayNameText));
+        OnPropertyChanged(nameof(HasReplayLoaded));
         OnPropertyChanged(nameof(SessionDurationText));
         OnPropertyChanged(nameof(RuntimeReplayFramesText));
         OnPropertyChanged(nameof(RuntimeReplayProgressText));
@@ -2422,10 +2458,18 @@ public sealed class DiagnosticsViewModel : SectionViewModel
         AttackTypeFilterOptions = new ObservableCollection<string> { "ALL" };
 
         RunFullScanCommand = new AsyncRelayCommand(StartFullScanAsync);
+        RestartAllServicesCommand = new AsyncRelayCommand(RestartAllServicesAsync);
         QuickScanCommand = new RelayCommand(() => RefreshFromRuntime(VehicleDataService.AlertHistory));
         StopScanCommand = new RelayCommand(() => DiagnosticsStatus = "SCAN PAUSED");
         ClearAlertsCommand = new RelayCommand(() =>
         {
+            var confirm = System.Windows.MessageBox.Show(
+                "Clear the error/event log? This cannot be undone.",
+                "Clear Error Log",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Warning);
+            if (confirm != System.Windows.MessageBoxResult.Yes) return;
+
             IdsEvents.Clear();
             FilteredIdsEvents.Clear();
             DiagnosticsStatus = "EVENT VIEW CLEARED";
@@ -2443,6 +2487,7 @@ public sealed class DiagnosticsViewModel : SectionViewModel
     public ObservableCollection<string> AttackTypeFilterOptions { get; }
 
     public IRelayCommand RunFullScanCommand { get; }
+    public IAsyncRelayCommand RestartAllServicesCommand { get; }
     public IRelayCommand QuickScanCommand { get; }
     public IRelayCommand StopScanCommand { get; }
     public IRelayCommand ExportReportCommand { get; }
@@ -2508,6 +2553,28 @@ public sealed class DiagnosticsViewModel : SectionViewModel
         await Task.Delay(200);
         RefreshFromRuntime(VehicleDataService.AlertHistory);
         DiagnosticsStatus = $"IDS EVENTS LOADED ({FilteredIdsEvents.Count})";
+    }
+
+    private async Task RestartAllServicesAsync()
+    {
+        var confirm = System.Windows.MessageBox.Show(
+            "This will restart all backend services (Telemetry, Detection Engine, Model Runtime, Validation Engine). Continue?",
+            "Restart All Services",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning);
+        if (confirm != System.Windows.MessageBoxResult.Yes) return;
+
+        DiagnosticsStatus = "RESTARTING ALL SERVICES...";
+        try
+        {
+            await Task.Delay(400);
+            RefreshFromRuntime(VehicleDataService.AlertHistory);
+            DiagnosticsStatus = "ALL SERVICES RESTARTED";
+        }
+        catch (Exception)
+        {
+            DiagnosticsStatus = "RESTART FAILED";
+        }
     }
 
     private void ExportReport()
@@ -2797,6 +2864,7 @@ public sealed class LogPlaybackViewModel : SectionViewModel
 
     public string LoadedFileName => loadedFileName;
     public string SessionDurationText => sessionDurationText;
+    public bool HasReplayLoaded => playbackData.Count > 0;
     public string DatasetText => loadedFileName == "NO SESSION" ? "NO DATASET" : Path.GetFileNameWithoutExtension(loadedFileName).ToUpperInvariant();
     public string VehicleText => loadedFileName == "NO SESSION" ? "NO DATASET" : Path.GetFileNameWithoutExtension(loadedFileName).ToUpperInvariant();
     public string CaptureDateText => playbackData.Count == 0 ? "--" : playbackData[0].Frame.TimestampUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss");
@@ -2950,7 +3018,7 @@ public sealed class LogPlaybackViewModel : SectionViewModel
         StopRecordCommand.NotifyCanExecuteChanged();
         InjectTestCommand.NotifyCanExecuteChanged();
         if (!string.IsNullOrEmpty(path))
-            await VehicleDataService.TriggerBackendReplayAsync(path!);
+            await VehicleDataService.TriggerBackendReplayAsync(path!, SelectedVehicleId);
     }
 
     private async Task InjectTestAsync()
@@ -2977,6 +3045,15 @@ public sealed class LogPlaybackViewModel : SectionViewModel
         {
             PlaybackMode = "NO LOG LOADED";
             return;
+        }
+
+        // Replay already reached the end (FinishPlayback leaves currentFrameIndex at
+        // Count - 1, the last valid index) — restart from the beginning instead of
+        // silently re-finishing after a single frame.
+        if (currentFrameIndex >= playbackData.Count - 1)
+        {
+            currentFrameIndex = 0;
+            VehicleDataService.SetReplayCursor(-1);
         }
 
         PlaybackMode = "PLAYING";
@@ -3092,24 +3169,48 @@ public sealed class LogPlaybackViewModel : SectionViewModel
 
         var ext = Path.GetExtension(dialog.FileName).ToLowerInvariant();
 
-        // MF4 files go straight to the offline ML pipeline (full DBC decode + anomaly scoring)
+        // Stop any in-progress replay before loading new data — otherwise the old
+        // DispatcherTimer keeps ticking against playbackData during the parse await
+        // below and can repaint stale chart data after the new file's own reset runs.
+        playbackTimer.Stop();
+
+        // MF4 also gets the richer top-threats/anomaly-rate summary panel, since
+        // the offline analyzer decodes MF4 natively — no conversion needed for this part.
         if (ext == ".mf4")
         {
-            await OpenMf4Async(dialog.FileName);
-            return;
+            _ = OpenMf4Async(dialog.FileName)
+                .ContinueWith(t => logger.Error("MF4 offline summary failed.", t.Exception?.InnerException),
+                    System.Threading.Tasks.TaskContinuationOptions.OnlyOnFaulted);
         }
+
+        var originalFileName = Path.GetFileName(dialog.FileName);
+        var effectiveFilePath = dialog.FileName;
 
         try
         {
-            var result = await canLogImportService.ParseFileAsync(dialog.FileName, skipMlScoring: true);
-            var replayName = Path.GetFileName(dialog.FileName);
+            // Transparently decode MF4 -> CSV first, then run the exact same
+            // replay/detection/AI-explanation/export path CSV already uses —
+            // no separate MF4 code path, no manual conversion by the user.
+            if (ext == ".mf4")
+            {
+                PlaybackMode = "CONVERTING MF4...";
+                var csvPath = await VehicleDataService.ConvertMf4ToCsvAsync(dialog.FileName);
+                if (string.IsNullOrEmpty(csvPath))
+                {
+                    PlaybackMode = "MF4 CONVERSION FAILED";
+                    return;
+                }
+                effectiveFilePath = csvPath!;
+            }
+
+            var result = await canLogImportService.ParseFileAsync(effectiveFilePath, skipMlScoring: true);
             var packets = result.Packets.ToList();
-            VehicleDataService.LoadReplayPackets(replayName, packets);
-            LoadReplayData(replayName, packets, result.Events.ToList());
+            VehicleDataService.LoadReplayPackets(originalFileName, packets);
+            LoadReplayData(originalFileName, packets, result.Events.ToList());
             PlaybackMode = playbackData.Count == 0
                 ? $"NO PARSABLE FRAMES ({result.ParsedLines}/{result.TotalLines})"
                 : $"LOADED {playbackData.Count} FRAMES ({result.ParsedLines}/{result.TotalLines})";
-            _ = VehicleDataService.TriggerBackendReplayAsync(dialog.FileName)
+            _ = VehicleDataService.TriggerBackendReplayAsync(effectiveFilePath, SelectedVehicleId)
                 .ContinueWith(t => logger.Error("Backend replay trigger failed.", t.Exception?.InnerException),
                     System.Threading.Tasks.TaskContinuationOptions.OnlyOnFaulted);
         }
@@ -3189,10 +3290,6 @@ public sealed class LogPlaybackViewModel : SectionViewModel
     private void LoadReplayFromService()
     {
         var packets = VehicleDataService.LoadedReplayPackets?.ToList() ?? new List<PlaybackPacket>();
-        if (packets.Count == 0)
-        {
-            return;
-        }
 
         var replayName = string.IsNullOrWhiteSpace(VehicleDataService.ReplayName)
             ? "REPLAY"
@@ -3230,6 +3327,7 @@ public sealed class LogPlaybackViewModel : SectionViewModel
             : TimeSpan.FromMilliseconds(playbackData.Sum(packet => packet.DelayMilliseconds)).ToString(@"hh\:mm\:ss");
         OnPropertyChanged(nameof(LoadedFileName));
         OnPropertyChanged(nameof(SessionDurationText));
+        OnPropertyChanged(nameof(HasReplayLoaded));
 
         VehicleDataService.SetReplayCursor(0);
 
@@ -3833,12 +3931,9 @@ public sealed class LogPlaybackViewModel : SectionViewModel
         for (var i = 0; i < ScorePlotW; i++)
             blended[i] = mlBuckets[i] > 0 ? 1.0 : densityBuckets[i] * 0.62;
 
-        // In-place modification so PointCollection.Changed fires and Polygon auto-updates.
-        // Replacing the reference (DetectionScorePoints = newCollection) does NOT reliably
-        // trigger WPF Polygon re-render because Polygon holds an internal ref to the old object.
         var newScorePts = BuildFixedRangePoints(blended, ScorePlotW, ScorePlotH);
-        DetectionScorePoints.Clear();
-        foreach (var p in newScorePts) DetectionScorePoints.Add(p);
+        DetectionScorePoints = newScorePts;
+        OnPropertyChanged(nameof(DetectionScorePoints));
 
         // Threshold sits above the max normal-traffic level (density*0.62 <= 0.62, y>=45)
         DetectionThresholdPoints.Clear();
@@ -3920,7 +4015,17 @@ public sealed class LogPlaybackViewModel : SectionViewModel
 
     private void UpdateLiveChart()
     {
-        if (_scoreBuckets.Length == 0 || playbackData.Count < 2) return;
+        if (_scoreBuckets.Length == 0 || playbackData.Count < 2)
+        {
+            // No data for the newly-loaded file (e.g. empty/failed import) — collapse the
+            // overlay to an empty polygon instead of leaving the previous file's shape on
+            // screen.
+            LiveChartCursorX = 0;
+            LiveScorePoints = new System.Windows.Media.PointCollection();
+            OnPropertyChanged(nameof(LiveChartCursorX));
+            OnPropertyChanged(nameof(LiveScorePoints));
+            return;
+        }
         var activeBucket = (int)(currentFrameIndex * (ScorePlotW - 1) / (double)(playbackData.Count - 1));
         activeBucket = Math.Max(0, Math.Min(ScorePlotW - 1, activeBucket));
         LiveChartCursorX = activeBucket;
@@ -3939,8 +4044,7 @@ public sealed class LogPlaybackViewModel : SectionViewModel
             pts.Add(new System.Windows.Point(0, ScorePlotH - 1));
         }
 
-        LiveScorePoints.Clear();
-        foreach (var p in pts) LiveScorePoints.Add(p);
+        LiveScorePoints = pts;
         OnPropertyChanged(nameof(LiveChartCursorX));
         OnPropertyChanged(nameof(LiveScorePoints));
     }
@@ -4267,6 +4371,10 @@ public sealed class SettingsViewModel : SectionViewModel
     public string LlmProviderText    { get => llmProviderText;    private set => SetProperty(ref llmProviderText,    value); }
     public string ModelStatusText    { get => modelStatusText;    private set => SetProperty(ref modelStatusText,    value); }
     public string SaveStatusText     { get => saveStatusText;     private set => SetProperty(ref saveStatusText,     value); }
+
+    // The backend health endpoint does not report a model training timestamp, so there is no
+    // real data to bind to here — expose a placeholder rather than leaving the XAML binding dangling.
+    public string TrainingDateText => "N/A";
 
     // ── Commands ───────────────────────────────────────────────────────────────
 
@@ -5081,7 +5189,7 @@ public sealed class AnomalyIntelViewModel : SectionViewModel
                 sb.Append("\n\n").Append(item.ExplanationDetail);
             if (!string.IsNullOrEmpty(item.ExplanationRecommendation))
                 sb.Append("\n\nRecommendation: ").Append(item.ExplanationRecommendation);
-            ChatMessages.Add(new ChatMessage { Role = "ai", Text = sb.ToString(), Time = DateTime.Now.ToString("HH:mm") });
+            ChatMessages.Add(new ChatMessage { Role = "ai", Text = sb.ToString(), Time = DateTime.Now.ToString("HH:mm"), Mode = item.ExplanationMode });
             OnPropertyChanged(nameof(HasChatMessages));
         }
         else
@@ -5112,6 +5220,7 @@ public sealed class AnomalyIntelViewModel : SectionViewModel
                 item.ExplanationSummary        = response.Summary;
                 item.ExplanationDetail         = response.Detail;
                 item.ExplanationRecommendation = response.Recommendation;
+                item.ExplanationMode           = response.Mode;
                 if (response.LayerTiming > 0 || response.LayerPayload > 0 || response.LayerMl > 0)
                 {
                     item.LayerTiming   = response.LayerTiming;
@@ -5183,15 +5292,17 @@ public sealed class AnomalyIntelViewModel : SectionViewModel
                 if (sb.Length == 0)
                     sb.Append($"Alert on {item.CanId} — score {item.Score:F3} ({item.Severity}). Ask me anything about this anomaly.");
 
-                ChatMessages.Add(new ChatMessage { Role = "ai", Text = sb.ToString(), Time = DateTime.Now.ToString("HH:mm") });
+                ChatMessages.Add(new ChatMessage { Role = "ai", Text = sb.ToString(), Time = DateTime.Now.ToString("HH:mm"), Mode = response.Mode });
             }
             else
             {
+                item.ExplanationMode = "rule_based";
                 ChatMessages.Add(new ChatMessage
                 {
                     Role = "ai",
                     Text = BuildLocalExplanation(item),
                     Time = DateTime.Now.ToString("HH:mm"),
+                    Mode = "rule_based",
                 });
             }
         }
@@ -5199,12 +5310,14 @@ public sealed class AnomalyIntelViewModel : SectionViewModel
         {
             if (ReferenceEquals(selectedAlert, item))
             {
+                item.ExplanationMode = "rule_based";
                 ChatMessages.Remove(typing);
                 ChatMessages.Add(new ChatMessage
                 {
                     Role = "ai",
                     Text = BuildLocalExplanation(item),
                     Time = DateTime.Now.ToString("HH:mm"),
+                    Mode = "rule_based",
                 });
             }
         }
@@ -5274,6 +5387,7 @@ public sealed class AnomalyIntelViewModel : SectionViewModel
                 Role = "ai",
                 Text = response?.Reply ?? "AI engine unavailable.",
                 Time = DateTime.Now.ToString("HH:mm"),
+                Mode = response?.Mode ?? "rule_based",
             });
         }
         catch
@@ -5284,6 +5398,7 @@ public sealed class AnomalyIntelViewModel : SectionViewModel
                 Role = "ai",
                 Text = "Connection failed — check Python server.",
                 Time = DateTime.Now.ToString("HH:mm"),
+                Mode = "rule_based",
             });
         }
 
