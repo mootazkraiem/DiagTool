@@ -21,20 +21,18 @@ repository, so these were left as placeholders rather than invented.
 - [ ] **Department / service / team** the project was carried out in, and its role — `chapters/chapter1_host_company.tex`
 - [ ] **Acknowledgements text** — personalize `chapters/00_acknowledgements.tex` in your own words;
       it currently only has a generic skeleton.
+- [ ] **PDF metadata author** — `config.tex`, the `\hypersetup{pdfauthor=...}` line still says
+      `PLACEHOLDER-STUDENT-NAME`. Purely cosmetic (shows up in the PDF's "Properties" dialog),
+      but worth a 10-second fix once you have your final name.
 
-## 2. Screenshots (8 total)
+## 2. Screenshots — DONE
 
-Every one of these is marked with a boxed "INSERT SCREENSHOT HERE" placeholder in the PDF,
-with a caption already written describing what to capture. Locations:
-
-- [ ] Home screen — Live Session / Offline Import choice, backend status — `chapters/chapter5_implementation.tex`
-- [ ] Log Playback view during a replay — `chapters/chapter5_implementation.tex`
-- [ ] Anomaly Intel view — alert list + layer bars + Chat with AI — `chapters/chapter5_implementation.tex`
-- [ ] Anomaly Intel view after correction (post-fix, correctly labelled alerts) — `chapters/chapter6_validation.tex`
-- [ ] Dashboard view during a completed replay — `appendices/appendixD_additional_validation.tex`
-- [ ] Settings view — `appendices/appendixD_additional_validation.tex`
-- [ ] Exported CSV opened in a spreadsheet — `appendices/appendixD_additional_validation.tex`
-- [ ] Exported PDF report, first page — `appendices/appendixD_additional_validation.tex`
+All screenshots are now real captures from the running application (`thesis/images/screenshots/`),
+taken against the actual 97,741-frame Kia EV6 recording used in Chapter 6: Home, Dashboard,
+Telemetry, Diagnostics, Settings, Log Playback (loaded replay), Anomaly Intel (with a freshly
+generated, correctly-matched AI explanation), the exported CSV (reconstructed preview — see the
+new CSV-export note in Chapter 6's Limitations and Appendix D), and the exported PDF report.
+Nothing left to do here unless you want to swap any of them for a different moment in the app.
 
 ## 3. Optional / worth double-checking
 

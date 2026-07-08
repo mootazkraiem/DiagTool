@@ -38,7 +38,7 @@ Figure~\ref{fig:can-frame} shows the simplified layout of a classic \gls{can} da
 
 \subsection{CAN FD}
 
-\gls{canfd} extends classic \gls{can} with two changes: the data payload can go up to 64 bytes instead of 8, and the data phase of the frame can run at a higher bit rate than the arbitration phase. \gls{canfd} is increasingly used on newer vehicle platforms, including some of the electric vehicles used in this project's training corpus (Chapter~\ref{chap:validation}), where a single \gls{canfd} frame can carry several sensor readings that would otherwise need multiple classic \gls{can} frames.
+\gls{canfd} extends classic \gls{can} with two changes: the data payload can go up to 64 bytes instead of 8, and the data phase of the frame can run at a higher bit rate than the arbitration phase. \gls{canfd} is increasingly used on newer vehicle platforms, and one of the raw \gls{dbc} files used in this project (for the Kia EV6, Section~\ref{sec:impl-vehicle}) is itself named for an FD bus. The detection pipeline described in Chapter~\ref{chap:design}, however, works on a fixed 8-byte payload throughout its feature-engineering and scoring code, matching the classic \gls{can} frames actually present in every recording used for training and validation (Chapter~\ref{chap:validation}).
 
 \subsection{UDS}
 
@@ -65,6 +65,25 @@ From an intrusion-detection point of view, published attacks and public datasets
     \item \textbf{Replay.} The attacker records legitimate traffic and re-transmits it later, out of its original context, to re-trigger a past command.
     \item \textbf{Masquerade.} A refinement of injection in which the attacker first suppresses the legitimate sender of an identifier, then injects forged frames on the same identifier at the expected rate, so that simple frequency-based detectors do not notice anything unusual. This pattern is explicitly represented in the ROAD dataset~\cite{verma2020road}, which distinguishes plain injection attacks from their masqueraded counterparts.
 \end{itemize}
+
+Table~\ref{tab:attack-comparison} maps each of these patterns to the detection signal it primarily disturbs. No single signal covers every row, which is the main argument, developed in Chapter~\ref{chap:design}, for combining several of them into one fusion score rather than relying on any one of them alone.
+
+\begin{table}[H]
+\centering
+\caption{CAN bus attack patterns and the detection signal each one primarily disturbs.}
+\label{tab:attack-comparison}
+\begin{tabularx}{\textwidth}{@{}lXl@{}}
+\toprule
+\textbf{Attack pattern} & \textbf{Typical effect on the bus} & \textbf{Primary detection signal} \\
+\midrule
+DoS / flooding    & Sustained, abnormally high message frequency on one identifier & Timing \\
+Fuzzing           & Unexpected identifiers or out-of-range payload bytes & Payload \\
+Spoofing / injection & Legitimate identifier, implausible or out-of-pattern payload & Payload / ML \\
+Replay            & Legitimate frames repeated out of their original context & Temporal persistence \\
+Masquerade        & Forged frames at the expected rate — timing alone stays quiet & ML \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \section{Intrusion detection systems for CAN}
 

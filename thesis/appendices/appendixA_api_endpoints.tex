@@ -16,7 +16,8 @@ Table~\ref{tab:api-endpoints} lists the \gls{rest} endpoints exposed by \texttt{
 GET  & \texttt{/health}                              & Backend health check \\
 GET  & \texttt{/vehicle}                              & Synthetic / live vehicle snapshot \\
 GET  & \texttt{/metrics}                               & Runtime metrics \\
-POST & \texttt{/api/db/stats} (via decoded route)      & Database statistics \\
+GET  & \texttt{/api/db/stats}                          & SQLite database statistics (frame count, DB size, recent alerts) \\
+POST & \texttt{/analyze}                                & Offline batch analysis of one or more uploaded log files \\
 GET  & \texttt{/incidents}                             & Grouped incidents from the last analysis \\
 POST & \texttt{/inject}                                & Attack injection into an uploaded log \\
 POST & \texttt{/feedback}                              & Analyst feedback on a frame label \\

@@ -6,7 +6,7 @@ This report presented CANvisionNative, a hybrid-architecture intrusion detection
 \section*{Achievements}
 \addcontentsline{toc}{section}{Achievements}
 
-The project delivered a working desktop client and backend pipeline supporting three input modes (replay, live simulation, and live hardware capture through a shared code path), a four-layer detection pipeline (timing, payload, machine learning, temporal persistence) fused into a single score, a vehicle-specific model store trained on more than seven million \gls{can} frames across eighteen profiles, and a natural-language explanation layer combining rule-based reasoning with a Large Language Model provider chain that degrades gracefully when no external model is reachable. Beyond the software itself, the project delivered a rigorous, evidence-based validation of that software against a real one-hour vehicle recording, which is documented in full in Chapter~\ref{chap:validation}.
+The project delivered a working desktop client and backend pipeline supporting three input modes (replay, live simulation, and live hardware capture through a shared code path), a four-layer detection pipeline (timing, payload, machine learning, temporal persistence) fused into a single score, a vehicle-specific model store trained on more than seven million \gls{can} frames across sixteen vehicle- and dataset-specific sources, and a natural-language explanation layer combining rule-based reasoning with a Large Language Model provider chain that degrades gracefully when no external model is reachable. Beyond the software itself, the project delivered a rigorous, evidence-based validation of that software against a real one-hour vehicle recording, which is documented in full in Chapter~\ref{chap:validation}.
 
 \section*{Objectives reached}
 \addcontentsline{toc}{section}{Objectives reached}
@@ -26,7 +26,7 @@ Six confirmed software defects were found through evidence-based testing and cor
 \section*{Limitations}
 \addcontentsline{toc}{section}{Limitations}
 
-As detailed in Section~\ref{chap:validation}, the live hardware capture path remains unvalidated on a physical vehicle, pending the arrival of a compatible adapter, and the root-cause proportions found on the Kia EV6 recording are not guaranteed to generalize to every vehicle without further testing.
+As detailed in Chapter~\ref{chap:validation}, the live hardware capture path remains unvalidated on a physical vehicle, pending the arrival of a compatible adapter, and the root-cause proportions found on the Kia EV6 recording are not guaranteed to generalize to every vehicle without further testing.
 
 \section*{Future work}
 \addcontentsline{toc}{section}{Future work}

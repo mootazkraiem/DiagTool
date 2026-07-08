@@ -3,7 +3,7 @@
 
 \section{Requirements}
 
-Table~\ref{tab:app-requirements} lists the software requirements to build and run CANvisionNative, as documented in the project's own setup guide.
+Table~\ref{tab:app-requirements} lists the software requirements to build and run CANvisionNative, as documented in the project's own setup guide. Table~\ref{tab:app-hardware} lists the hardware requirements; only the last row is needed for the live hardware capture mode (Section~\ref{sec:design-replay}) — every other feature, including the full validation in Chapter~\ref{chap:validation}, runs on the desktop machine alone.
 
 \begin{table}[H]
 \centering
@@ -16,9 +16,25 @@ Table~\ref{tab:app-requirements} lists the software requirements to build and ru
 Windows              & 10 or 11, 64-bit \\
 .NET Runtime         & 4.8 \\
 Python               & 3.11 -- 3.14 \\
-ELM327 USB adapter   & Required only for live hardware capture \\
+Git                  & Any (for cloning the repository) \\
 \bottomrule
 \end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Hardware requirements.}
+\label{tab:app-hardware}
+\begin{tabularx}{\textwidth}{@{}llX@{}}
+\toprule
+\textbf{Component} & \textbf{Requirement} & \textbf{Notes} \\
+\midrule
+Desktop / laptop & Any machine able to run Windows 10/11 and Python 3.11+ & Used for every mode (replay, simulation, hardware capture) \\
+Disk space & A few GB free & Trained model store, DBC files, and recorded logs \\
+USB port & 1 free port & Only for the ELM327 / USB-CAN adapter below \\
+CAN adapter & ELM327 USB (slcan), PEAK PCAN-USB, or a SocketCAN-compatible interface & Required only for live hardware capture (FR9); not needed for replay or simulation \\
+\bottomrule
+\end{tabularx}
 \end{table}
 
 \section{Key Python dependencies}

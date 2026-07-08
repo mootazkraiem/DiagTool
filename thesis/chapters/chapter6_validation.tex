@@ -26,6 +26,52 @@ This was applied in three passes, summarized in Table~\ref{tab:qa-timeline}.
 \end{tabularx}
 \end{table}
 
+Figure~\ref{fig:validation-workflow} shows the same three passes as a workflow diagram, including the explicit decision point that governed the whole phase: a defect was only fixed once it had been reproduced and explained, never on suspicion alone.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    box/.style={draw, rounded corners, minimum width=4.6cm, minimum height=1cm, align=center, font=\small},
+    decision/.style={draw, diamond, aspect=2.4, minimum width=3.4cm, align=center, font=\small},
+    >=Stealth, node distance=0.9cm
+]
+\node[box, fill=blue!8] (audit) {Pass 1\\Interactive UI audit};
+\node[box, fill=orange!8, below=of audit] (root) {Pass 2\\Root-cause analysis\\(100\% of alerts explained)};
+\node[decision, below=of root] (dec) {Reproducible\\evidence?};
+\node[box, fill=gray!10, right=2.2cm of dec] (skip) {Not a defect\\— leave unchanged};
+\node[box, fill=green!8, below=of dec] (fix) {Pass 3\\Fix + re-validate\\with the same evidence};
+\node[box, fill=purple!10, below=of fix] (e2e) {Full end-to-end re-run\\(import $\to$ replay $\to$ detection\\$\to$ AI $\to$ export)};
+
+\draw[->] (audit) -- (root);
+\draw[->] (root) -- (dec);
+\draw[->] (dec) -- node[left,font=\scriptsize]{yes} (fix);
+\draw[->] (dec) -- node[above,font=\scriptsize]{no} (skip);
+\draw[->] (fix) -- (e2e);
+\end{tikzpicture}
+\caption{Validation workflow: three passes, gated by reproducible evidence.}
+\label{fig:validation-workflow}
+\end{figure}
+
+Table~\ref{tab:testing-matrix} lists what was tested at each pass, the method used, and what it covered, to make the scope of the validation phase explicit.
+
+\begin{table}[H]
+\centering
+\caption{Testing matrix: what was covered, and how.}
+\label{tab:testing-matrix}
+\begin{tabularx}{\textwidth}{@{}lXX@{}}
+\toprule
+\textbf{Target} & \textbf{Method} & \textbf{Coverage} \\
+\midrule
+Desktop UI (all screens) & Interactive UI automation (button clicks, file dialogs, keyboard input) & Navigation, import, replay controls, wrong-order and repeated actions \\
+Detection pipeline & Direct backend \gls{api} calls + full replay on real data & Vehicle selection, state classification, fusion scoring, reason attribution \\
+Parsers & Synthetic fixtures per format (\gls{csv}, candump, Vector \gls{can}) + real recordings & Canonical frame extraction, byte-for-byte comparison against known-good output \\
+AI explanation & Direct \gls{api} calls across two independent real datasets & Per-alert correctness, cross-session/cross-dataset leakage \\
+Export & Manual export + direct file inspection & \gls{csv} column correctness, PDF rendering and pagination \\
+End-to-end & Full application walk-through (import $\to$ replay $\to$ detection $\to$ AI $\to$ export) & Integration of every layer above, on the real Kia EV6 recording \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
 \subsection{Interactive UI audit}
 
 Before the data-driven root-cause analysis, the application was exercised interactively, screen by screen, using UI automation to drive the running desktop client (button clicks, file dialogs, keyboard input) while observing the result on screen. This pass covered the Home, Dashboard, Telemetry, and Diagnostics screens, log import with valid, empty, corrupted, and oversized files, the full replay lifecycle (start, pause, resume, stop, replay again), and deliberately wrong-order or repeated actions. It surfaced issues that were fixed before the data-driven validation pass, including an implausible-latency display appearing on three screens, a font glyph-substitution rendering bug, and destructive recovery actions that had no confirmation dialog.
@@ -163,43 +209,66 @@ ML-score saturation ($\geq$0.999) & 77.6--78.6\%   & 0.0\% \\
 \end{tabular}
 \end{table}
 
-Figure~\ref{fig:chart-alerts} and Figure~\ref{fig:chart-saturation} present the two most representative measurements as bar charts.
+Figure~\ref{fig:chart-alerts}, Figure~\ref{fig:chart-saturation}, and Figure~\ref{fig:chart-throughput} present the three headline measurements as bar charts, generated directly from the replay summary files produced by the corrected pipeline and from the measurements recorded during the correction phase.
 
 \begin{figure}[H]
 \centering
-\begin{tikzpicture}
-\begin{axis}[
-    ybar, bar width=1.2cm, width=9cm, height=6cm,
-    symbolic x coords={Before,After}, xtick=data,
-    ylabel={Total alerts}, ymin=0, ymax=18000,
-    nodes near coords, nodes near coords align={vertical},
-]
-\addplot coordinates {(Before,15945) (After,11971)};
-\end{axis}
-\end{tikzpicture}
+\includegraphics[width=0.7\textwidth]{before_after_alerts.png}
 \caption{Total alerts on the Kia EV6 recording, before and after correction.}
 \label{fig:chart-alerts}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\begin{tikzpicture}
-\begin{axis}[
-    ybar, bar width=1.2cm, width=9cm, height=6cm,
-    symbolic x coords={Before,After}, xtick=data,
-    ylabel={ML-score saturation (\%)}, ymin=0, ymax=90,
-    nodes near coords, nodes near coords align={vertical},
-]
-\addplot coordinates {(Before,78.6) (After,0.0)};
-\end{axis}
-\end{tikzpicture}
+\includegraphics[width=0.7\textwidth]{before_after_saturation.png}
 \caption{Share of frames with a saturated ($\geq$0.999) ML score, before and after correction.}
 \label{fig:chart-saturation}
 \end{figure}
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{before_after_throughput.png}
+\caption{Replay throughput, before and after correction.}
+\label{fig:chart-throughput}
+\end{figure}
+
 The alert reduction and the throughput improvement are both side effects of fixing genuine defects (the correct, lighter-weight per-vehicle model being exercised instead of a saturated fallback path), not of loosening the detection threshold, which was left unchanged throughout.
 
-\screenshot{Anomaly Intel view after correction, showing a live alert list with correctly attributed dominant-layer labels.}
+Figure~\ref{fig:chart-state} isolates the Fix 2 evidence already summarized in Section~\ref{sec:fix2}: the same 97,741 frames, classified by the state classifier before and after the correction, using the same three state labels on both sides so the two distributions can be compared directly.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{state_classification_before_after.png}
+\caption{Vehicle-state classification of the whole recording, before and after Fix 2.}
+\label{fig:chart-state}
+\end{figure}
+
+Figure~\ref{fig:chart-severity} and Figure~\ref{fig:chart-reason} break down the 11,971 post-correction alerts by severity and by dominant detection layer. The reason-distribution chart is itself evidence for Fix 3: none of the three buckets is \texttt{can\_id\_entropy} or \texttt{freq}, because those two fields were removed from the comparison entirely and were never part of the real fusion score in the first place (Section~\ref{sec:design-pipeline}).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.65\textwidth]{severity_distribution.png}
+\caption{Severity distribution of the 11,971 alerts produced by the corrected pipeline.}
+\label{fig:chart-severity}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.65\textwidth]{reason_distribution.png}
+\caption{Dominant-layer attribution of the same 11,971 alerts, after the Fix 3 correction.}
+\label{fig:chart-reason}
+\end{figure}
+
+Figure~\ref{fig:chart-fusion-hist} shows the fusion-score distribution of the first 1,000 alerts recorded by the corrected pipeline, against the three severity thresholds from Appendix~\ref{app:config}. The distribution is multi-modal rather than a single spike, and no bar sits at the top of the 0--2 range used internally by the fusion score: this is the direct, visual counterpart of the 0\% ML-score-saturation figure in Table~\ref{tab:before-after} — before the correction, the great majority of scores were pinned at the top of this range instead of spreading across it.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{fusion_score_histogram.png}
+\caption{Fusion-score distribution of the first 1,000 alerts recorded by the corrected pipeline, against the LOW/MEDIUM/HIGH severity thresholds.}
+\label{fig:chart-fusion-hist}
+\end{figure}
+
+Figure~\ref{fig:screen-anomaly-intel} (Chapter~\ref{chap:impl}) already shows this live alert list and a freshly-generated explanation for the selected alert, captured on the same 97,741-frame recording used throughout this section: the selected alert's identifier, severity, and score in the context bar (\texttt{0x7EC}, LOW, 0.415) match exactly the summary text produced by the explanation engine, with no trace of an unrelated alert.
 
 \section{Export validation}
 
@@ -227,17 +296,52 @@ Table~\ref{tab:fixes-summary} summarizes every confirmed defect addressed during
 \end{tabularx}
 \end{table}
 
+Figure~\ref{fig:bugfix-timeline} places the six fixes on the engineering timeline that produced them: the first four came directly out of the root-cause analysis of Section~\ref{sec:validation-rootcause}, while the last two only surfaced once the corrected pipeline was re-validated end to end in the live application rather than through the backend \gls{api} alone — the exact reason Pass 3 of the methodology (Table~\ref{tab:qa-timeline}) ends with a full end-to-end re-run and not just a backend re-test.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=1.05cm,
+    ev/.style={draw, rounded corners, minimum width=9.6cm, minimum height=0.85cm, align=left, font=\small, inner sep=6pt},
+    lbl/.style={font=\scriptsize\bfseries, text width=1.6cm, align=right}
+]
+\node[ev, fill=blue!8]   (a) {Root-cause analysis: 100\% of 15{,}945 baseline alerts explained};
+\node[lbl, left=0.2cm of a] {Analysis};
+\node[ev, fill=orange!8, below=of a] (b) {Fix 1 — vehicle model selection};
+\node[lbl, left=0.2cm of b] {Fix 1};
+\node[ev, fill=orange!8, below=of b] (c) {Fix 2 — driving-state classification};
+\node[lbl, left=0.2cm of c] {Fix 2};
+\node[ev, fill=orange!8, below=of c] (d) {Fix 3 — reason attribution (6 occurrences)};
+\node[lbl, left=0.2cm of d] {Fix 3};
+\node[ev, fill=orange!8, below=of d] (e) {Fix 4 — replay parser consistency};
+\node[lbl, left=0.2cm of e] {Fix 4};
+\node[ev, fill=green!8, below=of e]  (f) {End-to-end re-validation in the live application};
+\node[lbl, left=0.2cm of f] {Re-test};
+\node[ev, fill=red!8, below=of f]    (g) {Fix 5 — alert-polling timer left stopped};
+\node[lbl, left=0.2cm of g] {Fix 5};
+\node[ev, fill=red!8, below=of g]    (h) {Fix 6 — AI explanation cache staleness};
+\node[lbl, left=0.2cm of h] {Fix 6};
+\node[ev, fill=green!8, below=of h]  (i) {Final clean build and full end-to-end re-validation};
+\node[lbl, left=0.2cm of i] {Release};
+
+\foreach \x/\y in {a/b, b/c, c/d, d/e, e/f, f/g, g/h, h/i}
+    \draw[-{Stealth}] (\x) -- (\y);
+\end{tikzpicture}
+\caption{Bug-fix timeline: from root-cause analysis to the final Release Candidate.}
+\label{fig:bugfix-timeline}
+\end{figure}
+
 \section{Discussion}
 
 Every defect in Table~\ref{tab:fixes-summary} shares a common shape: the surrounding code did not crash and did not raise a visible error, so nothing pointed at the defect except a deliberate, evidence-based comparison between what the system reported and what was independently known to be true (the vehicle actually being driven, the file actually being a valid log, the alert actually being the one on screen). This is the practical argument, beyond the specific numbers in Table~\ref{tab:before-after}, for validating an anomaly-detection system against real, independently-understood data rather than trusting that a correctly-structured pipeline behaves correctly end to end.
 
 \section{Limitations}
 
-The live hardware capture path (Chapter~\ref{chap:design}) remains code-complete but unvalidated against a physical vehicle, because the ELM327 adapter needed for that test did not arrive during the project. The \gls{ai} explanation's ``similar historical case'' feature was found, during this validation phase, to intentionally persist across sessions by design (Chapter~\ref{chap:design}); this is documented here as a known, deliberate characteristic rather than a defect, but it means an analyst comparing two unrelated vehicles may see a cross-referenced historical case, which is worth keeping in mind when reading an explanation. Finally, the root-cause analysis in Section~\ref{sec:validation-rootcause} was performed on one recording from one vehicle; the timing- and payload-dominant shares found structurally explainable there are not guaranteed to hold in the same proportions on a different vehicle or driving pattern.
+The live hardware capture path (Chapter~\ref{chap:design}) remains code-complete but unvalidated against a physical vehicle, because the ELM327 adapter needed for that test did not arrive during the project. The \gls{ai} explanation's ``similar historical case'' feature was found, during this validation phase, to intentionally persist across sessions by design (Chapter~\ref{chap:design}); this is documented here as a known, deliberate characteristic rather than a defect, but it means an analyst comparing two unrelated vehicles may see a cross-referenced historical case, which is worth keeping in mind when reading an explanation. The \gls{csv} exporter writes the \texttt{Score} column with a French-locale decimal comma without quoting it, which shifts every later column when the file is read by a plain comma-delimited parser (Appendix~\ref{app:additional-validation}); this is a minor formatting defect in the export path itself, distinct from the six defects listed in Table~\ref{tab:fixes-summary}, and does not affect any detection or explanation result. Finally, the root-cause analysis in Section~\ref{sec:validation-rootcause} was performed on one recording from one vehicle; the timing- and payload-dominant shares found structurally explainable there are not guaranteed to hold in the same proportions on a different vehicle or driving pattern.
 
 \section{Future improvements}
 
-Three directions follow directly from the limitations above: validating the hardware capture path once an adapter is available, closing M2 from the project planning (Chapter~\ref{chap:requirements}); extending the root-cause methodology used in Section~\ref{sec:validation-rootcause} to additional vehicles, to check whether the same timing/payload/ML split holds; and scoping the historical-case feature per vehicle or per session, if cross-vehicle references turn out to be more confusing than useful to analysts in practice.
+Three of the limitations above point to concrete future work: validating the hardware capture path once an adapter is available, closing M2 from the project planning (Chapter~\ref{chap:requirements}); extending the root-cause methodology used in Section~\ref{sec:validation-rootcause} to additional vehicles, to check whether the same timing/payload/ML split holds; and scoping the historical-case feature per vehicle or per session, if cross-vehicle references turn out to be more confusing than useful to analysts in practice. The \gls{csv} formatting defect is not included here, since its fix is a self-contained, well-understood change to the export code rather than an open engineering question.
 
 \section{Conclusion}
 

@@ -32,6 +32,7 @@
 
 % ---------- Graphics / figures ----------
 \usepackage{graphicx}
+\graphicspath{{images/}{images/graphs/}{images/screenshots/}}
 \usepackage{float}
 \usepackage{subcaption}
 \usepackage{placeins}      % \FloatBarrier to keep figures inside their chapter/section
@@ -114,12 +115,4 @@
 
 % ---------- Custom commands ----------
 \newcommand{\todofill}[1]{\textcolor{espritred}{\textbf{[TO FILL: #1]}}}
-\newcommand{\screenshot}[1]{%
-    \begin{center}
-    \fbox{\parbox{0.9\textwidth}{\centering\vspace{2cm}
-    \textit{INSERT SCREENSHOT HERE}\\[4pt]
-    \small #1
-    \vspace{2cm}}}
-    \end{center}
-}
 \newcommand{\code}[1]{\texttt{#1}}

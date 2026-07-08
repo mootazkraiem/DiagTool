@@ -34,12 +34,34 @@ CANvisionNative is built as two cooperating processes on the same machine: a Win
 
 \subsection{Frontend architecture}
 
-The desktop client follows the \gls{mvvm} pattern. Each screen (Home, Dashboard, Telemetry, Diagnostics, Log Playback, Anomaly Intel, Settings) has a XAML view and a corresponding ViewModel in \texttt{ViewModels/SectionViewModels.cs}. Two services sit between the ViewModels and the backend:
+The desktop client follows the \gls{mvvm} pattern. Each screen (Home, Dashboard, Telemetry, Diagnostics, Log Playback, Anomaly Intel, Settings) has a XAML view and a corresponding ViewModel in \texttt{ViewModels/SectionViewModels.cs}. Two services sit between the ViewModels and the backend, as shown in Figure~\ref{fig:frontend-arch}:
 
 \begin{itemize}
     \item \textbf{PythonApiClient} — a thin \gls{http} client wrapping every backend endpoint (start/stop replay, get alerts, get explanation, get vehicle list, and so on).
     \item \textbf{VehicleDataService} — the shared, in-memory state of the client: current snapshot, alert history, replay runtime metrics. It owns a polling timer that periodically calls the backend (replay status, partial alerts, live signals) and raises events that the ViewModels subscribe to, so that every view reflects the same underlying state.
 \end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    box/.style={draw, rounded corners, minimum width=3.6cm, minimum height=0.9cm, align=center, font=\small},
+    >=Stealth, node distance=1.1cm and 1.4cm
+]
+\node[box, fill=blue!8] (views) {XAML Views\\(Home, Dashboard, \ldots)};
+\node[box, fill=orange!8, below=of views] (vms) {ViewModels\\(SectionViewModels.cs)};
+\node[box, fill=green!8, below left=of vms] (vds) {VehicleDataService\\(shared state + poll timer)};
+\node[box, fill=green!8, below right=of vms] (api) {PythonApiClient\\(HTTP wrapper)};
+\node[box, fill=gray!10, below=1.6cm of vms] (backend) {Backend REST API};
+
+\draw[<->] (views) -- (vms);
+\draw[<->] (vms) -- (vds);
+\draw[<->] (vms) -- (api);
+\draw[<->] (vds) -- (backend);
+\draw[<->] (api) -- (backend);
+\end{tikzpicture}
+\caption{Frontend architecture: MVVM views bound to ViewModels, backed by two shared services.}
+\label{fig:frontend-arch}
+\end{figure}
 
 Navigation between sections is driven by a section catalog and a navigation service, so that adding a new screen does not require changes to existing screens.
 
@@ -117,7 +139,7 @@ The backend exposes more than 40 endpoints under a small number of prefixes: \te
 \section{Replay engine}
 \label{sec:design-replay}
 
-The replay engine (\texttt{backend/ml/runtime/replay\_runner.py}) is launched as a subprocess by the \texttt{/api/replay/start} endpoint. It reads the input file through a single, format-aware loader (Section~\ref{sec:impl-parser}) shared with the offline batch analyzer, so that every supported format enters the pipeline as the same canonical \texttt{(timestamp, can\_id, payload)} stream. Each frame is then passed, in order, to the same \texttt{RealtimeEngine} used by the live and simulated paths, guaranteeing that replay, live, and simulated detection behave identically for the same input.
+The replay engine (\texttt{backend/ml/runtime/replay\_runner.py}) is launched as a subprocess by the \texttt{/api/replay/start} endpoint. It reads the input file through a single, format-aware loader (Section~\ref{sec:impl-parser}) shared with the offline batch analyzer, so that every supported format enters the pipeline as the same canonical \texttt{(timestamp, can\_id, payload)} stream. Each frame is then passed, in order, to the same \texttt{RealtimeEngine} used by the live and simulated paths, guaranteeing that replay, live, and simulated detection behave identically for the same input. Section~\ref{sec:impl-replay} describes its implementation in detail, and Chapter~\ref{chap:validation} documents two defects that were found and fixed in this exact module.
 
 \section{Detection pipeline}
 \label{sec:design-pipeline}
@@ -160,7 +182,7 @@ Feature extraction computes, per \gls{can} identifier, a rolling set of statisti
     \item The \textbf{temporal-persistence layer} tracks, over a rolling window, how often the fused score has stayed above the high-severity threshold, so an isolated single-frame spike is treated differently from a sustained anomaly.
 \end{itemize}
 
-The four layers are combined into one fusion score by a fixed weighted sum, and the fused score is compared against four severity thresholds (LOW, MEDIUM, HIGH, CRITICAL). Only frames whose fused score crosses the configured alert threshold are turned into alerts, subject to a per-identifier debounce so that a single burst is not reported as dozens of near-duplicate alerts.
+The four layers are combined into one fusion score by a fixed weighted sum, and the fused score is compared against four severity thresholds (LOW, MEDIUM, HIGH, CRITICAL). Only frames whose fused score crosses the configured alert threshold are turned into alerts, subject to a per-identifier debounce so that a single burst is not reported as dozens of near-duplicate alerts. The exact weight and threshold values are listed in Table~\ref{tab:app-fusion-config} (Appendix~\ref{app:config}).
 
 \section{Hardware layer}
 

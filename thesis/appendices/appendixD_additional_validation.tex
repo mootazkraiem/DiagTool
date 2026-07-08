@@ -42,14 +42,49 @@ ML (\texttt{ml\_outlier})             & 2{,}489 & 20.8\% \\
 
 \section{Top alerting CAN identifiers}
 
-The five most frequent identifiers in the post-correction alert list were \texttt{0x19}, \texttt{0x7EC}, \texttt{0x7E4}, \texttt{0x13}, and \texttt{0x7BB}. The three eights-prefixed identifiers (\texttt{0x7EC}, \texttt{0x7E4}, \texttt{0x7BB}) are consistent with UDS diagnostic request/response traffic, matching the recording's active-polling capture method described in Appendix~\ref{app:datasets}.
+Figure~\ref{fig:app-top-canids} ranks the eight most frequent identifiers in the post-correction alert list. The identifiers \texttt{0x7EC}, \texttt{0x7E4}, \texttt{0x7BB}, \texttt{0x7A8}, \texttt{0x7B3}, and \texttt{0x7A0} all fall in the \texttt{0x7A0}--\texttt{0x7EC} range reserved for \gls{uds} diagnostic request/response pairs, consistent with the recording's active-polling capture method described in Appendix~\ref{app:datasets}. Identifier \texttt{0x19}, the single most frequent alert source, and \texttt{0x13} are broadcast identifiers rather than diagnostic ones, and correspond to the high-frequency battery and drivetrain messages discussed in Section~\ref{sec:validation-rootcause}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{top_can_ids.png}
+\caption{Top alerting CAN identifiers in the corrected pipeline's alert list.}
+\label{fig:app-top-canids}
+\end{figure}
 
 \section{Additional screenshots}
 
-\screenshot{Dashboard view showing the fusion score trend, active-threat panel, and IDS quick statistics during a completed replay.}
+Figure~\ref{fig:screen-dashboard} shows the Dashboard view during a live session: the fusion score gauge, active-threat panel, and IDS quick statistics.
 
-\screenshot{Settings view: alert threshold, LLM provider key, and hardware interface configuration fields.}
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{02_dashboard_live.png}
+\caption{Dashboard view: fusion score, active-threat panel, and IDS quick statistics.}
+\label{fig:screen-dashboard}
+\end{figure}
 
-\screenshot{Exported CSV file opened in a spreadsheet application, showing the Time, CAN\_ID, Severity, AttackType, and Score columns for a sample of alerts.}
+Figure~\ref{fig:screen-settings} shows the Settings view, including the hardware interface fields, the alert threshold slider, and the vehicle profile list also summarized in Table~\ref{tab:vehicles}.
 
-\screenshot{Exported PDF report first page: header, summary statistics, and the start of the paginated alert table.}
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{05_settings.png}
+\caption{Settings view: hardware interface, neural core configuration, and vehicle profiles.}
+\label{fig:screen-settings}
+\end{figure}
+
+Figure~\ref{fig:screen-export-csv} shows a rendering of the real exported CSV file, reconstructed from the raw export because the exporter writes the \texttt{Score} column with a French-locale decimal comma (for example \texttt{0,415}) without quoting it, which shifts every later column when the file is opened with a plain, comma-delimited reader. This is a genuine, minor formatting quirk of the export path, noted here for completeness; it does not affect any of the validation results in Chapter~\ref{chap:validation}, all of which were read from the underlying JSON summary rather than the CSV export.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{09_export_csv_preview.png}
+\caption{Exported CSV file (reconstructed preview), Time/CAN\_ID/Severity/AttackType/Score columns.}
+\label{fig:screen-export-csv}
+\end{figure}
+
+Figure~\ref{fig:screen-export-pdf} shows the first page of the exported PDF report, generated from the same completed replay: header, summary statistics, and the start of the paginated alert table.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{10_export_pdf_page1.png}
+\caption{Exported PDF report, first page.}
+\label{fig:screen-export-pdf}
+\end{figure}

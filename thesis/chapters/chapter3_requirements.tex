@@ -30,7 +30,7 @@ This chapter turns the context and objectives from Chapter~\ref{chap:host} into 
     \item \textbf{NFR4 — Portability of input formats.} Every supported log format shall enter the detection pipeline through the same canonical frame representation, so that detection behaviour does not depend on which format was used to record the data.
     \item \textbf{NFR5 — Extensibility.} Adding a new vehicle profile shall only require adding a \gls{dbc} file and a trained model directory, without changing the detection engine code.
     \item \textbf{NFR6 — Graceful degradation.} If the \gls{llm} provider is unavailable, the system shall still produce a rule-based explanation instead of failing the request.
-    \item \textbf{NFR7 — Platform.} The desktop client shall run on Windows 10/11 using .NET Framework 4.8 and \gls{wpf}; the backend shall run as a local Python process exposing a \gls{rest} \gls{api} on \texttt{localhost}.
+    \item \textbf{NFR7 — Platform.} The desktop client shall run on Windows 10/11 using .NET Framework 4.8 and \gls{wpf}; the backend shall run as a local Python process exposing a \gls{rest} \gls{api} on \texttt{localhost}. The full software and hardware requirements are listed in Table~\ref{tab:app-requirements} and Table~\ref{tab:app-hardware} (Appendix~\ref{app:config}).
 \end{itemize}
 
 \section{Actors}

@@ -7,8 +7,6 @@ This chapter introduces the organization in which the project was carried out, d
 
 \section{Host organization}
 
-\todofill{Company name}, described here, hosted this final year project.
-
 \subsection{Presentation}
 
 \todofill{Add a short (half-page) presentation of the host company: sector of activity, size, main products or services, location. If this was an independent / self-directed project rather than a company internship, replace this subsection with a short paragraph stating that explicitly, and describe instead the academic framework under which the project was carried out.}
@@ -26,7 +24,7 @@ The project, \textbf{CANvisionNative}, is a hybrid-architecture \gls{ids} for ve
 \begin{itemize}
     \item a Windows desktop client (\gls{wpf}, \gls{mvvm}) for visualization, replay control, and analyst interaction;
     \item a Python backend (FastAPI) that decodes \gls{can} frames, extracts features, scores anomalies, and generates natural-language explanations;
-    \item a machine-learning layer trained on more than seven million \gls{can} frames across eighteen vehicle profiles;
+    \item a machine-learning layer trained on more than seven million \gls{can} frames across sixteen vehicle- and dataset-specific sources;
     \item support for three operating modes: replay of recorded logs, live simulation, and live hardware capture.
 \end{itemize}
 
@@ -42,7 +40,7 @@ Three problems motivated this project.
 
 \textbf{Third}, a raw anomaly score is not enough for a human analyst to act on. A list of alerts with numeric scores does not explain what happened, why the system flagged it, or what to do next. This motivated an explanation layer that turns a detected anomaly into a short, readable description of the likely attack pattern and a recommended action.
 
-Beyond building the system, this project also required a rigorous validation phase, since a detection system that produces incorrect or misleading alerts is not trustworthy. This is documented in full in Chapter~\ref{chap:validation}, which describes four confirmed software defects that were found through evidence-based testing on a real one-hour vehicle recording, and their correction.
+Beyond building the system, this project also required a rigorous validation phase, since a detection system that produces incorrect or misleading alerts is not trustworthy. This is documented in full in Chapter~\ref{chap:validation}, which describes six confirmed software defects that were found through evidence-based testing on a real one-hour vehicle recording, and their correction.
 
 \section{Objectives}
 

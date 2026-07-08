@@ -5,6 +5,66 @@
 
 This chapter describes how the design presented in Chapter~\ref{chap:design} was implemented. It goes through the desktop application, the backend, the replay engine and parsers, the \gls{mf4} conversion path, the vehicle profile system, the machine-learning pipeline, the \gls{ai} explanation module, the charting and export features, the settings module, and the hardware layer. Only short, illustrative snippets are shown; full listings are not included, in line with the reporting guidelines followed for this document.
 
+\section{Repository organization}
+
+The two halves of the system live in the same repository but keep separate top-level folders, reflecting the process boundary between them (Figure~\ref{fig:repo-structure}). The C\# client's code is split into \texttt{UI/} (XAML views), \texttt{ViewModels/} (the single \texttt{SectionViewModels.cs} file), \texttt{Services/} (\texttt{PythonApiClient}, \texttt{VehicleDataService}, \texttt{PdfReportBuilder}), \texttt{Models/}, and \texttt{Converters/}. The Python backend is split by responsibility under \texttt{backend/}: \texttt{api/} (the FastAPI entry point), \texttt{decoding/} (vehicle profiles, \gls{dbc} decoding), \texttt{data\_processing/} (parsers, \gls{mf4} conversion), \texttt{ml/} (feature engineering, the runtime engine, training scripts, the \gls{ai} explainer), \texttt{hardware/} (the live adapter interface), \texttt{db/} (the SQLite store), and \texttt{knowledge/} (the attack knowledge base and signal map). Trained models, \gls{dbc} files, and datasets live under \texttt{assets/}, outside both source trees.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    folder/.style={draw, rounded corners, minimum width=3.1cm, minimum height=0.8cm, align=center, font=\scriptsize},
+    root/.style={draw, rounded corners, minimum width=3.6cm, minimum height=0.9cm, align=center, font=\small\bfseries},
+    >=Stealth
+]
+\node[root, fill=gray!12] (root) {can\_project/};
+\node[root, fill=blue!8, below left=1.4cm and 0.2cm of root] (csharp) {C\# client};
+\node[root, fill=orange!8, below=1.4cm of root] (backend) {backend/};
+\node[root, fill=gray!12, below right=1.4cm and 0.2cm of root] (assets) {assets/};
+
+\node[folder, below=0.6cm of csharp, xshift=-1.6cm] (ui) {UI/};
+\node[folder, right=0.15cm of ui] (vm) {ViewModels/};
+\node[folder, below=0.4cm of ui] (svc) {Services/};
+\node[folder, right=0.15cm of svc] (models) {Models/};
+
+\node[folder, below=0.6cm of backend, xshift=-1.9cm] (api) {api/};
+\node[folder, right=0.15cm of api] (dec) {decoding/};
+\node[folder, right=0.15cm of dec] (dp) {data\_processing/};
+\node[folder, below=0.4cm of api] (ml) {ml/};
+\node[folder, right=0.15cm of ml] (hw) {hardware/};
+\node[folder, right=0.15cm of hw] (db) {db/};
+
+\node[folder, below=0.6cm of assets, xshift=-0.9cm] (dbcf) {dbc\_files/};
+\node[folder, right=0.15cm of dbcf] (mdl) {models/};
+
+\draw (root) -- (csharp);
+\draw (root) -- (backend);
+\draw (root) -- (assets);
+\draw (csharp) -- (ui); \draw (csharp) -- (vm); \draw (csharp) -- (svc); \draw (csharp) -- (models);
+\draw (backend) -- (api); \draw (backend) -- (dec); \draw (backend) -- (dp);
+\draw (backend) -- (ml); \draw (backend) -- (hw); \draw (backend) -- (db);
+\draw (assets) -- (dbcf); \draw (assets) -- (mdl);
+\end{tikzpicture}
+\caption{Repository organization: the WPF client, the Python backend, and shared assets.}
+\label{fig:repo-structure}
+\end{figure}
+
+Table~\ref{tab:repo-stats} gives the size of each side of the repository, measured directly on the source tree (excluding generated build output, downloaded datasets, and third-party packages).
+
+\begin{table}[H]
+\centering
+\caption{Repository statistics (source code only).}
+\label{tab:repo-stats}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\textbf{Component} & \textbf{Files} & \textbf{Lines} \\
+\midrule
+Python backend (\texttt{backend/})                        & 135 & 18{,}363 \\
+C\# client (\texttt{UI/}, \texttt{ViewModels/}, \texttt{Services/}, \texttt{Models/}, \texttt{Converters/}) & 33  & 10{,}084 \\
+XAML views (\texttt{UI/*.xaml})                            & 13  & — \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \section{WPF application}
 
 The desktop client is a WPF application targeting .NET Framework 4.8, structured with the \gls{mvvm} pattern and CommunityToolkit.Mvvm for command and observable-property boilerplate. The main window hosts a navigation bar (Home, Dashboard, Telemetry, Diagnostics, Log Playback, Settings, Anomaly Intel) backed by a section catalog, so that each section is a self-contained view/ViewModel pair. All ViewModels live in a single file, \texttt{ViewModels/SectionViewModels.cs}, an explicit project convention kept throughout development to avoid navigation wiring being duplicated across files.
@@ -16,11 +76,48 @@ Two services are shared by every ViewModel:
     \item \texttt{VehicleDataService} holds the client-side state shared across views: the current snapshot, the alert history, and the replay/live runtime metrics. It runs a polling loop (\texttt{OnRefreshTick}) that periodically asks the backend for replay status, partial alerts, and live signals, and raises events (\texttt{AlertHistoryUpdated}, \texttt{DataUpdated}) that ViewModels subscribe to.
 \end{itemize}
 
-\screenshot{Home screen showing the Live Session / Offline Import choice and backend connection status.}
+Figure~\ref{fig:screen-home} shows the Home screen, the client's entry point: it reports whether the backend is reachable and lets the analyst choose between a live session and an offline import.
 
-\screenshot{Log Playback view during a replay: transport controls, vehicle profile selector, detection-analysis chart, and replay progress panel.}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{01_home.png}
+\caption{Home screen — Live Session / Offline Import choice, backend connection status.}
+\label{fig:screen-home}
+\end{figure}
 
-\screenshot{Anomaly Intel view: alert list, layer-attribution bars for the selected alert, and the Chat with AI panel.}
+Figure~\ref{fig:screen-logplayback} shows the Log Playback view during a completed replay of the real Kia EV6 recording used throughout Chapter~\ref{chap:validation}: transport controls, vehicle profile selector, detection-analysis chart, and replay progress panel.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{07b_logplayback_kia.png}
+\caption{Log Playback view after a completed replay of the 97,741-frame Kia EV6 recording.}
+\label{fig:screen-logplayback}
+\end{figure}
+
+Figure~\ref{fig:screen-anomaly-intel} shows the Anomaly Intel view: the alert list on the left, the four-layer attribution bars for the selected alert, and the Chat with AI panel on the right, showing a freshly generated explanation for the selected alert.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{08c_anomaly_intel_kia_final.png}
+\caption{Anomaly Intel view: alert list, layer-attribution bars, and the Chat with AI explanation panel.}
+\label{fig:screen-anomaly-intel}
+\end{figure}
+
+The remaining two live views, Telemetry and Diagnostics, are shown in Figure~\ref{fig:screen-telemetry} and Figure~\ref{fig:screen-diagnostics}. Telemetry draws the decoded signal channels (speed, state of charge, motor temperature, voltage) alongside the raw live signal monitor and per-identifier activity ranking; Diagnostics exposes adapter and bus health, a running IDS event log, and a set of recovery actions for the live session.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{03_telemetry.png}
+\caption{Telemetry view: decoded signal channels, live signal monitor, and CAN-ID activity ranking.}
+\label{fig:screen-telemetry}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{04_diagnostics.png}
+\caption{Diagnostics view: adapter/bus health, IDS event log, and recovery actions.}
+\label{fig:screen-diagnostics}
+\end{figure}
 
 \section{FastAPI backend}
 
@@ -29,7 +126,7 @@ The backend entry point, \texttt{backend/api/server.py}, defines all \gls{rest} 
 \subsection{Replay engine}
 \label{sec:impl-replay}
 
-\texttt{backend/ml/runtime/replay\_runner.py} is invoked as a subprocess by \texttt{POST /api/replay/start}. It loads the input file through the shared, format-aware loader described in Section~\ref{sec:impl-parser}, builds three aligned arrays (timestamps, identifiers, payloads), and feeds them one by one into a \texttt{RealtimeEngine} instance configured with the requested vehicle identifier. Every 1{,}000 frames it writes a partial-alerts file to disk so the client can show live progress before the run completes; at the end it writes a summary \gls{json} file containing the full alert list and per-run statistics, which is what \texttt{GET /api/replay/alerts} serves to the client.
+This section describes the concrete implementation of the replay engine introduced in Section~\ref{sec:design-replay}. \texttt{backend/ml/runtime/replay\_runner.py} is invoked as a subprocess by \texttt{POST /api/replay/start}. It loads the input file through the shared, format-aware loader described in Section~\ref{sec:impl-parser}, builds three aligned arrays (timestamps, identifiers, payloads), and feeds them one by one into a \texttt{RealtimeEngine} instance configured with the requested vehicle identifier. Every 1{,}000 frames it writes a partial-alerts file to disk so the client can show live progress before the run completes; at the end it writes a summary \gls{json} file containing the full alert list and per-run statistics, which is what \texttt{GET /api/replay/alerts} serves to the client.
 
 A background thread on the server side (\texttt{monitor\_replay\_process}) waits for the subprocess to exit, updates the replay status to \texttt{completed} or \texttt{error}, and — as implemented during the validation phase in Chapter~\ref{chap:validation} — publishes this replay's own alerts into the state consumed by the \gls{ai} explanation endpoint.
 
@@ -54,6 +151,7 @@ This single dispatch point is what both the replay engine and the offline batch 
 \gls{mf4} files recorded by multi-channel CANedge-style loggers can spread real \gls{can} traffic across several channel groups, most of which are empty template groups. The conversion code (\texttt{backend/data\_processing/mf4\_to\_csv\_converter.py}) iterates every group in the file explicitly and merges the populated ones, instead of relying on the library's default single-dataframe view, which only surfaces the first group and silently drops the rest. This function is shared between the standalone \gls{mf4}-to-\gls{csv} conversion tool and the format-aware parser described above, so both code paths see the same, complete set of frames.
 
 \subsection{Vehicle profile system}
+\label{sec:impl-vehicle}
 
 \texttt{backend/decoding/vehicle\_profiles.py} defines a small registry of vehicle profiles (Table~\ref{tab:vehicles}), each mapping a vehicle identifier to a bitrate, a \gls{uds}-response \gls{dbc} file (used to decode diagnostic responses), and, where available, a raw broadcast \gls{dbc} file (used to decode spontaneous, non-diagnostic frames).
 
@@ -78,7 +176,7 @@ This single dispatch point is what both the replay engine and the offline batch 
 \end{tabular}
 \end{table}
 
-Selecting a profile in the client sets the \texttt{vehicle\_id} sent to every replay and live-capture request, which in turn selects both the \gls{dbc} decoding tables and the trained model bundle used for scoring, as described next.
+Selecting a profile in the client sets the \texttt{vehicle\_id} sent to every replay and live-capture request, which in turn selects both the \gls{dbc} decoding tables and the trained model bundle used for scoring, as described next. The nine profiles in Table~\ref{tab:vehicles} are the ones with full signal decoding through a named \gls{dbc} file; the trained model store (Appendix~\ref{app:datasets}) additionally holds model bundles for training-only sources without commercial vehicle names, such as the ROAD and Car-Hacking benchmark datasets, which is why the model store has more entries than Table~\ref{tab:vehicles}.
 
 \section{Machine learning pipeline}
 
@@ -99,7 +197,7 @@ Two implementation details matter here and are directly connected to a defect do
 
 \section{AI explanation module}
 
-The explanation module (\texttt{backend/ml/explainer/}) is called from the \texttt{GET /api/explain/\{alert\_index\}} endpoint. It builds a context object from four sources — the alert's own features, expected statistics for the current vehicle state, a keyword match against a small \gls{json} attack knowledge base, and the most similar past anomaly retrieved by cosine similarity from a persistent \gls{json}-lines history file — and sends this context to a provider chain that tries Google Gemini first, then a locally running Ollama model, and finally a rule-based template that fills in the same fields (summary, detail, recommendation) directly from the numeric context, so that the explanation is always produced even with no network access. Each resolved explanation is also appended to the historical anomaly store, so that later, similar anomalies can reference it.
+The explanation module (\texttt{backend/ml/explainer/}) implements the workflow introduced in Section~\ref{sec:design-ai}, and is called from the \texttt{GET /api/explain/\{alert\_index\}} endpoint. It builds a context object from four sources — the alert's own features, expected statistics for the current vehicle state, a keyword match against a small \gls{json} attack knowledge base, and the most similar past anomaly retrieved by cosine similarity from a persistent \gls{json}-lines history file — and sends this context to a provider chain that tries Google Gemini first, then a locally running Ollama model, and finally a rule-based template that fills in the same fields (summary, detail, recommendation) directly from the numeric context, so that the explanation is always produced even with no network access. Each resolved explanation is also appended to the historical anomaly store, so that later, similar anomalies can reference it.
 
 Explanations are cached by a key derived from the alert's own identifier and score, to avoid asking the language model the same question twice for the same alert within a run; Chapter~\ref{chap:validation} documents how the lifecycle of this cache, not the explanation logic itself, was the source of a validation defect, and how it was corrected.
 
@@ -109,7 +207,29 @@ The client draws its charts (anomaly score history, per-identifier activity, sev
 
 \section{Export}
 
-Two export paths are implemented from the Anomaly Intel view: \gls{csv} export writes the currently displayed alert list, including the parsed reason, KB match label, and explanation text where available, to a user-chosen file; PDF export (\texttt{Services/PdfReportBuilder.cs}, built on PDFsharp) renders a paginated A4 report with a header, summary statistics, and a formatted alert table, suitable for sharing outside the application.
+Two export paths are implemented from the Anomaly Intel view, shown in Figure~\ref{fig:export-workflow}: \gls{csv} export writes the currently displayed alert list, including the parsed reason, KB match label, and explanation text where available, to a user-chosen file; PDF export (\texttt{Services/PdfReportBuilder.cs}, built on PDFsharp) renders a paginated A4 report with a header, summary statistics, and a formatted alert table, suitable for sharing outside the application. Both paths read from the same in-memory alert list the analyst is looking at, so an export always matches what is currently on screen.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    box/.style={draw, rounded corners, minimum width=3.4cm, minimum height=0.9cm, align=center, font=\small},
+    >=Stealth
+]
+\node[box, fill=blue!8] (alerts) {In-memory\\alert list};
+\node[box, fill=orange!8, above right=0.4cm and 1.6cm of alerts] (csv) {CSV writer\\(Time, CAN\_ID, Severity,\\AttackType, Score, Reason, ...)};
+\node[box, fill=green!8, below right=0.4cm and 1.6cm of alerts] (pdf) {PdfReportBuilder\\(PDFsharp, paginated A4)};
+\node[box, fill=purple!10, right=2.8cm of alerts] (file) {User-chosen\\file on disk};
+
+\draw[->] (alerts) -- (csv);
+\draw[->] (alerts) -- (pdf);
+\draw[->] (csv) -- (file);
+\draw[->] (pdf) -- (file);
+\end{tikzpicture}
+\caption{Export workflow: both CSV and PDF export read the same displayed alert list.}
+\label{fig:export-workflow}
+\end{figure}
+
+Appendix~\ref{app:additional-validation} documents one minor, genuine formatting defect found in the \gls{csv} path during validation (an unquoted, French-locale decimal comma in the \texttt{Score} column) that is left as a known issue rather than corrected here, since the engineering scope of this project was frozen once the six defects of Chapter~\ref{chap:validation} were fixed and re-validated.
 
 \section{Settings}
 
