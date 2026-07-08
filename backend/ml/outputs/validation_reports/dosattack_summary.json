@@ -1,33 +1,63 @@
 {
-  "replay_source": "assets\\data\\OpelAstra\\dosattack.log",
-  "total_frames_processed": 250000,
-  "total_alerts": 1,
-  "alerts_per_1000_frames": 0.004,
+  "replay_source": "c:\\Users\\benkr\\OneDrive\\can_project\\assets\\data\\RenaultClio\\dosattack.log",
+  "total_frames_processed": 3000,
+  "total_alerts": 5,
+  "alerts_per_1000_frames": 1.6666666666666667,
   "critical_alert_rate": 0.0,
   "high_alert_rate": 0.0,
   "alerts_per_severity": {
-    "LOW": 1
+    "LOW": 5
   },
   "alerts_per_reason": {
-    "timing_burst": 1
+    "ml_outlier": 5
   },
   "alerts_per_can_id": {
-    "0x0": 1
+    "0xC6": 2,
+    "0x511": 2,
+    "0x500": 1
   },
   "alerts_per_risk_level": {
-    "LOW": 1
+    "LOW": 5
   },
-  "max_fusion_score_observed": 0.457830493430161,
-  "average_fusion_score_observed": 0.45782876814101137,
-  "runtime_duration_sec": 870.8227404999998,
-  "fps": 287.0848318183074,
+  "max_fusion_score_observed": 0.49669470278755423,
+  "average_fusion_score_observed": 0.16150734597796862,
+  "runtime_duration_sec": 7.336880299999393,
+  "fps": 408.8931367737113,
   "alert_records": [
     {
-      "timestamp": 0.0,
-      "can_id": 0,
+      "timestamp": 1508687476.626251,
+      "can_id": 198,
       "risk_level": "LOW",
-      "score": 0.457830493430161,
-      "reason": "timing=1.000, payload=0.000, ml=0.539, persistence=0.000, freq=1000000Hz, can_id_entropy=0.000"
+      "score": 0.4305333321059174,
+      "reason": "timing=0.001, payload=0.658, ml=1.000, persistence=0.000, freq=100Hz, can_id_entropy=3.476"
+    },
+    {
+      "timestamp": 1508687476.84834,
+      "can_id": 1297,
+      "risk_level": "LOW",
+      "score": 0.491037258971622,
+      "reason": "timing=0.000, payload=0.831, ml=1.000, persistence=0.000, freq=10Hz, can_id_entropy=3.411"
+    },
+    {
+      "timestamp": 1508687477.766267,
+      "can_id": 198,
+      "risk_level": "LOW",
+      "score": 0.441211429940979,
+      "reason": "timing=0.000, payload=0.689, ml=1.000, persistence=0.000, freq=100Hz, can_id_entropy=3.467"
+    },
+    {
+      "timestamp": 1508687477.848438,
+      "can_id": 1297,
+      "risk_level": "LOW",
+      "score": 0.4583958352261527,
+      "reason": "timing=0.001, payload=0.738, ml=1.000, persistence=0.000, freq=10Hz, can_id_entropy=3.441"
+    },
+    {
+      "timestamp": 1508687478.461118,
+      "can_id": 1280,
+      "risk_level": "LOW",
+      "score": 0.40107323786024485,
+      "reason": "timing=0.000, payload=0.574, ml=1.000, persistence=0.000, freq=10Hz, can_id_entropy=3.465"
     }
   ]
 }

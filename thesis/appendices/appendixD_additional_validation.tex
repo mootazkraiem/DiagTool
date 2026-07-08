@@ -1,0 +1,55 @@
+\chapter{Additional Validation Data}
+\label{app:additional-validation}
+
+\section{Post-correction alert breakdown}
+
+Table~\ref{tab:app-severity} and Table~\ref{tab:app-reason} give the full severity and reason-attribution breakdown of the 11{,}971 alerts produced by the corrected pipeline on the Kia EV6 recording (Chapter~\ref{chap:validation}), superseding the pre-correction breakdown of Table~\ref{tab:rootcause}.
+
+\begin{table}[H]
+\centering
+\caption{Severity distribution after correction.}
+\label{tab:app-severity}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\textbf{Severity} & \textbf{Count} & \textbf{Share} \\
+\midrule
+LOW      & 4{,}748 & 39.7\% \\
+MEDIUM   & 2{,}069 & 17.3\% \\
+HIGH     & 2{,}279 & 19.0\% \\
+CRITICAL & 2{,}875 & 24.0\% \\
+\midrule
+\textbf{Total} & \textbf{11{,}971} & \textbf{100\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Reason-attribution distribution after the Fix 3 correction.}
+\label{tab:app-reason}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\textbf{Dominant layer (bucket)} & \textbf{Count} & \textbf{Share} \\
+\midrule
+Timing (\texttt{timing\_burst})       & 5{,}031 & 42.0\% \\
+Payload (\texttt{continuity\_break})  & 4{,}451 & 37.2\% \\
+ML (\texttt{ml\_outlier})             & 2{,}489 & 20.8\% \\
+\midrule
+\textbf{Total} & \textbf{11{,}971} & \textbf{100\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Top alerting CAN identifiers}
+
+The five most frequent identifiers in the post-correction alert list were \texttt{0x19}, \texttt{0x7EC}, \texttt{0x7E4}, \texttt{0x13}, and \texttt{0x7BB}. The three eights-prefixed identifiers (\texttt{0x7EC}, \texttt{0x7E4}, \texttt{0x7BB}) are consistent with UDS diagnostic request/response traffic, matching the recording's active-polling capture method described in Appendix~\ref{app:datasets}.
+
+\section{Additional screenshots}
+
+\screenshot{Dashboard view showing the fusion score trend, active-threat panel, and IDS quick statistics during a completed replay.}
+
+\screenshot{Settings view: alert threshold, LLM provider key, and hardware interface configuration fields.}
+
+\screenshot{Exported CSV file opened in a spreadsheet application, showing the Time, CAN\_ID, Severity, AttackType, and Score columns for a sample of alerts.}
+
+\screenshot{Exported PDF report first page: header, summary statistics, and the start of the paginated alert table.}

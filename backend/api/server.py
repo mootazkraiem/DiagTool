@@ -378,6 +378,15 @@ def monitor_replay_process():
                 "results_ready": True
             })
             logger.info("[MONITOR] Status updated to completed")
+            try:
+                summary_files = sorted(
+                    glob.glob("backend/ml/outputs/validation_reports/*_summary.json"),
+                    key=os.path.getmtime, reverse=True,
+                )
+                if summary_files:
+                    _publish_replay_results_for_explain(Path(summary_files[0]))
+            except Exception as exc:
+                logger.warning("[MONITOR] Failed to publish replay results for explain: %s", exc)
         else:
             error_msg = f"Process exited with code {return_code}"
             if replay_stderr:
@@ -895,6 +904,10 @@ async def analyze(files: List[UploadFile] = File(...))  -> AnalyzeResponse:
         _last_incidents.extend(incidents)
         _last_analyze_results.clear()
         _last_analyze_results.extend(all_contexts)
+    # Drop cached /api/explain responses from whatever ran before this analyze call —
+    # otherwise a coincidental cache_key match (same can_id + score) could still serve
+    # a stale explanation from an unrelated earlier dataset/session.
+    _explain_cache.clear()
 
     # Persist alerts to DB
     try:
@@ -1030,6 +1043,10 @@ async def inject_attack(req: InjectRequest, files: List[UploadFile] = File(...))
         # instead of stale data left over from the last /analyze call.
         _last_analyze_results.clear()
         _last_analyze_results.extend(contexts)
+    # Also drop cached /api/explain responses — a coincidental cache_key match (same
+    # can_id + score) could otherwise still serve a stale explanation from whatever
+    # ran before this injection.
+    _explain_cache.clear()
 
     return JSONResponse(content={
         "injection_summary": inj_summary,
@@ -1425,6 +1442,61 @@ def _parse_layer_values(reason: str) -> dict[str, float]:
     return vals
 
 
+def _publish_replay_results_for_explain(summary_path: Path) -> None:
+    """Make /api/explain/{alert_index} resolve against THIS replay's own alerts.
+
+    _last_analyze_results/_last_incidents are shared, process-lifetime globals that
+    /api/explain/{alert_index} indexes into. Only /api/analyze and /api/inject ever
+    published into them (see the /api/inject handler, which explicitly clears+refills
+    them "instead of stale data left over from the last /analyze call") — a completed
+    replay never did. Since the UI's AI Detection list is built from /api/replay/alerts
+    and sends that list's position as alert_index, /api/explain calls for replay-sourced
+    alerts fell through to whatever unrelated data (potentially from a completely
+    different, earlier dataset/session) happened to still be sitting in those globals.
+    Publishing this replay's own alerts here, using the exact same records
+    /api/replay/alerts serves (same order, same truncation), keeps the two index spaces
+    aligned and removes the stale cross-session leakage.
+    """
+    try:
+        payload = json.loads(summary_path.read_text(encoding="utf-8"))
+    except Exception:
+        logger.warning("[REPLAY] Could not read summary for explain-cache refresh: %s", summary_path)
+        return
+
+    records = payload.get("alert_records", [])
+    contexts: list[dict[str, Any]] = []
+    for r in records:
+        reason_text = str(r.get("reason", ""))
+        layers = _parse_layer_values(reason_text)
+        score = float(r.get("score", 0.0))
+        severity = str(r.get("risk_level", "LOW"))
+        can_id_str = f"0x{int(r.get('can_id', 0)):X}"
+        contexts.append({
+            "can_id":                  can_id_str,
+            "anomaly_score":           score,
+            "reason":                  reason_text,
+            "detail":                  f"{severity} alert on {can_id_str} (fusion score {score:.3f}): {reason_text}",
+            "detection_layers":        [_dominant_layer(reason_text).upper()],
+            "timing_score":            layers.get("timing", 0.0),
+            "temporal_score":          layers.get("persistence", 0.0),
+            "temporal_pattern":        "runtime",
+            "plausibility_passed":     True,
+            "plausibility_violations": [],
+            "timing_anomaly":          False,
+            "decoded_signals":         [],
+        })
+
+    with _incidents_lock:
+        _last_incidents.clear()
+        _last_analyze_results.clear()
+        _last_analyze_results.extend(contexts)
+    _explain_cache.clear()
+    logger.info(
+        "[REPLAY] Published %d replay alerts for /api/explain (cleared stale analyze/inject/replay cache)",
+        len(contexts),
+    )
+
+
 @app.get("/api/explain/{alert_index}")
 def api_explain_alert(alert_index: int) -> dict[str, Any]:
     """Return an AI-generated explanation for an alert by index.
@@ -1628,6 +1700,19 @@ def api_replay_start(req: ReplayStartRequest) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail=f"Replay input file not found: {input_path}")
     if replay_process is not None and replay_process.poll() is None:
         raise HTTPException(status_code=409, detail="Replay already running.")
+
+    # Drop any stale per-alert state left over from a previous replay/analyze/inject/live
+    # session *before* this replay's own alerts start streaming in. Partial alerts (and the
+    # UI's auto-select-first-alert behavior) can appear well before the replay reaches
+    # "completed" — during that window /api/explain/{index} would otherwise still resolve
+    # against whatever unrelated data was last published, exactly reproducing the
+    # cross-session staleness bug even though the completed-replay publish step is correct.
+    with _incidents_lock:
+        _last_incidents.clear()
+        _last_analyze_results.clear()
+    _explain_cache.clear()
+    with runtime_lock:
+        live_alerts_buffer.clear()
 
     logger.info(f"[REPLAY] Starting replay for {input_path}")
     cmd = [sys.executable, "-m", "backend.ml.runtime.replay_runner", "--input", str(input_path)]

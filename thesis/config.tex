@@ -1,0 +1,125 @@
+% ============================================================
+% config.tex
+% Packages, layout, colors, custom commands, glossary, acronyms
+% ============================================================
+
+% ---------- Page geometry (ESPRIT guide: 2.5 cm margins) ----------
+\usepackage[a4paper,margin=2.5cm]{geometry}
+
+% ---------- Language ----------
+\usepackage[french,english]{babel}
+\selectlanguage{english}
+
+% ---------- Fonts / encoding ----------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{times}          % Times New Roman-like body font (guide requirement)
+\usepackage{microtype}
+
+% ---------- Line spacing / paragraphs (guide: 1.15, first-line indent 0.5 cm) ----------
+\usepackage{setspace}
+\setstretch{1.15}
+\setlength{\parindent}{0.5cm}
+
+% ---------- Color ----------
+\usepackage[table]{xcolor}
+\definecolor{espritred}{RGB}{200,30,45}
+\definecolor{codebg}{RGB}{245,245,245}
+\definecolor{codekw}{RGB}{0,90,150}
+\definecolor{codecomment}{RGB}{110,110,110}
+\definecolor{codestring}{RGB}{150,30,30}
+
+% ---------- Graphics / figures ----------
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage{placeins}      % \FloatBarrier to keep figures inside their chapter/section
+
+% ---------- Tables ----------
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{tabularx}
+
+% ---------- Diagrams ----------
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,backgrounds,calc,shadows}
+\usepackage{pgfgantt}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+% ---------- Code listings ----------
+\usepackage{listings}
+\lstdefinestyle{codestyle}{
+    backgroundcolor=\color{codebg},
+    commentstyle=\color{codecomment}\itshape,
+    keywordstyle=\color{codekw}\bfseries,
+    stringstyle=\color{codestring},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=6pt,
+    numberstyle=\tiny\color{gray},
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    frame=single,
+    framerule=0.3pt,
+    rulecolor=\color{gray!40}
+}
+\lstset{style=codestyle}
+
+% ---------- Hyperlinks / PDF bookmarks ----------
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=espritred,
+    citecolor=espritred,
+    urlcolor=blue,
+    filecolor=blue,
+    bookmarksnumbered=true,
+    bookmarksopen=true,
+    pdftitle={CANvisionNative - PFE Report},
+    pdfauthor={PLACEHOLDER-STUDENT-NAME},
+    pdfsubject={Final Year Engineering Project Report},
+}
+\usepackage[nameinlink,noabbrev]{cleveref} % must load after hyperref
+
+% ---------- Acronyms / Glossary ----------
+\usepackage[acronym,nomain,nonumberlist]{glossaries}
+\makeglossaries
+\input{styles/acronyms.tex}
+
+% ---------- Bibliography (IEEE style) ----------
+\usepackage[backend=biber,style=ieee,sorting=none]{biblatex}
+\addbibresource{references.bib}
+
+% ---------- Headers / footers ----------
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\leftmark}
+\fancyhead[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ---------- Section title numbering depth ----------
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+
+% ---------- Custom commands ----------
+\newcommand{\todofill}[1]{\textcolor{espritred}{\textbf{[TO FILL: #1]}}}
+\newcommand{\screenshot}[1]{%
+    \begin{center}
+    \fbox{\parbox{0.9\textwidth}{\centering\vspace{2cm}
+    \textit{INSERT SCREENSHOT HERE}\\[4pt]
+    \small #1
+    \vspace{2cm}}}
+    \end{center}
+}
+\newcommand{\code}[1]{\texttt{#1}}

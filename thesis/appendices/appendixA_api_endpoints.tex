@@ -1,0 +1,65 @@
+\chapter{REST API Endpoints}
+\label{app:api}
+
+Table~\ref{tab:api-endpoints} lists the \gls{rest} endpoints exposed by \texttt{backend/api/server.py}, grouped by function. All endpoints are served on \texttt{http://127.0.0.1:8765} and consumed by the desktop client only.
+
+\begin{longtable}{@{}llX@{}}
+\caption{Backend REST API endpoints.}\label{tab:api-endpoints}\\
+\toprule
+\textbf{Method} & \textbf{Path} & \textbf{Purpose} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Method} & \textbf{Path} & \textbf{Purpose} \\
+\midrule
+\endhead
+GET  & \texttt{/health}                              & Backend health check \\
+GET  & \texttt{/vehicle}                              & Synthetic / live vehicle snapshot \\
+GET  & \texttt{/metrics}                               & Runtime metrics \\
+POST & \texttt{/api/db/stats} (via decoded route)      & Database statistics \\
+GET  & \texttt{/incidents}                             & Grouped incidents from the last analysis \\
+POST & \texttt{/inject}                                & Attack injection into an uploaded log \\
+POST & \texttt{/feedback}                              & Analyst feedback on a frame label \\
+POST & \texttt{/infer}                                 & One-off inference on posted features \\
+POST & \texttt{/api/validation/score\_file}            & Batch validation scoring \\
+POST & \texttt{/api/live/start}                        & Start live simulated session \\
+POST & \texttt{/api/live/stop}                         & Stop live session \\
+GET  & \texttt{/api/live/signals}                      & Recent raw live frames \\
+GET  & \texttt{/api/live/decoded-signals}               & Recent decoded live signals \\
+GET  & \texttt{/api/live/alerts}                        & Live alert buffer \\
+GET  & \texttt{/api/explain/\{alert\_index\}}           & AI explanation for an alert \\
+GET  & \texttt{/api/live/status}                        & Live/simulator status \\
+GET  & \texttt{/api/runtime/statistics}                 & Runtime IDS statistics \\
+GET  & \texttt{/api/runtime/health}                     & Runtime engine health \\
+POST & \texttt{/api/replay/start}                       & Start a replay subprocess \\
+POST & \texttt{/api/replay/stop}                        & Stop the running replay \\
+GET  & \texttt{/api/replay/status}                      & Replay progress / completion state \\
+GET  & \texttt{/api/replay/results}                     & Latest replay result file \\
+GET  & \texttt{/api/replay/alerts}                       & Alerts from the latest replay summary \\
+GET  & \texttt{/api/replay/partial-alerts}               & Partial alerts while replay is running \\
+POST & \texttt{/api/simulator/generate}                 & Generate a simulated attack \\
+GET  & \texttt{/api/simulator/attacks}                  & List available simulated attack types \\
+GET  & \texttt{/api/validation/reports}                 & List validation report files \\
+GET  & \texttt{/api/vehicles}                           & Supported vehicle profile list \\
+GET  & \texttt{/api/vehicles/\{vehicle\_id\}/can\_ids}   & CAN identifiers defined in a vehicle's DBC \\
+POST & \texttt{/api/offline/analyze}                    & Start offline batch analysis \\
+GET  & \texttt{/api/offline/status/\{session\_id\}}      & Offline analysis progress \\
+GET  & \texttt{/api/offline/frames/\{session\_id\}}      & Paginated decoded frames \\
+GET  & \texttt{/api/offline/summary/\{session\_id\}}     & Offline analysis summary \\
+POST & \texttt{/api/mf4/convert}                        & Convert an MF4 file to CSV \\
+POST & \texttt{/api/live/hardware/connect}               & Connect a physical CAN adapter \\
+POST & \texttt{/api/live/hardware/disconnect}            & Disconnect the adapter \\
+GET  & \texttt{/api/live/hardware/status}                & Hardware connection status \\
+GET  & \texttt{/api/live/hardware/ports}                 & Available serial ports \\
+GET  & \texttt{/api/live/hardware/check}                 & Hardware availability check \\
+GET  & \texttt{/api/system/info}                        & System / build information \\
+GET  & \texttt{/api/settings}                           & Current settings \\
+POST & \texttt{/api/settings}                           & Update settings \\
+POST & \texttt{/api/chat}                               & Conversational Q\&A about an alert \\
+POST & \texttt{/api/session/record/start}                & Start session recording \\
+POST & \texttt{/api/session/record/stop}                 & Stop session recording \\
+GET  & \texttt{/api/session/record/status}               & Recording status \\
+GET  & \texttt{/api/session/list}                       & List recorded sessions \\
+GET  & \texttt{/api/system/health}                      & Aggregated system health \\
+\bottomrule
+\end{longtable}

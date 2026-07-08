@@ -1,0 +1,21 @@
+\chapter*{General Introduction}
+\addcontentsline{toc}{chapter}{General Introduction}
+
+Vehicles have become distributed computer networks on wheels. A modern car, and even more so an electric vehicle, contains dozens of \gls{ecu}s that control braking, battery management, motor torque, infotainment, and driver-assistance functions. These \gls{ecu}s talk to each other over shared internal networks, and the most common of these networks, by far, is the \gls{can} bus.
+
+The \gls{can} protocol was standardized in the 1980s for industrial reliability: every node on the bus can send and receive frames, and the protocol guarantees that the highest-priority message wins in case of collision. This design works extremely well for a closed, trusted environment. It was never designed to resist an attacker who gains access to the bus, because it has no field for authentication and no encryption. Once an attacker can inject frames onto the bus, the bus itself cannot tell a legitimate frame from a forged one.
+
+Over the last fifteen years, security researchers have repeatedly shown that this is not a theoretical problem. Remote attacks against production vehicles, published diagnostic exploits, and public intrusion-detection datasets have all demonstrated that a compromised \gls{can} bus can affect physical vehicle behaviour. At the same time, the rise of electric vehicles has increased the number of safety-critical messages on the bus (battery management, motor control) and the number of remote attack surfaces (telematics, over-the-air updates, mobile apps).
+
+An intrusion detection system for the \gls{can} bus has to work under constraints that are different from a typical network \gls{ids}: frames are small (up to 8 bytes of payload), periodic, and vehicle-specific, and a single trained model rarely generalizes across manufacturers. This motivates a system that combines several complementary detection strategies (timing, payload, machine learning, temporal persistence) and that adapts to the specific vehicle being monitored.
+
+This report describes the design, implementation, and validation of \textbf{CANvisionNative}, a hybrid desktop and backend \gls{ids} built to detect anomalies on recorded and live \gls{can} traffic, to explain detected anomalies in plain language, and to export the results for later analysis. The project also includes a full engineering validation phase, in which the system was tested against a real one-hour vehicle recording, defects were identified with concrete evidence, fixed, and re-validated.
+
+\section*{Report structure}
+\addcontentsline{toc}{section}{Report structure}
+
+This report is organized into six chapters.
+
+Chapter 1 presents the context of the project. Chapter 2 reviews the state of the art: the \gls{can} bus and its related protocols, known \gls{can} attacks, existing intrusion detection approaches, and how machine learning has been applied to this problem in the literature. Chapter 3 analyses the functional and non-functional requirements of the system, its actors and use cases, and the project planning. Chapter 4 presents the overall system architecture: the desktop client, the backend \gls{api}, the detection pipeline, and the \gls{ai} explanation engine. Chapter 5 describes the implementation of the main modules. Chapter 6 presents the validation work: the testing methodology, the real-data validation on the Kia EV6 recording, the defects found and fixed, and the before/after measurements. The report ends with a general conclusion, a bibliography, and a set of appendices.
+
+\cleardoublepage

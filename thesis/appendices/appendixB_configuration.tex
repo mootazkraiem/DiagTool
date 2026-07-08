@@ -1,0 +1,63 @@
+\chapter{Configuration}
+\label{app:config}
+
+\section{Requirements}
+
+Table~\ref{tab:app-requirements} lists the software requirements to build and run CANvisionNative, as documented in the project's own setup guide.
+
+\begin{table}[H]
+\centering
+\caption{Software requirements.}
+\label{tab:app-requirements}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Component} & \textbf{Version} \\
+\midrule
+Windows              & 10 or 11, 64-bit \\
+.NET Runtime         & 4.8 \\
+Python               & 3.11 -- 3.14 \\
+ELM327 USB adapter   & Required only for live hardware capture \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Key Python dependencies}
+
+\begin{itemize}
+    \item \texttt{fastapi}, \texttt{uvicorn} — REST API server
+    \item \texttt{scikit-learn}, \texttt{joblib} — Isolation Forest and K-Means pipeline
+    \item \texttt{pandas}, \texttt{numpy} — feature engineering
+    \item \texttt{asammdf} — MF4 decoding
+    \item \texttt{cantools} — DBC-based signal decoding
+    \item \texttt{python-can} — hardware CAN adapter access
+\end{itemize}
+
+\section{Backend startup}
+
+\begin{lstlisting}[language=bash]
+python -m uvicorn backend.api.server:app --host 127.0.0.1 --port 8765
+\end{lstlisting}
+
+The desktop client automatically starts and stops this process when a Python interpreter is found at the expected path, and exposes the same functionality if the backend is instead started manually beforehand.
+
+\section{Persisted configuration}
+
+Client-side settings (alert threshold, LLM provider key, hardware interface parameters) are persisted to \texttt{\%AppData\%\textbackslash CANvision\textbackslash config.json} and reloaded on startup. The LLM provider key, if configured, is applied as an environment variable so the backend can pick it up without a separate configuration step.
+
+\section{Fusion score configuration}
+
+\begin{table}[H]
+\centering
+\caption{Default fusion and severity configuration.}
+\label{tab:app-fusion-config}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Parameter} & \textbf{Value} \\
+\midrule
+Fusion score range     & 0.0 -- 2.0 \\
+Layer weights          & timing 0.35, payload 0.35, ML 0.20, persistence 0.10 \\
+Severity thresholds    & LOW $\geq$ 0.30, MEDIUM $\geq$ 0.55, HIGH $\geq$ 0.80, CRITICAL $\geq$ 1.00 \\
+Backend port           & 8765 \\
+\bottomrule
+\end{tabular}
+\end{table}

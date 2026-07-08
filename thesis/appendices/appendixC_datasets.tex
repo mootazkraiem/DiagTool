@@ -1,0 +1,34 @@
+\chapter{Datasets}
+\label{app:datasets}
+
+\section{Training corpus}
+
+The machine-learning models used by CANvisionNative were trained on a corpus of \textbf{more than seven million CAN frames} drawn from sixty-six sources, summarized in Table~\ref{tab:app-training-corpus}.
+
+\begin{table}[H]
+\centering
+\caption{Main sources of the training corpus.}
+\label{tab:app-training-corpus}
+\begin{tabular}{@{}llr@{}}
+\toprule
+\textbf{Source} & \textbf{Description} & \textbf{Frames} \\
+\midrule
+ROAD ambient~\cite{verma2020road} & University-collected ambient drives (12 sessions) & 1{,}737{,}195 \\
+Car-Hacking (normal rows)~\cite{seo2018gids} & Public benchmark, normal-traffic subset & 1{,}200{,}000 \\
+Nissan Leaf              & Community EV CAN logs & 1{,}163{,}181 \\
+BMW i3                   & Community EV CAN logs & 1{,}044{,}993 \\
+Kia EV6                  & Community EV CAN logs & 886{,}368 \\
+13 additional sources    & Kia Soul, Jaguar I-PACE, MG ZS EV, Tesla, others & $\sim$1{,}032{,}329 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+This corpus produced eighteen vehicle-specific model folders plus one generic fallback bundle, stored under \texttt{assets/models/}.
+
+\section{Primary validation dataset}
+
+The main validation dataset used in Chapter~\ref{chap:validation} is a real, one-hour Kia EV6 recording from the CSS Electronics EV Data Pack (\texttt{00000158-64CBC290.MF4}), captured by a CANedge logger performing active UDS polling. After MF4 conversion, the recording contains \textbf{97{,}741 frames}, decoded with the Hyundai/Kia UDS DBC file (\texttt{can1-hyundai-kia-uds-v2.4.dbc}).
+
+\section{Cross-validation dataset}
+
+To test for cross-session and cross-dataset state leakage in the AI explanation module (Section~\ref{sec:validation-ai}), a second, independent real recording was used: a Renault Clio DoS-attack candump log, from a different vehicle and a different capture tool, containing frames on identifiers unrelated to the Kia EV6 recording (for example \texttt{0xC6}, \texttt{0x511}).

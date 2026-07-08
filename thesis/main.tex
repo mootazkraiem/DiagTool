@@ -1,0 +1,55 @@
+\documentclass[12pt,a4paper,oneside]{report}
+
+\input{config.tex}
+
+\begin{document}
+
+% ============================================================
+% FRONT MATTER
+% ============================================================
+\pagenumbering{gobble}
+
+\input{chapters/00_cover.tex}
+\input{chapters/00_acknowledgements.tex}
+\input{chapters/00_abstract.tex}
+\input{chapters/00_resume.tex}
+
+\pagenumbering{roman}
+
+\tableofcontents
+\clearpage
+\listoffigures
+\clearpage
+\listoftables
+\clearpage
+\printglossary[type=\acronymtype,title={List of Abbreviations}]
+\clearpage
+
+\input{chapters/00_general_introduction.tex}
+
+% ============================================================
+% MAIN MATTER
+% ============================================================
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\input{chapters/chapter1_host_company.tex}
+\input{chapters/chapter2_state_of_the_art.tex}
+\input{chapters/chapter3_requirements.tex}
+\input{chapters/chapter4_design.tex}
+\input{chapters/chapter5_implementation.tex}
+\input{chapters/chapter6_validation.tex}
+\input{chapters/00_general_conclusion.tex}
+
+% ============================================================
+% BACK MATTER
+% ============================================================
+\printbibliography[title={Bibliography}]
+
+\appendix
+\input{appendices/appendixA_api_endpoints.tex}
+\input{appendices/appendixB_configuration.tex}
+\input{appendices/appendixC_datasets.tex}
+\input{appendices/appendixD_additional_validation.tex}
+
+\end{document}
