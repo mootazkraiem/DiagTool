@@ -1,0 +1,32 @@
+\babel@toc {english}{}\relax 
+\babel@toc {english}{}\relax 
+\babel@toc {french}{}\relax 
+\babel@toc {english}{}\relax 
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {2.1}{\ignorespaces CAN bus attack patterns and the detection signal each one primarily disturbs.}}{7}{table.caption.12}%
+\contentsline {table}{\numberline {2.2}{\ignorespaces Comparison of CAN IDS approaches.}}{9}{table.caption.13}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {3.1}{\ignorespaces Detailed description of the ``Replay log'' use case.}}{14}{table.caption.15}%
+\contentsline {table}{\numberline {3.2}{\ignorespaces Risk analysis.}}{17}{table.caption.18}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {5.1}{\ignorespaces Repository statistics (source code only).}}{27}{table.caption.28}%
+\contentsline {table}{\numberline {5.2}{\ignorespaces Supported vehicle profiles.}}{32}{table.caption.34}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {6.1}{\ignorespaces QA timeline.}}{37}{table.caption.36}%
+\contentsline {table}{\numberline {6.2}{\ignorespaces Testing matrix: what was covered, and how.}}{38}{table.caption.38}%
+\contentsline {table}{\numberline {6.3}{\ignorespaces Root-cause breakdown of the 15,945 baseline alerts.}}{40}{table.caption.40}%
+\contentsline {table}{\numberline {6.4}{\ignorespaces Before/after comparison on the real Kia EV6 recording (97,741 frames).}}{43}{table.caption.41}%
+\contentsline {table}{\numberline {6.5}{\ignorespaces Summary of engineering fixes and their validation status.}}{47}{table.caption.49}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {A.1}{\ignorespaces Backend REST API endpoints.}}{53}{table.A.1}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {B.1}{\ignorespaces Software requirements.}}{55}{table.caption.59}%
+\contentsline {table}{\numberline {B.2}{\ignorespaces Hardware requirements.}}{56}{table.caption.60}%
+\contentsline {table}{\numberline {B.3}{\ignorespaces Default fusion and severity configuration.}}{57}{table.caption.61}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {C.1}{\ignorespaces Main sources of the training corpus.}}{58}{table.caption.62}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {D.1}{\ignorespaces Severity distribution after correction.}}{60}{table.caption.63}%
+\contentsline {table}{\numberline {D.2}{\ignorespaces Reason-attribution distribution after the Fix 3 correction.}}{60}{table.caption.64}%

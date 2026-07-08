@@ -123,8 +123,8 @@ The backend keeps a small SQLite database (\texttt{backend/db/canvision.db}) for
     timing\_anomaly: INTEGER\\
     recommended\_response: TEXT
 };
-\draw[-{Crow foot}] (sessions) -- (frames) node[midway,above,sloped,font=\tiny]{1 .. N};
-\draw[-{Crow foot}] (sessions) -- (alerts) node[midway,below,sloped,font=\tiny]{1 .. N};
+\draw[-{Latex[length=3mm]}] (sessions) -- (frames) node[midway,above,sloped,font=\tiny]{1 .. N};
+\draw[-{Latex[length=3mm]}] (sessions) -- (alerts) node[midway,below,sloped,font=\tiny]{1 .. N};
 \end{tikzpicture}
 \caption{Entity-relationship diagram of the SQLite persistence layer.}
 \label{fig:er-diagram}
