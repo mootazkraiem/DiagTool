@@ -138,7 +138,7 @@ The four layers are combined into one fusion score by a fixed weighted sum, and 
 
 \section{Hardware layer}
 
-The hardware layer wraps the \texttt{python-can} library to support three transports: ELM327 over a serial/slcan connection, PEAK PCAN-USB, and native SocketCAN. It exposes connect, disconnect, and status endpoints, and feeds every received frame through the same \texttt{RealtimeEngine} instance used by replay, with the vehicle identifier selected in the Settings view. This design means the detection pipeline itself required no change to support live hardware once an adapter is available, only the transport layer differs, which is why the code-complete-but-hardware-blocked status described in Chapter~\ref{chap:requirements} was an acceptable risk to carry through the project.
+The hardware layer wraps the \texttt{python-can} library to support three transports: ELM327 over a serial/slcan connection, PEAK PCAN-USB, and native SocketCAN. It exposes connect, disconnect, and status endpoints, and feeds every received frame through the same \texttt{RealtimeEngine} instance used by replay, with the vehicle identifier selected in the Settings view. This design means the detection pipeline itself required no change to support live hardware; only the transport layer differs, which is why carrying this path through the project as code-complete but unvalidated, pending a compatible electric vehicle (Chapter~\ref{chap:requirements}), was an acceptable risk.
 
 \section{AI explanation engine}
 \label{sec:design-ai}
