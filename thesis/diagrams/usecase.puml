@@ -1,0 +1,48 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #EAF2FF
+  BorderColor #2C5AA0
+  ArrowColor #2C5AA0
+}
+left to right direction
+
+actor Analyst
+actor "Vehicle / CAN bus" as Vehicle
+actor "LLM provider" as LLM
+
+rectangle CANvisionNative {
+  usecase "Import log" as UC1
+  usecase "Select vehicle profile" as UC2
+  usecase "Replay log" as UC3
+  usecase "Detect anomaly" as UC4
+  usecase "Review alerts" as UC5
+  usecase "Request explanation" as UC6
+  usecase "Export report" as UC7
+  usecase "Configure settings" as UC8
+  usecase "Start live simulation" as UC9
+  usecase "Connect hardware" as UC10
+}
+
+Analyst --> UC1
+Analyst --> UC2
+Analyst --> UC3
+Analyst --> UC5
+Analyst --> UC6
+Analyst --> UC7
+Analyst --> UC8
+Analyst --> UC9
+Analyst --> UC10
+
+Vehicle --> UC10
+LLM --> UC6
+
+UC3 ..> UC4 : <<include>>
+UC9 ..> UC4 : <<include>>
+UC10 ..> UC4 : <<include>>
+UC6 ..> UC5 : <<extend>>
+@enduml

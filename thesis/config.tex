@@ -16,6 +16,7 @@
 \usepackage{lmodern}
 \usepackage{times}          % Times New Roman-like body font (guide requirement)
 \usepackage{microtype}
+\setlength{\emergencystretch}{3em} % reduces overfull lines from long inline \texttt{} paths
 
 % ---------- Line spacing / paragraphs (guide: 1.15, first-line indent 0.5 cm) ----------
 \usepackage{setspace}
@@ -25,6 +26,9 @@
 % ---------- Color ----------
 \usepackage[table]{xcolor}
 \definecolor{espritred}{RGB}{200,30,45}
+\definecolor{espritdarkred}{RGB}{130,20,35}
+\definecolor{espritgraydark}{RGB}{90,90,90}
+\definecolor{espritgraylight}{RGB}{180,180,180}
 \definecolor{codebg}{RGB}{245,245,245}
 \definecolor{codekw}{RGB}{0,90,150}
 \definecolor{codecomment}{RGB}{110,110,110}
@@ -32,7 +36,7 @@
 
 % ---------- Graphics / figures ----------
 \usepackage{graphicx}
-\graphicspath{{images/}{images/graphs/}{images/screenshots/}}
+\graphicspath{{images/}{images/graphs/}{images/screenshots/}{diagrams/}}
 \usepackage{float}
 \usepackage{subcaption}
 \usepackage{placeins}      % \FloatBarrier to keep figures inside their chapter/section
@@ -46,6 +50,7 @@
 \usepackage{tabularx}
 
 % ---------- Diagrams ----------
+\usepackage{ifthen}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,shapes.geometric,shapes.multipart,fit,backgrounds,calc,shadows}
 \usepackage{pgfgantt}
@@ -81,14 +86,16 @@
 \usepackage{hyperref}
 \hypersetup{
     colorlinks=true,
-    linkcolor=espritred,
-    citecolor=espritred,
+    linkcolor=blue,
+    citecolor=blue,
     urlcolor=blue,
     filecolor=blue,
     bookmarksnumbered=true,
     bookmarksopen=true,
+    plainpages=false,
+    pdfpagelabels=true,
     pdftitle={CANvisionNative - PFE Report},
-    pdfauthor={PLACEHOLDER-STUDENT-NAME},
+    pdfauthor={Mohamed Mootaz Ben Kraiem},
     pdfsubject={Final Year Engineering Project Report},
 }
 \usepackage[nameinlink,noabbrev]{cleveref} % must load after hyperref
@@ -104,6 +111,7 @@
 
 % ---------- Headers / footers ----------
 \usepackage{fancyhdr}
+\setlength{\headheight}{14pt}
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\small\leftmark}
@@ -115,5 +123,5 @@
 \setcounter{tocdepth}{3}
 
 % ---------- Custom commands ----------
-\newcommand{\todofill}[1]{\textcolor{espritred}{\textbf{[TO FILL: #1]}}}
+\newcommand{\todofill}[1]{\textbf{[TO FILL: #1]}}
 \newcommand{\code}[1]{\texttt{#1}}

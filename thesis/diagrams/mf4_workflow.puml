@@ -1,0 +1,24 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam ArrowColor #2C5AA0
+skinparam ArrowThickness 1.1
+skinparam component {
+  BackgroundColor #EAF2FF
+  BorderColor #2C5AA0
+}
+
+component "Raw .MF4 file\n(multi channel-group)" as MF4
+component "Iterate every\nchannel group" as Iter
+component "Merge populated\ngroups" as Merge
+component "Canonical\n(ts, id, payload)\nstream" as Canon
+component "Frame-count\ncross-check" as Check #E8F5E9
+
+MF4 -right-> Iter
+Iter -right-> Merge
+Merge -right-> Canon
+Canon -right-> Check
+@enduml

@@ -1,0 +1,31 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam sequence {
+  ArrowColor #2C5AA0
+  LifeLineBorderColor #2C5AA0
+  ParticipantBackgroundColor #EAF2FF
+  ParticipantBorderColor #2C5AA0
+}
+
+actor Analyst
+participant "Desktop Client" as Client
+participant "Backend API" as Backend
+participant "LLM Provider" as LLM
+
+Analyst -> Client : select alert / click Explain
+Client -> Backend : GET /api/explain/{index}
+activate Backend
+Backend -> Backend : resolve alert context
+Backend -> LLM : request explanation
+alt LLM available
+  LLM --> Backend : generated text
+else LLM unavailable
+  Backend -> Backend : rule-based fallback\n(no external call)
+end
+Backend --> Client : summary, detail,\nlayer scores, recommendation
+deactivate Backend
+Client --> Analyst : display explanation\nin Chat panel
+@enduml

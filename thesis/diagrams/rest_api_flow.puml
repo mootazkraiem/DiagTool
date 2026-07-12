@@ -1,0 +1,42 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam ArrowColor #2C5AA0
+skinparam ArrowThickness 1.1
+skinparam component {
+  BackgroundColor #EAF2FF
+  BorderColor #2C5AA0
+}
+skinparam rectangle {
+  BackgroundColor #F5F8FF
+  BorderColor #7C93B8
+}
+
+component "Desktop\nclient" as Client
+
+rectangle "FastAPI backend endpoints" {
+  component "/api/replay/*\n/api/live/*\n/analyze" as Detect
+  component "/api/explain/{i}" as Explain
+  component "/api/vehicles\n/api/session/*\n/api/settings" as Admin
+}
+
+component "Detection\nengine" as Engine
+component "AI explanation\nengine" as AI
+component "Data layer\n(DB, models, DBC)" as Data
+
+Detect -[hidden]down- Explain
+Explain -[hidden]down- Admin
+
+Client -up-> Detect
+Client -right-> Explain
+Client -down-> Admin
+
+Detect -right-> Engine
+Explain -right-> AI
+Admin -right-> Data
+Engine -down-> Data
+AI -down-> Data
+@enduml

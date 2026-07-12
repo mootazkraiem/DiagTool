@@ -1,0 +1,26 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam ArrowColor #2C5AA0
+skinparam ArrowThickness 1.1
+skinparam component {
+  BackgroundColor #EAF2FF
+  BorderColor #2C5AA0
+}
+left to right direction
+
+component "Selected alert\n(can_id, score, reason)" as Alert
+component "Context builder\n(features + state stats\n+ KB match + similar case)" as Context
+component "LLM provider chain\nGemini -> Ollama" as LLMChain
+component "Rule-based\nfallback template" as Rule #FFF3E0
+component "Summary, detail,\nrecommendation" as Output #E8F5E9
+
+Alert -> Context
+Context -> LLMChain
+LLMChain -> Output
+LLMChain ..> Rule : if all providers fail
+Rule -> Output
+@enduml

@@ -1,45 +1,41 @@
 % ============================================================
-% Cover page
+% Cover page (front) — official ESPRIT PFE cover artwork
+% (thesis/images/cover_front_bg.jpg, extracted from the filled
+% official template), with the variable text (year, specialty,
+% title, author, supervisors) overlaid at the exact positions
+% used in that template, and the real Capgemini Engineering
+% logo placed in its designated box.
 % ============================================================
 \begin{titlepage}
-\centering
+\newgeometry{margin=0cm}
+\thispagestyle{empty}
 
-{\large \textbf{ESPRIT — École Supérieure Privée d'Ingénierie et de Technologies}}\par
-\vspace{0.3cm}
-{\normalsize \todofill{Department / Engineering track name}}\par
+\begin{tikzpicture}[remember picture, overlay]
+\begin{scope}[shift={(current page.north west)}, x=1cm, y=-1cm]
 
-\vspace{2cm}
+% ---- official background artwork (logo, banner, decoration, accreditation row) ----
+\node[anchor=north west, inner sep=0pt] at (0,0) {\includegraphics[width=21cm,height=29.7cm]{cover_front_bg.jpg}};
 
-\rule{0.9\textwidth}{1pt}\par
-\vspace{0.5cm}
-{\Huge \textbf{Final Year Engineering Project Report}}\par
-\vspace{0.3cm}
-{\large (Projet de Fin d'Études)}\par
-\vspace{0.5cm}
-\rule{0.9\textwidth}{1pt}\par
+% ---- academic year ----
+\node[anchor=north west, font=\fontsize{26}{28}\selectfont\bfseries, text=espritred] at (6.96,4.6) {2025 - 2026};
 
-\vspace{1.5cm}
+% ---- specialty value (label "SPECIALTY :" is already in the background) ----
+\node[anchor=north west, font=\fontsize{15}{17}\selectfont\bfseries, text=black] at (10.46,11.5) {INFORMATION TECHNOLOGY};
 
-{\LARGE \textbf{CANvisionNative}}\par
-\vspace{0.3cm}
-{\Large A Hybrid-Architecture Intrusion Detection System \\ for Vehicle CAN Bus Networks}\par
+% ---- project title ----
+\node[anchor=north west, font=\fontsize{15}{17}\selectfont\bfseries, text=black] at (4.47,12.95) {CANvisionNative};
 
-\vspace{2cm}
+% ---- author / supervisors ----
+\node[anchor=north west, font=\normalsize, text=black] at (6.60,16.2) {By: Mohamed Mootaz Ben Kraiem};
+\node[anchor=north west, font=\normalsize, text=black] at (6.60,18.1) {Academic supervisor: Nadia Boulifa};
+\node[anchor=north west, font=\normalsize, text=black] at (6.60,20.1) {Corporate Internship Supervisor: Hamda Guizani};
 
-{\large Prepared by: \textbf{\todofill{Student full name}}}\par
+% ---- company logo, in its designated placeholder box ----
+\node[anchor=north west, inner sep=0pt] at (10.59,23.9) {\includegraphics[width=5.66cm]{cover_capgemini_logo.jpg}};
 
-\vspace{1cm}
-
-\begin{tabular}{ll}
-Academic supervisor: & \todofill{Academic supervisor name} \\[4pt]
-Company supervisor:  & \todofill{Company supervisor name, or ``N/A'' if independent project} \\[4pt]
-Host organization:   & \todofill{Host company name, or ``Independent project'' } \\
-\end{tabular}
-
-\vfill
-
-{\large Academic Year: \todofill{20XX / 20XX}}\par
+\end{scope}
+\end{tikzpicture}
 
 \end{titlepage}
-
-\cleardoublepage
+\restoregeometry
+\clearpage

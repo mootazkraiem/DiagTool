@@ -1,0 +1,38 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam sequence {
+  ArrowColor #2C5AA0
+  LifeLineBorderColor #2C5AA0
+  ParticipantBackgroundColor #EAF2FF
+  ParticipantBorderColor #2C5AA0
+}
+
+actor Analyst
+participant "Desktop Client" as Client
+participant "Backend API" as Backend
+participant "Replay Engine\n(subprocess)" as Replay
+participant "RealtimeEngine" as Engine
+
+Analyst -> Client : Open File (vehicle selected)
+Client -> Backend : POST /api/replay/start\n{input_path, vehicle_id}
+activate Backend
+Backend -> Replay : launch subprocess
+activate Replay
+Backend --> Client : status: running
+Client -> Backend : poll GET /api/replay/status
+loop every frame
+  Replay -> Engine : process_frame(frame, vehicle_id)
+  Engine --> Replay : fusion score, alert?
+end
+Replay -> Replay : write summary JSON
+Replay --> Backend : process exit (monitor thread)
+deactivate Replay
+Backend -> Backend : publish alerts for /api/explain
+Client -> Backend : GET /api/replay/alerts
+Backend --> Client : alert list
+deactivate Backend
+Client --> Analyst : display alerts in\nAnomaly Intel view
+@enduml

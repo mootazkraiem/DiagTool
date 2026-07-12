@@ -1,0 +1,49 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam ArrowColor #2C5AA0
+skinparam ArrowThickness 1.1
+skinparam component {
+  BackgroundColor #EAF2FF
+  BorderColor #2C5AA0
+}
+skinparam rectangle {
+  BackgroundColor #F5F8FF
+  BorderColor #7C93B8
+}
+
+component "CAN frame" as Frame
+component "Parser" as Parser
+component "Feature\nextraction" as Feat
+component "State\nclassification\n(K-Means)" as State
+component "Vehicle model\nselection" as Vehicle
+
+rectangle "Four detection layers" {
+  component "Timing layer" as Timing
+  component "Payload layer" as Payload
+  component "ML layer\n(Isolation Forest)" as ML
+}
+
+component "Fusion\nscore" as Fusion
+component "Temporal\npersistence" as Persist
+component "Alert +\nseverity" as Alert
+
+Timing -[hidden]down- Payload
+Payload -[hidden]down- ML
+
+Frame -right-> Parser
+Parser -right-> Feat
+Feat -right-> State
+State -right-> Vehicle
+Vehicle -up-> Timing
+Vehicle -right-> Payload
+Vehicle -down-> ML
+Timing -right-> Fusion
+Payload -right-> Fusion
+ML -right-> Fusion
+Fusion -right-> Persist
+Persist -right-> Alert
+@enduml

@@ -1,0 +1,33 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam ArrowColor #2C5AA0
+skinparam ArrowThickness 1.1
+skinparam component {
+  BackgroundColor #EAF2FF
+  BorderColor #2C5AA0
+}
+
+component "Root-cause\nanalysis\n(15,945 alerts,\n100% explained)" as A #EAF2FF
+component "Fix 1\nVehicle model\nselection" as B #FFE0B2
+component "Fix 2\nDriving-state\nclassification" as C #FFE0B2
+component "Fix 3\nReason\nattribution" as D #FFE0B2
+component "Fix 4\nReplay parser\nconsistency" as E #FFE0B2
+
+component "End-to-end\nre-validation" as F #C8E6C9
+component "Fix 5\nAlert-polling\ntimer" as G #FFCDD2
+component "Fix 6\nAI explanation\ncache staleness" as H #FFCDD2
+component "Release\nCandidate" as I #C8E6C9
+
+A -right-> B
+B -right-> C
+C -right-> D
+D -right-> E
+E -down-> F
+F -right-> G
+G -right-> H
+H -right-> I
+@enduml

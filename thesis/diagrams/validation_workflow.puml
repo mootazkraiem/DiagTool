@@ -1,0 +1,25 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam activity {
+  BackgroundColor #EAF2FF
+  BorderColor #2C5AA0
+  ArrowColor #2C5AA0
+  DiamondBackgroundColor #FFF3E0
+  DiamondBorderColor #C77800
+}
+
+start
+:Pass 1 - Interactive UI audit;
+:Pass 2 - Root-cause analysis\n(100% of alerts explained);
+if (Reproducible evidence?) then (yes)
+  :Pass 3 - Fix + re-validate\nwith the same evidence;
+  :Full end-to-end re-run\n(import -> replay -> detection\n-> AI -> export);
+else (no)
+  :Not a defect - leave unchanged;
+endif
+stop
+@enduml

@@ -25,7 +25,7 @@ Git                  & Any (for cloning the repository) \\
 \centering
 \caption{Hardware requirements.}
 \label{tab:app-hardware}
-\begin{tabularx}{\textwidth}{@{}llX@{}}
+\begin{tabular}{@{}p{2.6cm}p{5.3cm}p{6.4cm}@{}}
 \toprule
 \textbf{Component} & \textbf{Requirement} & \textbf{Notes} \\
 \midrule
@@ -34,7 +34,7 @@ Disk space & A few GB free & Trained model store, DBC files, and recorded logs \
 USB port & 1 free port & Only for the ELM327 / USB-CAN adapter below \\
 CAN adapter & ELM327 USB (slcan), PEAK PCAN-USB, or a SocketCAN-compatible interface & Required only for live hardware capture (FR9); not needed for replay or simulation \\
 \bottomrule
-\end{tabularx}
+\end{tabular}
 \end{table}
 
 \section{Key Python dependencies}

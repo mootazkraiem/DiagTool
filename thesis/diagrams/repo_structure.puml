@@ -1,0 +1,32 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam package {
+  BackgroundColor #EAF2FF
+  BorderColor #2C5AA0
+}
+
+package "can_project/" {
+  package "C# client" {
+    [UI/]
+    [ViewModels/]
+    [Services/]
+    [Models/]
+  }
+  package "backend/" {
+    [api/]
+    [decoding/]
+    [data_processing/]
+    [ml/]
+    [hardware/]
+    [db/]
+  }
+  package "assets/" {
+    [dbc_files/]
+    [models/]
+  }
+}
+@enduml

@@ -1,0 +1,23 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam component {
+  BackgroundColor #EAF2FF
+  BorderColor #2C5AA0
+  ArrowColor #2C5AA0
+}
+left to right direction
+
+component "In-memory\nalert list" as Alerts
+component "CSV writer\n(Time, CAN_ID, Severity,\nAttackType, Score, Reason, ...)" as CSV
+component "PdfReportBuilder\n(PDFsharp, paginated A4)" as PDF
+component "User-chosen\nfile on disk" as File
+
+Alerts --> CSV
+Alerts --> PDF
+CSV --> File
+PDF --> File
+@enduml

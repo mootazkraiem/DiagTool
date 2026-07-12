@@ -1,0 +1,41 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam ArrowColor #2C5AA0
+skinparam ArrowThickness 1.1
+skinparam component {
+  BackgroundColor #EAF2FF
+  BorderColor #2C5AA0
+}
+skinparam rectangle {
+  BackgroundColor #F5F8FF
+  BorderColor #7C93B8
+}
+
+component "Raw CAN\nframe" as Raw
+component "Cleaning\n(type cast,\nrange clip)" as Clean
+component "Per-ID rolling\nwindow update" as Roll
+
+rectangle "Feature extraction" {
+  component "Timing features\n(inter-arrival,\nfrequency, burstiness)" as Timing
+  component "Payload features\n(byte delta,\nchanged bytes)" as Payload
+  component "Entropy features\n(ID stream,\npayload bytes)" as Entropy
+}
+
+component "Final feature\nvector (14)\nclip + log1p" as Final #E8F5E9
+
+Timing -[hidden]down- Payload
+Payload -[hidden]down- Entropy
+
+Raw -right-> Clean
+Clean -right-> Roll
+Roll -up-> Timing
+Roll -right-> Payload
+Roll -down-> Entropy
+Timing -right-> Final
+Payload -right-> Final
+Entropy -right-> Final
+@enduml

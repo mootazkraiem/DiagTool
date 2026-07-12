@@ -1,0 +1,214 @@
+\chapter{System Design}
+\label{chap:design}
+
+\section{Introduction}
+
+This chapter presents the architecture of CANvisionNative: the technology choices, the overall layered architecture, the desktop client, the backend, the database, the \gls{rest} \gls{api}, the replay engine, the detection pipeline, the \gls{ai} explanation engine, the hardware layer, and the deployment architecture. Every diagram in this chapter is a UML diagram produced with PlantUML, generated directly from the actual architecture described in Chapter~\ref{chap:impl}.
+
+\section{Technology choices}
+
+The desktop client is built with \gls{wpf} and the \gls{mvvm} pattern on .NET Framework 4.8, chosen because it gives a native, responsive Windows UI with strong data-binding support, well suited to the chart-heavy, multi-screen client this project required. The backend is a Python FastAPI application, chosen because it exposes a typed, self-documenting \gls{rest} \gls{api} with minimal boilerplate and integrates directly with the Python machine-learning stack (scikit-learn, pandas) already used for model training. SQLite was chosen for persistence because the system runs as a single local process on a single workstation, with no need for a networked database server. Communication between the two processes uses \gls{http} \gls{json} over \texttt{localhost}, which keeps the client and backend independently testable and lets the backend be driven directly for automated validation, as done throughout Chapter~\ref{chap:validation}.
+
+Table~\ref{tab:tech-comparison} summarizes the main alternative considered for each layer and why it was set aside in favour of the chosen technology.
+
+\begin{table}[H]
+\centering
+\caption{Technology choices and the main alternative considered.}
+\label{tab:tech-comparison}
+\begin{tabularx}{\textwidth}{@{}p{2.3cm}p{3.2cm}p{3.0cm}X@{}}
+\toprule
+\textbf{Layer} & \textbf{Chosen} & \textbf{Alternative considered} & \textbf{Why the alternative was set aside} \\
+\midrule
+Desktop client & WPF / MVVM (.NET 4.8) & Web-based client (Electron / browser) & Would add a packaging and update-delivery layer for no real benefit on a single-workstation tool, and .NET 4.8 was already the required target platform. \\
+Backend \gls{api} & FastAPI (Python) & Flask, Django & FastAPI's typed request/response models and automatic \gls{api} documentation reduced boilerplate, and its async support was not needed but did not cost anything either; Django's full-stack features (templating, admin site) were unnecessary for a pure \gls{api} backend. \\
+Persistence & SQLite & PostgreSQL / MySQL & A networked database server would add an operational dependency with no benefit, since the system runs as a single local process on a single workstation. \\
+\gls{ml} runtime & scikit-learn & PyTorch / TensorFlow & The selected algorithms (Isolation Forest, K-Means) are classical, non-neural methods well supported by scikit-learn; a deep-learning framework would add dependency weight without a corresponding algorithm need (Section~\ref{sec:ml-selection}). \\
+Client/backend transport & \gls{http} \gls{json} over localhost & gRPC, named pipes & \gls{http} \gls{json} is simple to test directly (curl, browser, automated scripts), which was used throughout Chapter~\ref{chap:validation} to drive the backend independently of the desktop client. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Technologies used}
+\label{sec:tech-used}
+
+Table~\ref{tab:tech-used} lists every technology used in the project, grouped by category, as a quick reference alongside the more detailed justification given above and in Section~\ref{sec:ml-selection}.
+
+\begin{table}[H]
+\centering
+\caption{Technologies used, by category.}
+\label{tab:tech-used}
+\begin{tabularx}{\textwidth}{@{}p{3.4cm}X@{}}
+\toprule
+\textbf{Category} & \textbf{Technologies} \\
+\midrule
+Languages & C\# (.NET Framework 4.8), Python \\
+Desktop client & \gls{wpf}, \gls{mvvm}, CommunityToolkit.Mvvm, XAML, Newtonsoft.Json \\
+Backend / \gls{api} & FastAPI, uvicorn \\
+Machine learning & scikit-learn~\cite{pedregosa2011scikit} (Isolation Forest~\cite{liu2008isolation}, K-Means~\cite{macqueen1967methods}), pandas \\
+Data processing & \texttt{asammdf}~\cite{asam_mdf} (\gls{mf4} decoding), \texttt{python-can} (hardware interface) \\
+Persistence & SQLite \\
+AI explanation & Google Gemini API, Ollama (local \gls{llm} fallback) \\
+Export & PDFsharp \\
+Documentation \& diagrams & \LaTeX{}, PlantUML \\
+Version control & Git \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Overall architecture}
+
+CANvisionNative is built as two cooperating processes on the same machine: a Windows desktop client and a local Python backend, communicating over \gls{http} on \texttt{localhost}. Figure~\ref{fig:overall-arch} shows the layered view of the system.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.65\textwidth]{architecture_overall.png}
+\caption{Overall layered architecture of CANvisionNative.}
+\label{fig:overall-arch}
+\end{figure}
+
+The desktop client only talks to the \gls{rest} \gls{api} layer. The \gls{api} layer routes requests to the detection engine and to the data layer, and the detection engine calls the \gls{ai} explanation engine when an alert explanation is requested. This separation means the detection logic can be exercised directly through the \gls{api}, independently of the desktop client, which is exactly how a large part of the validation in Chapter~\ref{chap:validation} was carried out.
+
+\subsection{Frontend architecture}
+
+The desktop client follows the \gls{mvvm} pattern. Each screen (Home, Dashboard, Telemetry, Diagnostics, Log Playback, Anomaly Intel, Settings) has a XAML view and a corresponding ViewModel in \texttt{ViewModels/SectionViewModels.cs}.
+
+Two services sit between the ViewModels and the backend, as shown in Figure~\ref{fig:frontend-arch}. \texttt{PythonApiClient} is a thin \gls{http} client wrapping every backend endpoint. \texttt{VehicleDataService} is the shared, in-memory client state (current snapshot, alert history, replay runtime metrics); it owns a polling timer that periodically calls the backend and raises events the ViewModels subscribe to.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{architecture_frontend.png}
+\caption{Frontend architecture: MVVM views bound to ViewModels, backed by two shared services.}
+\label{fig:frontend-arch}
+\end{figure}
+
+Navigation between sections is driven by a section catalog and a navigation service, so that adding a new screen does not require changes to existing screens.
+
+\subsection{Backend architecture}
+
+The backend is a single FastAPI application (\texttt{backend/api/server.py}) organized around five responsibilities:
+
+\begin{enumerate}
+    \item \textbf{Decoding} (\texttt{backend/decoding/}) — vehicle profile registry and \gls{dbc}-based signal decoding.
+    \item \textbf{Data processing} (\texttt{backend/data\_processing/}) — log parsing and \gls{mf4}-to-\gls{csv} conversion.
+    \item \textbf{Machine learning} (\texttt{backend/ml/}) — feature engineering, the runtime detection engine, training scripts, and the \gls{ai} explainer.
+    \item \textbf{Hardware} (\texttt{backend/hardware/}) — the live \gls{can} adapter interface and session recorder.
+    \item \textbf{Persistence} (\texttt{backend/db/}) — the SQLite session and alert store.
+\end{enumerate}
+
+Long-running work (a replay, an offline analysis) is executed in a background subprocess or thread so that the \gls{api} stays responsive; the client polls a status endpoint until the work completes.
+
+\subsection{Database}
+
+The backend keeps a small SQLite database (\texttt{backend/db/canvision.db}) for session bookkeeping and historical alerts, independent of the per-replay summary files used for the live client views. Figure~\ref{fig:er-diagram} shows its three tables.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{er_diagram.png}
+\caption{Entity-relationship diagram of the SQLite persistence layer.}
+\label{fig:er-diagram}
+\end{figure}
+
+A \texttt{session} groups the frames and alerts produced by one live, replay, or injection run. \texttt{live\_frames} keeps every captured frame with its raw bytes and the engine's normal/anomalous classification, including an optional \texttt{user\_label} so a human reviewer can correct the label for future retraining. \texttt{alert\_history} keeps one row per raised alert, including the parsed detection-layer reason string and the recommended response, indexed on \texttt{session\_id} and \texttt{severity} for fast filtering.
+
+\section{REST API}
+
+The backend exposes 49 endpoints under a small number of prefixes: \texttt{/api/replay/*} (start, stop, status, alerts), \texttt{/api/live/*} (simulation and hardware capture), \texttt{/api/explain/\{index\}} (\gls{ai} explanation), \texttt{/analyze} (offline batch analysis), \texttt{/api/vehicles} (profile registry), \texttt{/api/session/*} (recording), \texttt{/api/db/*} (database access), and \texttt{/api/settings}. The full endpoint list is given in Appendix~\ref{app:api}. All endpoints return \gls{json} and are consumed exclusively by the desktop client over \texttt{localhost}.
+
+Figure~\ref{fig:rest-api-flow} groups these endpoints by the backend component they ultimately reach: the replay, live, and offline-analysis endpoints all drive the detection engine; the explanation endpoint drives the \gls{ai} explanation engine; and the vehicle, session, and settings endpoints read and write the data layer directly.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{rest_api_flow.png}
+\caption{REST API flow: client requests grouped by the backend component they reach.}
+\label{fig:rest-api-flow}
+\end{figure}
+
+\section{Replay engine}
+\label{sec:design-replay}
+
+The replay engine (\texttt{backend/ml/runtime/replay\_runner.py}) is launched as a subprocess by the \texttt{/api/replay/start} endpoint. It reads the input file through a single, format-aware loader (Section~\ref{sec:impl-parser}) shared with the offline batch analyzer, so that every supported format enters the pipeline as the same canonical \texttt{(timestamp, can\_id, payload)} stream. Each frame is then passed, in order, to the same \texttt{RealtimeEngine} used by the live and simulated paths, guaranteeing that replay, live, and simulated detection behave identically for the same input. Figure~\ref{fig:seq-replay} shows the full replay lifecycle as a sequence diagram. Section~\ref{sec:impl-replay} describes its implementation in detail, and Chapter~\ref{chap:validation} documents two defects that were found and fixed in this exact module.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{sequence_replay.png}
+\caption{Sequence diagram: replay lifecycle, from client request to published alerts.}
+\label{fig:seq-replay}
+\end{figure}
+
+\section{Detection pipeline}
+\label{sec:design-pipeline}
+
+Figure~\ref{fig:pipeline} shows the per-frame detection pipeline, common to replay, simulation, and live hardware capture.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{detection_pipeline.png}
+\caption{Per-frame detection pipeline: feature extraction, state classification, model selection, four-layer scoring, fusion, and alerting.}
+\label{fig:pipeline}
+\end{figure}
+
+Feature extraction computes, per \gls{can} identifier, a rolling set of statistics: inter-arrival time and its variance, message frequency, byte-level difference from the previous frame on the same identifier, and Shannon entropy of the identifier stream and of the payload. Before scoring, the engine classifies the vehicle's current operating state (parking, idle, driving) with a K-Means model, shown as a state diagram in Figure~\ref{fig:state-vehicle}, and selects the Isolation Forest trained for that state and for the currently selected vehicle profile.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{state_vehicle.png}
+\caption{Vehicle driving-state classification: Parking, Idle, and Driving, classified by K-Means on 14 rolling features after RobustScaler normalization.}
+\label{fig:state-vehicle}
+\end{figure}
+
+The four detection layers are then computed:
+
+\begin{itemize}
+    \item The \textbf{timing layer} flags both abnormally bursty timing and abnormally high message frequency (a pure timing-variance metric alone would miss a steady flood, since a perfectly periodic flood has almost no timing variance).
+    \item The \textbf{payload layer} flags abrupt, out-of-pattern byte changes.
+    \item The \textbf{ML layer} scores the feature vector with the Isolation Forest selected for the classified state and vehicle profile, falling back to a lightweight heuristic if no matching per-vehicle model is available.
+    \item The \textbf{temporal-persistence layer} tracks, over a rolling window, how often the fused score has stayed above the high-severity threshold, so an isolated single-frame spike is treated differently from a sustained anomaly.
+\end{itemize}
+
+The four layers are combined into one fusion score by a fixed weighted sum, and the fused score is compared against four severity thresholds (LOW, MEDIUM, HIGH, CRITICAL). Only frames whose fused score crosses the configured alert threshold are turned into alerts, subject to a per-identifier debounce so that a single burst is not reported as dozens of near-duplicate alerts. The exact weight and threshold values are listed in Table~\ref{tab:app-fusion-config} (Appendix~\ref{app:config}).
+
+\section{Hardware layer}
+
+The hardware layer (\texttt{backend/hardware/can\_interface.py}) wraps the \texttt{python-can} library to support three transports: ELM327 over a serial/slcan connection, PEAK PCAN-USB, and native SocketCAN. It exposes connect, disconnect, and status endpoints, and feeds every received frame through the same \texttt{RealtimeEngine} instance used by replay, with the vehicle identifier selected in the Settings view. This design means the detection pipeline itself required no change to support live hardware once an adapter is available; only the transport layer differs, which is why the code-complete-but-hardware-blocked status described in Chapter~\ref{chap:requirements} was an acceptable risk to carry through the project.
+
+\section{AI explanation engine}
+\label{sec:design-ai}
+
+Figure~\ref{fig:ai-workflow} shows the explanation workflow triggered when the analyst selects an alert.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{ai_workflow.png}
+\caption{AI explanation workflow: context building, LLM provider chain, and rule-based fallback.}
+\label{fig:ai-workflow}
+\end{figure}
+
+The context builder assembles four sources before calling the language model: the current alert's own features (identifier, frequency, entropy, fusion-layer scores), the expected statistics for the vehicle's current state, a keyword match against a small attack knowledge base, and the most similar historical anomaly found by cosine similarity against a persistent, growing store of previously explained anomalies. The assembled context is sent to a language-model provider chain — Gemini first, a local Ollama model second — and, if neither is reachable, a rule-based template still produces a complete, correctly parameterized explanation instead of failing the request, satisfying requirement NFR6.
+
+\section{Class diagram (backend detection core)}
+
+Figure~\ref{fig:class-diagram} shows the simplified class diagram of the backend's detection core, the part of the system most directly involved in the validation work of Chapter~\ref{chap:validation}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{class_detection_core.png}
+\caption{Simplified class diagram of the backend detection core.}
+\label{fig:class-diagram}
+\end{figure}
+
+\texttt{RealtimeEngine} is the single entry point used by replay, live simulation, and hardware capture. It owns the current \texttt{vehicle\_id}, delegates timing/payload scoring and fusion to \texttt{ScoringEngine}, and delegates ML scoring to \texttt{RuntimeModelStore}, which holds one \texttt{StateModelBundle} per vehicle profile (plus a generic fallback bundle) and is responsible for selecting the correct per-state, per-vehicle model. \texttt{IDSStatistics} accumulates per-run counters and severity/alert-reason distributions and writes the final summary report consumed by both the desktop client and the \gls{ai} explanation engine.
+
+\section{Deployment diagram}
+
+Figure~\ref{fig:deployment} shows how the system is deployed on a single workstation, with the two external systems it may reach over the network.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{deployment.png}
+\caption{Deployment diagram: single-workstation deployment with external LLM and hardware links.}
+\label{fig:deployment}
+\end{figure}
+
+\section{Conclusion}
+
+This chapter presented the layered architecture of CANvisionNative, its desktop and backend components, its database schema, its \gls{rest} \gls{api}, the replay engine, the four-layer detection pipeline, the hardware transport layer, and the \gls{ai} explanation workflow, together with the class, entity-relationship, and deployment diagrams that summarize the design. The next chapter describes how this design was implemented.

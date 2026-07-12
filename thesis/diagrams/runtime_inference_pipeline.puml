@@ -1,0 +1,32 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam ArrowColor #2C5AA0
+skinparam ArrowThickness 1.1
+skinparam component {
+  BackgroundColor #EAF2FF
+  BorderColor #2C5AA0
+}
+
+component "Incoming\nframe" as Frame
+component "Parser" as Parser
+component "Feature\nvector" as Feat
+component "Driving state\n(K-Means)" as State
+component "Vehicle-specific\nmodel bundle" as Bundle
+component "Isolation Forest\nscoring" as IF
+component "Fusion\n(4 layers)" as Fusion
+component "Severity\nclassification" as Severity
+component "Alert" as Alert #E8F5E9
+
+Frame -right-> Parser
+Parser -right-> Feat
+Feat -right-> State
+State -right-> Bundle
+Bundle -right-> IF
+IF -right-> Fusion
+Fusion -right-> Severity
+Severity -right-> Alert
+@enduml

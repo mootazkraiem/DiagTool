@@ -1,0 +1,15 @@
+[0] Config.pm:328> INFO - This is Biber 2.21
+[0] Config.pm:331> INFO - Logfile is 'build.blg'
+[175] biber-MSWIN64:342> INFO - === 
+[226] Biber.pm:421> INFO - Reading 'build.bcf'
+[365] Biber.pm:1002> INFO - Found 10 citekeys in bib section 0
+[383] Biber.pm:4487> INFO - Processing section 0
+[399] Biber.pm:4678> INFO - Looking for bibtex file 'references.bib' for section 0
+[456] bibtex.pm:1713> INFO - LaTeX decoding ...
+[474] bibtex.pm:1519> INFO - Found BibTeX data source 'references.bib'
+[644] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'variable = shifted' with 'variable = non-ignorable'
+[644] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[644] Biber.pm:4307> INFO - Sorting list 'none/global//global/global/global' of type 'entry' with template 'none' and locale 'en-US'
+[644] Biber.pm:4313> INFO - No sort tailoring available for locale 'en-US'
+[658] bbl.pm:676> INFO - Writing 'build.bbl' with encoding 'UTF-8'
+[674] bbl.pm:779> INFO - Output to build.bbl

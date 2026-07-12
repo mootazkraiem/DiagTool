@@ -1,0 +1,25 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam ArrowColor #2C5AA0
+skinparam ArrowThickness 1.1
+skinparam component {
+  BackgroundColor #EAF2FF
+  BorderColor #2C5AA0
+}
+
+component "Backlog\nrefinement" as Plan
+component "Development\n(increment)" as Dev
+component "Testing /\nevidence check" as Test
+component "Review" as Review
+component "Retrospective" as Retro #FFF3E0
+
+Plan -right-> Dev
+Dev -right-> Test
+Test -right-> Review
+Review -right-> Retro
+Retro -up-> Plan : next iteration
+@enduml

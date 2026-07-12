@@ -1,0 +1,33 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam ArrowColor #2C5AA0
+skinparam ArrowThickness 1.1
+skinparam component {
+  BackgroundColor #EAF2FF
+  BorderColor #2C5AA0
+}
+
+component "Training\ndataset\n(7M+ frames)" as Dataset
+component "Cleaning &\nnormalization" as Clean
+component "Feature\nengineering" as Feat
+component "Train /\nvalidation split" as Split
+
+component "K-Means training\n(state classification)" as KMeans
+component "Isolation Forest\ntraining (per state,\nper vehicle)" as IF
+component "Validation\n(held-out split)" as Validate #FFF3E0
+component "Model export\n(.joblib)" as Export
+component "Runtime\nloading" as Runtime #E8F5E9
+
+Dataset -right-> Clean
+Clean -right-> Feat
+Feat -right-> Split
+Split -down-> KMeans
+KMeans -right-> IF
+IF -right-> Validate
+Validate -right-> Export
+Export -right-> Runtime
+@enduml

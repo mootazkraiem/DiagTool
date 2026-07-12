@@ -1,0 +1,63 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam linetype ortho
+skinparam ArrowThickness 1.6
+skinparam ArrowColor #2C5AA0
+skinparam entity {
+  BackgroundColor #EAF2FF
+  BorderColor #2C5AA0
+  FontStyle plain
+}
+
+entity "sessions" as sessions {
+  * id : TEXT <<PK>>
+  --
+  started_at : REAL
+  ended_at : REAL
+  source : TEXT
+  frame_count : INTEGER
+  anomaly_count : INTEGER
+}
+
+entity "live_frames" as frames {
+  * id : INTEGER <<PK>>
+  --
+  session_id : TEXT <<FK>>
+  timestamp : REAL
+  can_id : INTEGER
+  b0 : INTEGER
+  b1 : INTEGER
+  b2 : INTEGER
+  b3 : INTEGER
+  b4 : INTEGER
+  b5 : INTEGER
+  b6 : INTEGER
+  b7 : INTEGER
+  anomaly : INTEGER
+  user_label : TEXT
+  created_at : REAL
+}
+
+entity "alert_history" as alerts {
+  * id : INTEGER <<PK>>
+  --
+  session_id : TEXT <<FK>>
+  timestamp : REAL
+  can_id : TEXT
+  severity : TEXT
+  score : REAL
+  attack_type : TEXT
+  reason : TEXT
+  temporal_pattern : TEXT
+  plausibility_passed : INTEGER
+  timing_anomaly : INTEGER
+  recommended_response : TEXT
+  created_at : REAL
+}
+
+sessions ||--o{ frames : "1 session has\nmany frames"
+sessions ||--o{ alerts : "1 session has\nmany alerts"
+@enduml

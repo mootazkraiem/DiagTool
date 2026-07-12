@@ -1,0 +1,25 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam component {
+  BackgroundColor #EAF2FF
+  BorderColor #2C5AA0
+  ArrowColor #2C5AA0
+}
+
+component "Desktop client\nWPF / MVVM (.NET 4.8)\nViews, ViewModels,\nVehicleDataService, PythonApiClient" as Client
+component "REST API layer\nFastAPI (backend/api/server.py)\nreplay, live, explain, offline-analyze,\nhardware, settings endpoints" as API
+component "Detection engine\nRealtimeEngine, ScoringEngine,\nRuntimeModelStore (per-vehicle\nIsolation Forest + KMeans)" as Engine
+component "AI explanation engine\nrule-based reasoning, context builder,\nLLM provider chain\n(Gemini -> Ollama -> template)" as AI
+component "Data layer\nDBC files, model store (.joblib),\nSQLite database, knowledge base,\nlog files" as Data
+
+Client <--> API
+API <--> Engine
+Engine <--> AI
+API <--> Data
+Engine <--> Data
+AI <--> Data
+@enduml

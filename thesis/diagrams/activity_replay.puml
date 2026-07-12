@@ -1,0 +1,33 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam ActivityBorderThickness 1
+skinparam activity {
+  BackgroundColor #EAF2FF
+  BorderColor #2C5AA0
+  ArrowColor #2C5AA0
+  DiamondBackgroundColor #FFF3E0
+  DiamondBorderColor #C77800
+}
+
+start
+:Select log file;
+:Detect format & select vehicle;
+:Parse into canonical stream;
+if (Frames parsed?) then (yes)
+  :Start replay subprocess;
+  repeat
+    :Score frame (fusion);
+    if (Score >= threshold?) then (yes)
+      :Emit alert;
+    endif
+  repeat while (more frames?) is (yes) not (no)
+  :Publish alert list;
+else (no)
+  :Show import error;
+endif
+stop
+@enduml

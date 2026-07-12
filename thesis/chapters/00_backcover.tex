@@ -1,0 +1,17 @@
+% ============================================================
+% Back cover — official ESPRIT artwork
+% (thesis/images/cover_back_bg.jpg, extracted from the filled
+% official template). No overlay text: the school name and
+% contact details are already part of this artwork.
+% ============================================================
+\clearpage
+\begin{titlepage}
+\newgeometry{margin=0cm}
+\thispagestyle{empty}
+
+\begin{tikzpicture}[remember picture, overlay]
+\node[anchor=north west, inner sep=0pt] at (current page.north west) {\includegraphics[width=21cm,height=29.7cm]{cover_back_bg.jpg}};
+\end{tikzpicture}
+
+\end{titlepage}
+\restoregeometry
