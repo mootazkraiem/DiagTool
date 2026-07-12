@@ -6,7 +6,7 @@
 \contentsline {chapter}{Résumé}{}{chapter*.3}%
 \babel@toc {english}{}\relax 
 \contentsline {chapter}{General Introduction}{ix}{chapter*.9}%
-\contentsline {section}{Report structure}{ix}{section*.10}%
+\contentsline {section}{Report structure}{x}{section*.10}%
 \contentsline {chapter}{\numberline {1}General Framework}{1}{chapter.1}%
 \contentsline {section}{\numberline {1.1}Introduction}{1}{section.1.1}%
 \contentsline {section}{\numberline {1.2}Host organization}{1}{section.1.2}%
@@ -17,26 +17,26 @@
 \contentsline {section}{\numberline {1.5}Objectives}{3}{section.1.5}%
 \contentsline {subsection}{\numberline {1.5.1}General objective}{3}{subsection.1.5.1}%
 \contentsline {subsection}{\numberline {1.5.2}Specific objectives}{3}{subsection.1.5.2}%
-\contentsline {section}{\numberline {1.6}Development methodology}{3}{section.1.6}%
-\contentsline {subsection}{\numberline {1.6.1}Waterfall, Agile, and Scrum}{3}{subsection.1.6.1}%
-\contentsline {subsection}{\numberline {1.6.2}Why Scrum was chosen for this project}{4}{subsection.1.6.2}%
+\contentsline {section}{\numberline {1.6}Development methodology}{4}{section.1.6}%
+\contentsline {subsection}{\numberline {1.6.1}Waterfall, Agile, and Scrum}{4}{subsection.1.6.1}%
+\contentsline {subsection}{\numberline {1.6.2}Why Scrum was chosen for this project}{5}{subsection.1.6.2}%
 \contentsline {subsection}{\numberline {1.6.3}How the real process reflected Scrum concepts}{5}{subsection.1.6.3}%
 \contentsline {subsection}{\numberline {1.6.4}Conclusion}{6}{subsection.1.6.4}%
 \contentsline {section}{\numberline {1.7}Conclusion}{6}{section.1.7}%
 \contentsline {chapter}{\numberline {2}Requirements Analysis}{7}{chapter.2}%
 \contentsline {section}{\numberline {2.1}Introduction}{7}{section.2.1}%
 \contentsline {section}{\numberline {2.2}Existing solutions analysis}{7}{section.2.2}%
-\contentsline {subsection}{\numberline {2.2.1}Traditional CAN tools}{7}{subsection.2.2.1}%
-\contentsline {subsection}{\numberline {2.2.2}Vehicle diagnostics tools}{7}{subsection.2.2.2}%
-\contentsline {subsection}{\numberline {2.2.3}Existing intrusion detection approaches}{8}{subsection.2.2.3}%
+\contentsline {subsection}{\numberline {2.2.1}Category 1: CAN analyzers}{7}{subsection.2.2.1}%
+\contentsline {subsection}{\numberline {2.2.2}Category 2: IDS tools}{7}{subsection.2.2.2}%
+\contentsline {subsection}{\numberline {2.2.3}Category 3: Static viewers and diagnostic scanners}{8}{subsection.2.2.3}%
 \contentsline {subsection}{\numberline {2.2.4}Current limitations}{8}{subsection.2.2.4}%
 \contentsline {subsection}{\numberline {2.2.5}Why CANvisionNative is different}{8}{subsection.2.2.5}%
-\contentsline {section}{\numberline {2.3}Functional requirements}{8}{section.2.3}%
-\contentsline {section}{\numberline {2.4}Non functional requirements}{9}{section.2.4}%
+\contentsline {section}{\numberline {2.3}Functional requirements}{9}{section.2.3}%
+\contentsline {section}{\numberline {2.4}Non-functional requirements}{10}{section.2.4}%
 \contentsline {section}{\numberline {2.5}Actors}{10}{section.2.5}%
-\contentsline {section}{\numberline {2.6}Use cases}{10}{section.2.6}%
-\contentsline {subsection}{\numberline {2.6.1}Activity diagram import and replay}{12}{subsection.2.6.1}%
-\contentsline {subsection}{\numberline {2.6.2}Sequence diagram request an AI explanation}{13}{subsection.2.6.2}%
+\contentsline {section}{\numberline {2.6}Use cases}{11}{section.2.6}%
+\contentsline {subsection}{\numberline {2.6.1}Activity diagram --- import and replay}{12}{subsection.2.6.1}%
+\contentsline {subsection}{\numberline {2.6.2}Sequence diagram --- request an AI explanation}{13}{subsection.2.6.2}%
 \contentsline {section}{\numberline {2.7}Risk analysis}{14}{section.2.7}%
 \contentsline {section}{\numberline {2.8}Planning}{15}{section.2.8}%
 \contentsline {section}{\numberline {2.9}Requirements traceability}{16}{section.2.9}%

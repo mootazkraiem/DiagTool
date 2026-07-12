@@ -8,7 +8,7 @@ This chapter describes how the design presented in Chapter~\ref{chap:design} was
 \section{Development environment}
 
 \begin{itemize}
-    \item \textbf{Hardware.} A standard Windows desktop/laptop workstation was used for development, training, and validation, no specialized hardware was required for the software work. The live hardware capture path targets an ELM327 (serial/slcan), a PEAK PCAN-USB adapter, or native SocketCAN, but validating this path end to end requires a physical adapter connected to a vehicle, which did not arrive during the project (Chapter~\ref{chap:validation}, Limitations).
+    \item \textbf{Hardware.} A standard Windows desktop/laptop workstation was used for development, training, and validation; no specialized hardware was required for the software work. The live hardware capture path targets an ELM327 (serial/slcan), a PEAK PCAN-USB adapter, or native SocketCAN, but validating this path end to end requires a physical vehicle to connect it to, and no compatible electric vehicle was available during the project (Chapter~\ref{chap:validation}, Limitations).
     \item \textbf{Operating system.} Windows 10/11, the target platform for the \gls{wpf} desktop client.
     \item \textbf{Languages.} C\# (.NET Framework 4.8) for the desktop client, Python for the backend.
     \item \textbf{Key libraries.} \gls{wpf} and CommunityToolkit.Mvvm for the client, FastAPI and uvicorn for the \gls{rest} \gls{api}, scikit-learn~\cite{pedregosa2011scikit} for Isolation Forest and K-Means, pandas and \texttt{asammdf} for data processing and \gls{mf4} decoding~\cite{asam_mdf}, \texttt{python-can} for the hardware layer, PDFsharp (via \texttt{PdfReportBuilder.cs}) for PDF export.

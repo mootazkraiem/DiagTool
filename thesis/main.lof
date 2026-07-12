@@ -4,12 +4,12 @@
 \babel@toc {english}{}\relax 
 \addvspace {10\p@ }
 \contentsline {figure}{\numberline {1.1}{\ignorespaces Reference Scrum cycle used as the framework for this project's iterative process.}}{5}{figure.caption.12}%
-\contentsline {figure}{\numberline {1.2}{\ignorespaces Project timeline: milestonebased increments through to the Release Candidate.}}{6}{figure.caption.13}%
+\contentsline {figure}{\numberline {1.2}{\ignorespaces Project timeline: milestone-based increments through to the Release Candidate.}}{6}{figure.caption.13}%
 \addvspace {10\p@ }
 \contentsline {figure}{\numberline {2.1}{\ignorespaces Use case diagram for CANvisionNative.}}{11}{figure.caption.14}%
 \contentsline {figure}{\numberline {2.2}{\ignorespaces Activity diagram: import and replay a log.}}{13}{figure.caption.16}%
 \contentsline {figure}{\numberline {2.3}{\ignorespaces Sequence diagram: requesting an AI explanation for an alert.}}{14}{figure.caption.17}%
-\contentsline {figure}{\numberline {2.4}{\ignorespaces Project planning (Gantt chart, in weeks).}}{16}{figure.caption.19}%
+\contentsline {figure}{\numberline {2.4}{\ignorespaces Project planning (Gantt chart, in weeks, over the six-month internship).}}{16}{figure.caption.19}%
 \addvspace {10\p@ }
 \contentsline {figure}{\numberline {3.1}{\ignorespaces Overall layered architecture of CANvisionNative.}}{21}{figure.caption.23}%
 \contentsline {figure}{\numberline {3.2}{\ignorespaces Frontend architecture: MVVM views bound to ViewModels, backed by two shared services.}}{22}{figure.caption.24}%

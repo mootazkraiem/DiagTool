@@ -9,55 +9,58 @@ This chapter sets the general framework of the project. It presents the host org
 
 \subsection{Presentation}
 
-This project was carried out at \textbf{Capgemini engeneering}, a global technology and consulting company headquartered in France. Capgemini provides IT consulting, digital transformation, and engineering services to clients across several industries, 
-including automotive and other transportation sectors, where it works on both software systems and embedded/engineering projects. As a large, multiindustry technology group, Capgemini regularly hosts endofstudies internship projects that combine academic engineering training with a concrete technical deliverable.
+This project was carried out at \textbf{Capgemini Engineering}, a global technology and consulting company headquartered in France. Capgemini provides IT consulting, digital transformation, and engineering services to clients across several industries, including automotive and other transportation sectors, where it works on both software systems and embedded engineering projects. As a large, multi-industry technology group, Capgemini regularly hosts end-of-studies internship projects that combine academic engineering training with a concrete technical deliverable.
 
 \subsection{Department and internship context}
 
-The internship was carried out within Capgemini Tunisia's Automotive division, in the Battery Management Systems (BMS) team. This team works on embedded software and validation for battery management functions in electric and hybrid vehicles, which places it directly next to the kind of invehicle network traffic this project analyses. Although CANvisionNative is not itself a BMS deliverable, its role as a \gls{can} diagnostic and validation platform placed it directly alongside the kind of invehicle network traffic the BMS team analyses day to day, and the internship benefited from being carried out in a team already familiar with automotive \gls{ecu} communication, \gls{can} bus behaviour, and the general constraints of embedded automotive software.
+The internship was carried out within Capgemini Tunisia's Automotive division, in the Battery Management Systems (BMS) team. This team works on embedded software and validation for battery management functions in electric and hybrid vehicles, which places it directly next to the kind of in-vehicle network traffic this project analyses. CANvisionNative is not itself a BMS deliverable, but its role as a \gls{can} diagnostic and validation platform grew directly out of that BMS validation background: the gaps it addresses, fragmented tooling, no real-time visibility, unexplained alerts, are the same gaps a BMS validation engineer runs into day to day, and the internship benefited from being carried out in a team already familiar with automotive \gls{ecu} communication, \gls{can} bus behaviour, and the general constraints of embedded automotive software.
 
 \section{Project context}
 
 The project sits in the broader context of automotive cybersecurity. Modern vehicles, and electric vehicles in particular, are built around internal networks of \gls{ecu}s that communicate over a \gls{can} bus. This bus was designed for reliability, not for security, and it has been repeatedly shown in the security literature to be vulnerable to message injection, flooding, and replay attacks (Chapter~\ref{chap:requirements} reviews this in more detail).
 
-The project, \textbf{CANvisionNative}, is an intelligent \gls{can} diagnostic and validation platform for Battery Management Systems that incorporates machinelearningbased anomaly detection. It combines:
+The project, \textbf{CANvisionNative}, is an intelligent, \gls{can}-based diagnostic and validation platform for Battery Management Systems. Diagnostics is the core objective. Real-time monitoring, log replay, and machine-learning-based anomaly detection are capabilities the platform combines around that core, not separate purposes competing with it. Concretely, it combines:
 
 \begin{itemize}
     \item a Windows desktop client (\gls{wpf}, \gls{mvvm}) for visualization, replay control, and analyst interaction
-    \item a Python backend (FastAPI) that decodes \gls{can} frames, extracts features, scores anomalies, and generates naturallanguage explanations
-    \item a machinelearning layer trained on more than seven million \gls{can} frames across sixteen vehicle and datasetspecific sources
+    \item a Python backend (FastAPI) that decodes \gls{can} frames, extracts features, scores anomalies, and generates natural-language explanations
+    \item a machine-learning layer trained on more than seven million \gls{can} frames across sixteen vehicle- and dataset-specific sources
     \item support for three operating modes: replay of recorded logs, live simulation, and live hardware capture.
 \end{itemize}
 
-The system was designed to be usable both as a forensic tool , importing a recorded log and reviewing detected anomalies after the fact and, once hardware is connected, as a live monitoring tool.
+The system was designed to be usable both as a forensic tool, importing a recorded log and reviewing detected anomalies after the fact, and, once hardware is connected, as a live monitoring tool.
 
 \section{Problem statement}
 
-Three problems motivated this project.
+Four problems, all rooted in day-to-day BMS validation work, motivated this project.
 
-\textbf{First}, the \gls{can} bus, standardized as ISO~11898~\cite{iso11898}, has no builtin security. Any device connected to the bus can send frames, and no frame carries a sender identity or a signature. Continuous, anomalybased monitoring is therefore one of the only practical ways to add a securityrelevant layer of visibility to an existing vehicle without redesigning its electrical architecture.
+\textbf{No real-time monitoring.} A BMS validation engineer working with a recorded log has no running commentary on what the traffic is actually doing. Reading raw frames tells you what happened, not whether it was normal, and by the time an engineer notices something odd in a spreadsheet or a log viewer, the context that would explain it is already gone.
 
-\textbf{Second}, a single detection strategy is not enough. Timingbased detection catches flooding attacks but misses slow, lowrate attacks. Payloadbased detection catches outofrange values but misses attacks that stay within plausible ranges. Machinelearning models trained on one vehicle rarely transfer cleanly to another vehicle, because message layout, frequency, and normalvalue ranges are vehiclespecific. This suggested a design combining several independent detection layers, fused into a single score, rather than relying on one algorithm.
+\textbf{Weak replay systems.} Replaying a recorded session is central to BMS validation, but the common tools either replay frames without judging them (Chapter~\ref{chap:requirements} reviews this) or only support a narrow set of log formats. An engineer routinely ends up converting formats by hand or switching tools mid-investigation, which slows down exactly the kind of repeated, comparative testing BMS validation depends on.
 
-\textbf{Third}, a raw anomaly score is not enough for a human analyst to act on. A list of alerts with numeric scores does not explain what happened, why the system flagged it, or what to do next. This motivated an explanation layer that turns a detected anomaly into a short, readable description of the likely attack pattern and a recommended action.
+\textbf{Fragmented tools.} No single tool available to the team combines decoding, replay, live capture, and anomaly awareness. An engineer typically pieces together a CAN analyzer for raw traffic, a diagnostic scanner for known parameters, and a spreadsheet or notebook for anything that needs comparing across sessions.
 
-Beyond building the system, this project also required a rigorous validation phase, since a detection system that produces incorrect or misleading alerts is not trustworthy. This is documented in full in Chapter~\ref{chap:validation}, which describes six confirmed software defects that were found through evidencebased testing on a real onehour vehicle recording, and their correction.
+\textbf{Limited explainability.} Where a tool does flag something unusual, it is almost always a bare number. A severity score or a raw statistic does not tell an engineer what pattern triggered it or what to check next, so interpreting an alert still falls entirely on the engineer's own experience.
+
+The \gls{can} bus's lack of built-in security (ISO~11898~\cite{iso11898}, no sender identity, no signature) compounds all four problems, since a fragmented, non-monitoring toolchain also has no way to notice a malicious frame, not only a faulty one. Security is therefore a real motivation for this project, but a secondary one: the primary driver is that BMS engineers need a single, explainable, always-on diagnostic view of the bus, and a system built to provide that view naturally strengthens security awareness as a side effect.
+
+Beyond building the system, this project also required a rigorous validation phase, since a diagnostic platform that produces incorrect or misleading alerts is not trustworthy. This is documented in full in Chapter~\ref{chap:validation}, which describes six confirmed software defects that were found through evidence-based testing on a real one-hour vehicle recording, and their correction.
 
 \section{Objectives}
 
 \subsection{General objective}
 
-The general objective of this project is to design, implement, and rigorously validate a multilayer \gls{can} diagnostic and validation platform for Battery Management Systems, incorporating machinelearningbased anomaly detection, that adapts to the specific vehicle being analysed and explains its own alerts in plain language.
+The general objective of this project is to design, implement, and rigorously validate a diagnostic and validation platform for Battery Management Systems that gives an engineer continuous, unified visibility into \gls{can} traffic, adapts to the specific vehicle being analysed, and explains its own alerts in plain language. This objective covers the software platform only: the general objective, and every specific objective below, was scoped and validated as software running on recorded and simulated traffic, with live hardware capture designed and implemented but not experimentally validated, for the reasons given in Chapter~\ref{chap:requirements}'s risk analysis and Chapter~\ref{chap:validation}'s limitations.
 
 \subsection{Specific objectives}
 
 \begin{enumerate}
-    \item Design and implement a multilayer \gls{can} anomalydetection pipeline combining timing, payload, machinelearning, and temporalpersistence signals into a single fusion score.
-    \item Support multiple input sources: recorded logs (\gls{csv}, \gls{mf4}, candump, Vector \gls{can}), a live attack simulator, and live hardware capture through an ELM327 or SocketCAN adapter.
-    \item Train and integrate vehiclespecific machinelearning models so that detection adapts to the vehicle being analysed instead of relying on one generic model.
+    \item Design and implement a multi-layer \gls{can} anomaly-detection pipeline combining timing, payload, machine-learning, and temporal-persistence signals into a single fusion score.
+    \item Support multiple input sources: recorded logs (\gls{csv}, \gls{mf4}, candump, Vector \gls{can}) and a live attack simulator, both fully validated in software, plus a live hardware capture path (ELM327 or SocketCAN) that was implemented and code-complete but not validated against a physical vehicle within this project.
+    \item Train and integrate vehicle-specific machine-learning models so that detection adapts to the vehicle being analysed instead of relying on one generic model.
     \item Build a desktop client that lets an analyst import a log, replay it, review detected anomalies, and export a report.
-    \item Add a naturallanguage explanation layer that describes each anomaly and recommends an action, using a combination of rulebased reasoning and a Large Language Model.
-    \item Validate the complete pipeline against a real vehicle recording, using measurable, reproducible evidence, and correct any defect found before considering the system ready.
+    \item Add a natural-language explanation layer that describes each anomaly and recommends an action, using a combination of rule-based reasoning and a Large Language Model.
+    \item Validate the complete software pipeline against a real vehicle recording, using measurable, reproducible evidence, and correct any defect found before considering the system ready.
 \end{enumerate}
 
 \section{Development methodology}
@@ -65,60 +68,60 @@ The general objective of this project is to design, implement, and rigorously va
 
 \subsection{Waterfall, Agile, and Scrum}
 
-Table~\ref{tab:methodologycomparison} compares the three methodological approaches usually considered for a project of this size, before explaining which one guided this project and why.
+Table~\ref{tab:methodology-comparison} compares the three methodological approaches usually considered for a project of this size, before explaining which one guided this project and why.
 
 \begin{table}[H]
 \centering
 \caption{Comparison of Waterfall, Agile, and Scrum.}
-\label{tab:methodologycomparison}
+\label{tab:methodology-comparison}
 \begin{tabular}{@{}p{2.6cm}p{5.4cm}p{5.4cm}@{}}
 \toprule
 \textbf{Approach} & \textbf{Advantages} & \textbf{Disadvantages} \\
 \midrule
-Waterfall & Clear, predictable phases easy to plan and document up front well suited to fixed, wellunderstood requirements. & Requirements are frozen too early for an exploratory project a defect found late (for example during validation) is expensive to trace back to an earlier phase, poor fit when the exact scope of the machinelearning layer or the validation effort cannot be fully specified in advance. \\
-Agile (general) & Iterative delivery of working software requirements and design can evolve as understanding improves feedback is incorporated continuously instead of only at the end. & Requires discipline to avoid scope drift without a team, several Agile ceremonies (standups, planning poker) lose most of their value. \\
-Scrum & Structures Agile delivery around a prioritized backlog and short, incremental delivery cycles, each producing a working increment that can be reviewed and built upon makes it natural to reprioritize (for example, to insert a dedicated correction phase) once real evidence changes what matters most. & Formal Scrum assumes a crossfunctional team with distinct roles (Product Owner, Scrum Master, development team) and regular ceremonies a singledeveloper project cannot reproduce these roles literally and has to adapt the framework rather than apply it as written. \\
+Waterfall & Clear, predictable phases, easy to plan and document up front, well suited to fixed, well-understood requirements. & Requirements are frozen too early for an exploratory project. A defect found late (for example during validation) is expensive to trace back to an earlier phase, and it is a poor fit when the exact scope of the machine-learning layer or the validation effort cannot be fully specified in advance. \\
+Agile (general) & Iterative delivery of working software. Requirements and design can evolve as understanding improves, and feedback is incorporated continuously instead of only at the end. & Requires discipline to avoid scope drift. Without a team, several Agile ceremonies (stand-ups, planning poker) lose most of their value. \\
+Scrum & Structures Agile delivery around a prioritized backlog and short, incremental delivery cycles, each producing a working increment that can be reviewed and built upon. Makes it natural to reprioritize (for example, to insert a dedicated correction phase) once real evidence changes what matters most. & Formal Scrum assumes a cross-functional team with distinct roles (Product Owner, Scrum Master, development team) and regular ceremonies. A single-developer project cannot reproduce these roles literally and has to adapt the framework rather than apply it as written. \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{Why Scrum was chosen for this project}
 
-Scrum was chosen, in an adapted form, over a strict Waterfall plan because the project's two main sources of uncertainty , how well a vehiclespecific machinelearning model would actually perform, and how many real defects a rigorous validation pass would uncover , could not be estimated accurately before the work started. A Waterfall plan would have required freezing the detection design and the validation scope before either was known with any confidence. An incremental approach, where each milestone produced a working, testable piece of the system before the next one was scoped in detail, matched the way the project's own uncertainty was actually resolved: one milestone at a time, backed by evidence rather than by an upfront estimate.
+Scrum was chosen, in an adapted form, over a strict Waterfall plan because the project's two main sources of uncertainty, how well a vehicle-specific machine-learning model would actually perform, and how many real defects a rigorous validation pass would uncover, could not be estimated accurately before the work started. A Waterfall plan would have required freezing the detection design and the validation scope before either was known with any confidence. An incremental approach, where each milestone produced a working, testable piece of the system before the next one was scoped in detail, matched the way the project's own uncertainty was actually resolved: one milestone at a time, backed by evidence rather than by an up-front estimate.
 
-It should be stated plainly that this was a singleperson project, not a Scrum team. There was no Scrum Master, no separate Product Owner, and no fixedlength sprint calendar with daily standup meetings in the literal Scrum sense. What was kept from Scrum was its underlying discipline: a prioritized backlog, incremental delivery of working functionality, a review step before moving on, and a clear definition of done. Figure~\ref{fig:scrumcycle} shows the standard Scrum cycle used here as a reference model. the rest of this section explains, phase by phase, how that discipline was actually applied on this project, without claiming that every ceremony in the diagram was run in its formal, textbook form.
+It should be stated plainly that this was a single-person project, not a Scrum team. There was no Scrum Master, no separate Product Owner, and no fixed-length sprint calendar with daily stand-up meetings in the literal Scrum sense. What was kept from Scrum was its underlying discipline: a prioritized backlog, incremental delivery of working functionality, a review step before moving on, and a clear definition of done. Figure~\ref{fig:scrum-cycle} shows the standard Scrum cycle used here as a reference model. The rest of this section explains, phase by phase, how that discipline was actually applied on this project, without claiming that every ceremony in the diagram was run in its formal, textbook form.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.6\textwidth]{scrum_workflow.png}
 \caption{Reference Scrum cycle used as the framework for this project's iterative process.}
-\label{fig:scrumcycle}
+\label{fig:scrum-cycle}
 \end{figure}
 
 \subsection{How the real process reflected Scrum concepts}
 
-\textbf{Product backlog.} The project's internal roadmap served as a living backlog, listing milestones M1 through M8 (live foundation, hardware layer, multistate \gls{ml} training, \gls{ai} explanation engine, realtime graphs, session recording, integration, offline/live decode pipeline) in priority order, reordered as earlier milestones revealed what the later ones actually needed.
+\textbf{Product backlog.} The project's internal roadmap served as a living backlog, listing milestones M1 through M8 (live foundation, hardware layer, multi-state \gls{ml} training, \gls{ai} explanation engine, real-time graphs, session recording, integration, offline/live decode pipeline) in priority order, reordered as earlier milestones revealed what the later ones actually needed.
 
-\textbf{Incremental development.} Each milestone was scoped to deliver a working, demonstrable increment of the system  for example, M1 delivered a functioning live pipeline before any machinelearning model existed, and M4 added the \gls{ai} explanation layer only once the detection pipeline it explains was already producing alerts. This mirrors the Scrum principle of shippable increments more closely than a single endtoend build attempted in one pass.
+\textbf{Incremental development.} Each milestone was scoped to deliver a working, demonstrable increment of the system. For example, M1 delivered a functioning live pipeline before any machine-learning model existed, and M4 added the \gls{ai} explanation layer only once the detection pipeline it explains was already producing alerts. This mirrors the Scrum principle of shippable increments more closely than a single end-to-end build attempted in one pass.
 
-\textbf{Engineering correction phase as a stabilization iteration.} Once the milestonebased increments were functionally complete, the project entered a dedicated, evidencebased correction phase (Chapter~\ref{chap:validation}), comparable to a Scrum stabilization or hardening iteration: no new features were added, and the entire effort was redirected to finding and fixing defects, with each fix reverified before moving to the next.
+\textbf{Engineering correction phase as a stabilization iteration.} Once the milestone-based increments were functionally complete, the project entered a dedicated, evidence-based correction phase (Chapter~\ref{chap:validation}), comparable to a Scrum stabilization or hardening iteration: no new features were added, and the entire effort was redirected to finding and fixing defects, with each fix re-verified before moving to the next.
 
-\textbf{Validation iterations as reviews.} Where a Scrum team would hold a sprint review with stakeholders, this project substituted a stricter, evidencebased review: every claim about the system's behaviour had to be demonstrated on real data before it was accepted, and every fix was checked against reproducible evidence rather than presented for a subjective signoff (Table~\ref{tab:qatimeline} in Chapter~\ref{chap:validation}).
+\textbf{Validation iterations as reviews.} Where a Scrum team would hold a sprint review with stakeholders, this project substituted a stricter, evidence-based review: every claim about the system's behaviour had to be demonstrated on real data before it was accepted, and every fix was checked against reproducible evidence rather than presented for a subjective sign-off (Table~\ref{tab:qa-timeline} in Chapter~\ref{chap:validation}).
 
-\textbf{Repository freeze and Release Candidate.} Once the correction phase closed with all identified defects fixed and reverified end to end, the repository was frozen for engineering changes, and the resulting state was treated as a Release Candidate  the practical equivalent of a Scrum \emph{definition of done} applied to the whole project rather than to a single sprint.
+\textbf{Repository freeze and Release Candidate.} Once the correction phase closed with all identified defects fixed and re-verified end to end, the repository was frozen for engineering changes, and the resulting state was treated as a Release Candidate, the practical equivalent of a Scrum \emph{definition of done} applied to the whole project rather than to a single sprint.
 
-Figure~\ref{fig:projecttimeline} places all of this on a single timeline: the milestonebased increments (M1, M3, M4, M5, M6, then M8/M7 together, then the codecompletebuthardwareblocked M2), followed by the dedicated engineering correction phase, the validation rerun, and the resulting Release Candidate.
+Figure~\ref{fig:project-timeline} places all of this on a single timeline: the milestone-based increments (M1, M3, M4, M5, M6, then M8/M7 together, then the code-complete M2, blocked on a compatible electric vehicle rather than on the hardware adapter itself), followed by the dedicated engineering correction phase, the validation re-run, and the resulting Release Candidate.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{project_timeline.png}
-\caption{Project timeline: milestonebased increments through to the Release Candidate.}
-\label{fig:projecttimeline}
+\caption{Project timeline: milestone-based increments through to the Release Candidate.}
+\label{fig:project-timeline}
 \end{figure}
 
 \subsection{Conclusion}
 
-Framed this way, the project followed an incremental, evidencedriven process consistent with Scrum's core principles, adapted honestly to the reality of a singledeveloper internship rather than dressed up with ceremonies that were never actually run.
+Framed this way, the project followed an incremental, evidence-driven process consistent with Scrum's core principles, adapted honestly to the reality of a single-developer internship rather than dressed up with ceremonies that were never actually run.
 
 \section{Conclusion}
 
