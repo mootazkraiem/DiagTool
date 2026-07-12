@@ -3,13 +3,13 @@
 
 \section{Introduction}
 
-This chapter turns the context and objectives from Chapter~\ref{chap:framework} into a concrete requirements analysis. It starts with a short review of existing solutions, to position what CANvisionNative adds. It then lists the functional and non-functional requirements, identifies the actors, and presents the use cases with a UML use-case diagram and textual descriptions.
+This chapter turns the context and objectives from Chapter~\ref{chap:framework} into a concrete requirements analysis. It starts with a short review of existing solutions, to position what CANvisionNative adds. It then lists the functional and non functional requirements, identifies the actors, and presents the use cases with a UML use case diagram and textual descriptions.
 
 \section{Existing solutions analysis}
 
 \subsection{Traditional CAN tools}
 
-The most common way to observe \gls{can} traffic today is a passive sniffing and logging tool: open-source utilities such as \texttt{candump} and SavvyCAN, or commercial tools such as Vector CANoe/CANalyzer. These tools capture and display raw frames, decode them against a \gls{dbc} file if one is provided, and let an engineer replay a recorded log. They are built for development and diagnostics, not for security monitoring: they show what is on the bus, but they do not judge whether a frame is normal or malicious.
+The most common way to observe \gls{can} traffic today is a passive sniffing and logging tool: open source utilities such as \texttt{candump} and SavvyCAN, or commercial tools such as Vector CANoe/CANalyzer. These tools capture and display raw frames, decode them against a \gls{dbc} file if one is provided, and let an engineer replay a recorded log. They are built for development and diagnostics, not for security monitoring: they show what is on the bus, but they do not judge whether a frame is normal or malicious.
 
 \subsection{Vehicle diagnostics tools}
 
@@ -17,44 +17,44 @@ A second category of tools targets vehicle diagnostics rather than raw \gls{can}
 
 \subsection{Existing intrusion detection approaches}
 
-Published intrusion detection approaches for the \gls{can} bus generally fall into three families. \textbf{Signature-based detection} matches traffic against known attack patterns; it is precise for known attacks but cannot catch a new one. \textbf{Specification-based detection} encodes expected behaviour by hand (expected identifiers, frequency ranges, payload ranges); it does not need attack data, but it needs a manually written specification for every vehicle and does not generalize. \textbf{Anomaly-based detection} learns what normal traffic looks like from timing and/or payload statistics and flags deviations; it is the most broadly applicable of the three, because it only needs a sample of normal traffic, and it is the detection family the anomaly-detection layer of CANvisionNative belongs to.
+Published intrusion detection approaches for the \gls{can} bus generally fall into three families. \textbf{Signature based detection} matches traffic against known attack patterns, it is precise for known attacks but cannot catch a new one. \textbf{Specification based detection} encodes expected behaviour by hand (expected identifiers, frequency ranges, payload ranges), it does not need attack data, but it needs a manually written specification for every vehicle and does not generalize. \textbf{Anomaly based detection} learns what normal traffic looks like from timing and/or payload statistics and flags deviations, it is the most broadly applicable of the three, because it only needs a sample of normal traffic, and it is the detection family the anomaly detection layer of CANvisionNative belongs to.
 
 \subsection{Current limitations}
 
-Across the tools and approaches above, three limitations recur. First, most anomaly-based designs rely on a single detection signal (either timing or one machine-learning model), so an attack that does not disturb that one signal goes undetected. Second, a machine-learning model trained on one vehicle is rarely reused correctly across vehicles, because message layout, frequency, and normal-value ranges are vehicle-specific; in practice, systems that mention vehicle-specific models often treat correct model selection as an implementation detail rather than something to verify explicitly. Third, none of the tools reviewed above turn a raw anomaly score into a plain-language explanation an analyst can act on directly.
+Across the tools and approaches above, three limitations recur. First, most anomaly based designs rely on a single detection signal (either timing or one machine learning model), so an attack that does not disturb that one signal goes undetected. Second, a machine learning model trained on one vehicle is rarely reused correctly across vehicles, because message layout, frequency, and normal value ranges are vehicle specific, in practice, systems that mention vehicle specific models often treat correct model selection as an implementation detail rather than something to verify explicitly. Third, none of the tools reviewed above turn a raw anomaly score into a plain language explanation an analyst can act on directly.
 
 \subsection{Why CANvisionNative is different}
 
-CANvisionNative addresses these three limitations directly. It fuses four independent detection signals (timing, payload, machine learning, temporal persistence) into one score, so an attack missed by one layer can still be caught by another. It selects a trained model per vehicle profile at run time, rather than a single generic model; this exact selection step was one of the six defects verified during validation (Chapter~\ref{chap:validation}). And it adds a natural-language explanation layer, combining rule-based reasoning with a Large Language Model, so an alert comes with a description of the likely attack pattern and a recommended action rather than a bare score.
+CANvisionNative addresses these three limitations directly. It fuses four independent detection signals (timing, payload, machine learning, temporal persistence) into one score, so an attack missed by one layer can still be caught by another. It selects a trained model per vehicle profile at run time, rather than a single generic model, this exact selection step was one of the six defects verified during validation (Chapter~\ref{chap:validation}). And it adds a natural language explanation layer, combining rule based reasoning with a Large Language Model, so an alert comes with a description of the likely attack pattern and a recommended action rather than a bare score.
 
-In practice, this positions CANvisionNative between the two categories reviewed above. It monitors traffic continuously and learns what normal behaviour looks like, the way the anomaly-detection literature does, but it is packaged as a diagnostic and validation platform an analyst can actually use during a validation campaign, with an import-replay-review-export workflow, rather than as a bare research detector that only outputs a score.
+In practice, this positions CANvisionNative between the two categories reviewed above. It monitors traffic continuously and learns what normal behaviour looks like, the way the anomaly detection literature does, but it is packaged as a diagnostic and validation platform an analyst can actually use during a validation campaign, with an import replay review export workflow, rather than as a bare research detector that only outputs a score.
 
 \section{Functional requirements}
 
 \begin{itemize}
-    \item \textbf{FR1 — Import a recorded log.} The system shall let the user import a \gls{can} log file in \gls{csv}, \gls{mf4}, Vector \gls{can} (\texttt{.asc}), candump (\texttt{.log}), or PCAN text (\texttt{.txt}) format, and convert it to a canonical frame stream (timestamp, identifier, payload).
-    \item \textbf{FR2 — Select a vehicle profile.} The system shall let the user select the vehicle that produced the log (or the closest matching profile), so that the correct \gls{dbc} file and the correct trained model are used.
-    \item \textbf{FR3 — Replay the log.} The system shall replay the imported frames through the detection pipeline, in order, at a user-selectable speed (0.5$\times$ up to a maximum speed), and report progress.
-    \item \textbf{FR4 — Detect anomalies.} For every frame, the system shall compute a fusion anomaly score from four detection layers (timing, payload, machine learning, temporal persistence) and raise an alert when the score exceeds the configured threshold.
-    \item \textbf{FR5 — Classify severity.} Each alert shall be labelled with a severity level (LOW, MEDIUM, HIGH, CRITICAL) derived from the fusion score.
-    \item \textbf{FR6 — Explain an alert.} The system shall let the user request a natural-language explanation of any alert, including the dominant detection layer, a plain-language description of the likely attack pattern, and a recommended action.
-    \item \textbf{FR7 — Export results.} The system shall let the user export the alert list as a \gls{csv} file and as a formatted PDF report.
-    \item \textbf{FR8 — Live simulation.} The system shall be able to generate a simulated live \gls{can} stream, including a simulated attack burst, for testing the detection pipeline without a physical vehicle.
-    \item \textbf{FR9 — Live hardware capture.} The system shall be able to connect to a physical \gls{can} adapter (ELM327 or SocketCAN) and feed real vehicle frames into the same detection pipeline used for replay.
-    \item \textbf{FR10 — Record a session.} The system shall be able to record a live or simulated session to a log file, optionally injecting a labelled attack, for later replay or retraining.
-    \item \textbf{FR11 — Configure the system.} The system shall let the user configure the alert threshold, the \gls{llm} provider key, and the hardware interface settings, and persist this configuration between sessions.
+    \item \textbf{FR1   Import a recorded log.} The system shall let the user import a \gls{can} log file in \gls{csv}, \gls{mf4}, Vector \gls{can} (\texttt{.asc}), candump (\texttt{.log}), or PCAN text (\texttt{.txt}) format, and convert it to a canonical frame stream (timestamp, identifier, payload).
+    \item \textbf{FR2   Select a vehicle profile.} The system shall let the user select the vehicle that produced the log (or the closest matching profile), so that the correct \gls{dbc} file and the correct trained model are used.
+    \item \textbf{FR3   Replay the log.} The system shall replay the imported frames through the detection pipeline, in order, at a user selectable speed (0.5$\times$ up to a maximum speed), and report progress.
+    \item \textbf{FR4   Detect anomalies.} For every frame, the system shall compute a fusion anomaly score from four detection layers (timing, payload, machine learning, temporal persistence) and raise an alert when the score exceeds the configured threshold.
+    \item \textbf{FR5   Classify severity.} Each alert shall be labelled with a severity level (LOW, MEDIUM, HIGH, CRITICAL) derived from the fusion score.
+    \item \textbf{FR6   Explain an alert.} The system shall let the user request a natural language explanation of any alert, including the dominant detection layer, a plain language description of the likely attack pattern, and a recommended action.
+    \item \textbf{FR7   Export results.} The system shall let the user export the alert list as a \gls{csv} file and as a formatted PDF report.
+    \item \textbf{FR8   Live simulation.} The system shall be able to generate a simulated live \gls{can} stream, including a simulated attack burst, for testing the detection pipeline without a physical vehicle.
+    \item \textbf{FR9   Live hardware capture.} The system shall be able to connect to a physical \gls{can} adapter (ELM327 or SocketCAN) and feed real vehicle frames into the same detection pipeline used for replay.
+    \item \textbf{FR10   Record a session.} The system shall be able to record a live or simulated session to a log file, optionally injecting a labelled attack, for later replay or retraining.
+    \item \textbf{FR11   Configure the system.} The system shall let the user configure the alert threshold, the \gls{llm} provider key, and the hardware interface settings, and persist this configuration between sessions.
 \end{itemize}
 
-\section{Non-functional requirements}
+\section{Non functional requirements}
 
 \begin{itemize}
-    \item \textbf{NFR1 — Performance.} The replay engine shall process a one-hour, 97{,}741-frame recording in a few minutes, not hours, on a standard desktop machine. Chapter~\ref{chap:validation} reports a measured throughput of about 286 frames per second after the corrections described there.
-    \item \textbf{NFR2 — Reliability.} A detection defect must be provable and fixable with concrete evidence, not by blindly tuning thresholds. This principle governed the whole validation phase in Chapter~\ref{chap:validation}.
-    \item \textbf{NFR3 — Usability.} An analyst without machine-learning expertise shall be able to import a log, read the alert list, and understand the explanation of an alert without consulting external documentation.
-    \item \textbf{NFR4 — Portability of input formats.} Every supported log format shall enter the detection pipeline through the same canonical frame representation, so that detection behaviour does not depend on which format was used to record the data.
-    \item \textbf{NFR5 — Extensibility.} Adding a new vehicle profile shall only require adding a \gls{dbc} file and a trained model directory, without changing the detection engine code.
-    \item \textbf{NFR6 — Graceful degradation.} If the \gls{llm} provider is unavailable, the system shall still produce a rule-based explanation instead of failing the request.
-    \item \textbf{NFR7 — Platform.} The desktop client shall run on Windows 10/11 using .NET Framework 4.8 and \gls{wpf}; the backend shall run as a local Python process exposing a \gls{rest} \gls{api} on \texttt{localhost}. The full software and hardware requirements are listed in Table~\ref{tab:app-requirements} and Table~\ref{tab:app-hardware} (Appendix~\ref{app:config}).
+    \item \textbf{NFR1   Performance.} The replay engine shall process a one hour, 97{,}741 frame recording in a few minutes, not hours, on a standard desktop machine. Chapter~\ref{chap:validation} reports a measured throughput of about 286 frames per second after the corrections described there.
+    \item \textbf{NFR2   Reliability.} A detection defect must be provable and fixable with concrete evidence, not by blindly tuning thresholds. This principle governed the whole validation phase in Chapter~\ref{chap:validation}.
+    \item \textbf{NFR3   Usability.} An analyst without machine learning expertise shall be able to import a log, read the alert list, and understand the explanation of an alert without consulting external documentation.
+    \item \textbf{NFR4   Portability of input formats.} Every supported log format shall enter the detection pipeline through the same canonical frame representation, so that detection behaviour does not depend on which format was used to record the data.
+    \item \textbf{NFR5   Extensibility.} Adding a new vehicle profile shall only require adding a \gls{dbc} file and a trained model directory, without changing the detection engine code.
+    \item \textbf{NFR6   Graceful degradation.} If the \gls{llm} provider is unavailable, the system shall still produce a rule based explanation instead of failing the request.
+    \item \textbf{NFR7   Platform.} The desktop client shall run on Windows 10/11 using .NET Framework 4.8 and \gls{wpf}, the backend shall run as a local Python process exposing a \gls{rest} \gls{api} on \texttt{localhost}. The full software and hardware requirements are listed in Table~\ref{tab:app requirements} and Table~\ref{tab:app hardware} (Appendix~\ref{app:config}).
 \end{itemize}
 
 \section{Actors}
@@ -62,7 +62,7 @@ In practice, this positions CANvisionNative between the two categories reviewed 
 \begin{itemize}
     \item \textbf{Analyst (primary user).} Imports logs, starts replays, reviews alerts, requests explanations, exports reports, configures the system.
     \item \textbf{Vehicle / CAN bus (external system).} Source of live frames when the hardware capture mode is used.
-    \item \textbf{LLM provider (external system).} Supplies natural-language text for the explanation layer (Gemini, or a local Ollama model as fallback).
+    \item \textbf{LLM provider (external system).} Supplies natural language text for the explanation layer (Gemini, or a local Ollama model as fallback).
     \item \textbf{CANvisionNative backend (system under design).} Performs decoding, feature extraction, scoring, and explanation generation, and exposes them through the \gls{rest} \gls{api}.
 \end{itemize}
 
@@ -70,57 +70,57 @@ In practice, this positions CANvisionNative between the two categories reviewed 
 
 \section{Use cases}
 
-Figure~\ref{fig:usecase} shows the use-case diagram for the Analyst actor, the two external systems, and the main use cases implemented by the system.
+Figure~\ref{fig:usecase} shows the use case diagram for the Analyst actor, the two external systems, and the main use cases implemented by the system.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{usecase.png}
-\caption{Use-case diagram for CANvisionNative.}
+\caption{Use case diagram for CANvisionNative.}
 \label{fig:usecase}
 \end{figure}
 
-Import log, Select vehicle profile, Review alerts, Export report, Configure settings, Start live simulation, and Connect hardware are all initiated directly by the Analyst. Detect anomaly is included by Replay log, Start live simulation, and Connect hardware, since all three input modes feed the same detection pipeline. Request explanation extends Review alerts, since it is an optional action available on any reviewed alert, and it involves the external LLM provider. Table~\ref{tab:usecase-table} gives a short textual description of the eight use cases most representative of the system's behaviour.
+Import log, Select vehicle profile, Review alerts, Export report, Configure settings, Start live simulation, and Connect hardware are all initiated directly by the Analyst. Detect anomaly is included by Replay log, Start live simulation, and Connect hardware, since all three input modes feed the same detection pipeline. Request explanation extends Review alerts, since it is an optional action available on any reviewed alert, and it involves the external LLM provider. Table~\ref{tab:usecase table} gives a short textual description of the eight use cases most representative of the system's behaviour.
 
 \begin{table}[H]
 \centering
 \caption{Textual description of the main use cases.}
-\label{tab:usecase-table}
+\label{tab:usecase table}
 \begin{tabularx}{\textwidth}{@{}p{3.2cm}X@{}}
 \toprule
 \textbf{Use case} & \textbf{Description} \\
 \midrule
-Import log & The analyst selects a log file; the system detects its format and converts it to the canonical frame stream (FR1). \\
+Import log & The analyst selects a log file, the system detects its format and converts it to the canonical frame stream (FR1). \\
 Select vehicle profile & The analyst chooses the vehicle that produced the log, so the correct \gls{dbc} file and trained model are used (FR2). \\
-Replay log & The system replays the canonical frame stream through the detection pipeline at a user-selectable speed, including the Detect anomaly use case (FR3, FR4). \\
-Detect anomaly & For every frame, the system computes the four-layer fusion score and raises an alert above the configured threshold (FR4, FR5). Shared by replay, live simulation, and hardware capture. \\
-Review alerts & The analyst browses the alert list, filters by severity, and inspects the layer-attribution breakdown of a selected alert. \\
-Request explanation & The analyst asks for a natural-language explanation of a selected alert; the system builds context and queries the LLM provider chain, falling back to a rule-based template if needed (FR6). \\
+Replay log & The system replays the canonical frame stream through the detection pipeline at a user selectable speed, including the Detect anomaly use case (FR3, FR4). \\
+Detect anomaly & For every frame, the system computes the four layer fusion score and raises an alert above the configured threshold (FR4, FR5). Shared by replay, live simulation, and hardware capture. \\
+Review alerts & The analyst browses the alert list, filters by severity, and inspects the layer attribution breakdown of a selected alert. \\
+Request explanation & The analyst asks for a natural language explanation of a selected alert, the system builds context and queries the LLM provider chain, falling back to a rule based template if needed (FR6). \\
 Export report & The analyst exports the current alert list as \gls{csv} or as a formatted PDF report (FR7). \\
 Configure settings & The analyst sets the alert threshold, the LLM provider key, and the hardware interface parameters, persisted between sessions (FR11). \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\subsection{Activity diagram — import and replay}
+\subsection{Activity diagram   import and replay}
 
-Figure~\ref{fig:activity-replay} shows the activity flow from importing a log to publishing its alerts to the client, corresponding to the Import log, Select vehicle profile, Replay log, and Detect anomaly use cases together.
+Figure~\ref{fig:activity replay} shows the activity flow from importing a log to publishing its alerts to the client, corresponding to the Import log, Select vehicle profile, Replay log, and Detect anomaly use cases together.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.5\textwidth]{activity_replay.png}
 \caption{Activity diagram: import and replay a log.}
-\label{fig:activity-replay}
+\label{fig:activity replay}
 \end{figure}
 
-\subsection{Sequence diagram — request an AI explanation}
+\subsection{Sequence diagram   request an AI explanation}
 
-Figure~\ref{fig:seq-explain} shows the sequence of calls triggered by the Request explanation use case, including the fallback behaviour when the primary LLM provider is unavailable.
+Figure~\ref{fig:seq explain} shows the sequence of calls triggered by the Request explanation use case, including the fallback behaviour when the primary LLM provider is unavailable.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{sequence_explain.png}
 \caption{Sequence diagram: requesting an AI explanation for an alert.}
-\label{fig:seq-explain}
+\label{fig:seq explain}
 \end{figure}
 
 \section{Risk analysis}
@@ -136,11 +136,11 @@ Table~\ref{tab:risks} lists the main risks identified during the project and how
 \textbf{Risk} & \textbf{Likelihood} & \textbf{Impact} & \textbf{Mitigation} \\
 \midrule
 ELM327 / hardware adapter not available in time & High (materialized) & Medium & Design and implement the hardware layer against the same interface as replay and simulation, so it can be validated later without changing the detection pipeline (Chapter~\ref{chap:design}). \\
-LLM provider unavailable or unauthenticated & Medium & Low & Provider chain with automatic fallback: Gemini $\rightarrow$ local Ollama model $\rightarrow$ rule-based template. \\
-Vehicle-specific model not selected correctly & Medium (materialized) & High & Root-cause investigation with direct evidence rather than threshold tuning; full fix and validation documented in Chapter~\ref{chap:validation}. \\
-False positives eroding analyst trust & Medium & High & Multi-layer fusion with a temporal-persistence term instead of a single-frame score; before/after alert-rate measurement in Chapter~\ref{chap:validation}. \\
-Different log formats behaving inconsistently & Medium (materialized) & Medium & Single canonical parsing entry point shared by every input path; verified in Chapter~\ref{chap:validation}. \\
-Explanation shown for the wrong alert (stale cache) & Low (materialized) & High & Root-caused to two cache-lifecycle gaps and fixed at both the completion and the start of every replay; verified with a seeded cross-dataset test (Chapter~\ref{chap:validation}). \\
+LLM provider unavailable or unauthenticated & Medium & Low & Provider chain with automatic fallback: Gemini $\rightarrow$ local Ollama model $\rightarrow$ rule based template. \\
+Vehicle specific model not selected correctly & Medium (materialized) & High & Root cause investigation with direct evidence rather than threshold tuning, full fix and validation documented in Chapter~\ref{chap:validation}. \\
+False positives eroding analyst trust & Medium & High & Multi layer fusion with a temporal persistence term instead of a single frame score, before/after alert rate measurement in Chapter~\ref{chap:validation}. \\
+Different log formats behaving inconsistently & Medium (materialized) & Medium & Single canonical parsing entry point shared by every input path, verified in Chapter~\ref{chap:validation}. \\
+Explanation shown for the wrong alert (stale cache) & Low (materialized) & High & Root caused to two cache lifecycle gaps and fixed at both the completion and the start of every replay, verified with a seeded cross dataset test (Chapter~\ref{chap:validation}). \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -160,23 +160,23 @@ The project was carried out through a sequence of milestones, tracked internally
 ]{1}{16}
 \gantttitle{Project weeks}{16} \\
 \gantttitlelist{1,...,16}{1} \\
-\ganttbar{M1 — Live foundation}{1}{2} \\
-\ganttbar{M3 — Multi-state ML training}{2}{5} \\
-\ganttbar{M4 — AI explanation engine}{4}{7} \\
-\ganttbar{M5 — Real-time graphs}{5}{7} \\
-\ganttbar{M6 — Session recording}{7}{9} \\
-\ganttbar{M8 — Offline / live decode pipeline}{6}{10} \\
-\ganttbar{M7 — Integration}{9}{11} \\
-\ganttbar{M2 — Hardware layer (code)}{9}{11} \\
-\ganttbar{Root-cause validation (real data)}{11}{14} \\
-\ganttbar{Engineering correction \& re-validation}{13}{15} \\
+\ganttbar{M1   Live foundation}{1}{2} \\
+\ganttbar{M3   Multi state ML training}{2}{5} \\
+\ganttbar{M4   AI explanation engine}{4}{7} \\
+\ganttbar{M5   Real time graphs}{5}{7} \\
+\ganttbar{M6   Session recording}{7}{9} \\
+\ganttbar{M8   Offline / live decode pipeline}{6}{10} \\
+\ganttbar{M7   Integration}{9}{11} \\
+\ganttbar{M2   Hardware layer (code)}{9}{11} \\
+\ganttbar{Root cause validation (real data)}{11}{14} \\
+\ganttbar{Engineering correction \& re validation}{13}{15} \\
 \ganttbar{Report writing}{15}{16}
 \end{ganttchart}
 \caption{Project planning (Gantt chart, in weeks).}
 \label{fig:gantt}
 \end{figure}
 
-Milestone M2 (hardware / OBD2 validation) is shown as code-complete but is explicitly marked as blocked on the physical arrival of an ELM327 adapter, and is not part of the validated scope in Chapter~\ref{chap:validation}, which is why it is not part of the risk-mitigated critical path.
+Milestone M2 (hardware / OBD2 validation) is shown as code complete but is explicitly marked as blocked on the physical arrival of an ELM327 adapter, and is not part of the validated scope in Chapter~\ref{chap:validation}, which is why it is not part of the risk mitigated critical path.
 
 \section{Requirements traceability}
 
@@ -190,23 +190,23 @@ Table~\ref{tab:traceability} traces each functional requirement to the design an
 \toprule
 \textbf{Req.} & \textbf{Implemented in} & \textbf{Validated by} \\
 \midrule
-FR1 & Canonical parser, Section~\ref{sec:impl-parser} & Fix 4, Chapter~\ref{chap:validation} \\
-FR2 & Vehicle profile system, Section~\ref{sec:impl-vehicle} & Fix 1, Chapter~\ref{chap:validation} \\
-FR3 & Replay engine, Section~\ref{sec:impl-replay} & Before/after throughput, Table~\ref{tab:before-after} \\
-FR4 & Detection pipeline, Section~\ref{sec:design-pipeline} & Root-cause analysis, Table~\ref{tab:rootcause} \\
-FR5 & Fusion scoring, Section~\ref{sec:design-pipeline} & Severity distribution, Figure~\ref{fig:chart-severity} \\
-FR6 & AI explanation module, Section~\ref{sec:design-ai} & Fix 6, Section~\ref{sec:validation-ai} \\
+FR1 & Canonical parser, Section~\ref{sec:impl parser} & Fix 4, Chapter~\ref{chap:validation} \\
+FR2 & Vehicle profile system, Section~\ref{sec:impl vehicle} & Fix 1, Chapter~\ref{chap:validation} \\
+FR3 & Replay engine, Section~\ref{sec:impl replay} & Before/after throughput, Table~\ref{tab:before after} \\
+FR4 & Detection pipeline, Section~\ref{sec:design pipeline} & Root cause analysis, Table~\ref{tab:rootcause} \\
+FR5 & Fusion scoring, Section~\ref{sec:design pipeline} & Severity distribution, Figure~\ref{fig:chart severity} \\
+FR6 & AI explanation module, Section~\ref{sec:design ai} & Fix 6, Section~\ref{sec:validation ai} \\
 FR7 & Export, Section on Export, Chapter~\ref{chap:impl} & Export validation, Chapter~\ref{chap:validation} \\
 FR8 & Live simulation (hardware layer design) & Interactive UI audit, Chapter~\ref{chap:validation} \\
-FR9 & Hardware layer, Section on Hardware, Chapter~\ref{chap:impl} & Code-complete; physical test pending (Limitations) \\
+FR9 & Hardware layer, Section on Hardware, Chapter~\ref{chap:impl} & Code complete, physical test pending (Limitations) \\
 FR10 & Session recording (\texttt{backend/hardware/}) & Interactive UI audit, Chapter~\ref{chap:validation} \\
 FR11 & Settings, Section on Settings, Chapter~\ref{chap:impl} & Interactive UI audit, Chapter~\ref{chap:validation} \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-Every functional requirement is either backed by direct, reproducible validation evidence or explicitly marked as pending a physical test, consistent with the honest treatment of the hardware-capture limitation throughout this report.
+Every functional requirement is either backed by direct, reproducible validation evidence or explicitly marked as pending a physical test, consistent with the honest treatment of the hardware capture limitation throughout this report.
 
 \section{Conclusion}
 
-This chapter reviewed existing \gls{can} tools and intrusion-detection approaches, positioned CANvisionNative against their limitations, and defined the functional and non-functional requirements, actors, and use cases that follow from this analysis, together with the project's risk analysis and planning. The next chapter presents the system design built to satisfy these requirements.
+This chapter reviewed existing \gls{can} tools and intrusion detection approaches, positioned CANvisionNative against their limitations, and defined the functional and non functional requirements, actors, and use cases that follow from this analysis, together with the project's risk analysis and planning. The next chapter presents the system design built to satisfy these requirements.
