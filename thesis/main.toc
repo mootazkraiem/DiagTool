@@ -17,8 +17,8 @@
 \contentsline {section}{\numberline {1.5}Objectives}{3}{section.1.5}%
 \contentsline {subsection}{\numberline {1.5.1}General objective}{3}{subsection.1.5.1}%
 \contentsline {subsection}{\numberline {1.5.2}Specific objectives}{3}{subsection.1.5.2}%
-\contentsline {section}{\numberline {1.6}Development methodology}{4}{section.1.6}%
-\contentsline {subsection}{\numberline {1.6.1}Waterfall, Agile, and Scrum}{4}{subsection.1.6.1}%
+\contentsline {section}{\numberline {1.6}Development methodology}{3}{section.1.6}%
+\contentsline {subsection}{\numberline {1.6.1}Waterfall, Agile, and Scrum}{3}{subsection.1.6.1}%
 \contentsline {subsection}{\numberline {1.6.2}Why Scrum was chosen for this project}{4}{subsection.1.6.2}%
 \contentsline {subsection}{\numberline {1.6.3}How the real process reflected Scrum concepts}{5}{subsection.1.6.3}%
 \contentsline {subsection}{\numberline {1.6.4}Conclusion}{6}{subsection.1.6.4}%
