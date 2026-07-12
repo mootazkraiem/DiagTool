@@ -13,7 +13,7 @@ This project was carried out at \textbf{Capgemini}, a global technology and cons
 
 \subsection{Department and internship context}
 
-The internship was carried out within Capgemini Tunisia's Automotive division, in the Battery Management Systems (BMS) team. This team works on embedded software and validation for battery management functions in electric and hybrid vehicles, which places it directly next to the kind of in-vehicle network traffic this project analyses. Although CANvisionNative itself is an intrusion detection system rather than a BMS deliverable, the internship benefited from being carried out in a team already familiar with automotive \gls{ecu} communication, \gls{can} bus behaviour, and the general constraints of embedded automotive software.
+The internship was carried out within Capgemini Tunisia's Automotive division, in the Battery Management Systems (BMS) team. This team works on embedded software and validation for battery management functions in electric and hybrid vehicles, which places it directly next to the kind of in-vehicle network traffic this project analyses. Although CANvisionNative is not itself a BMS deliverable, its role as a \gls{can} diagnostic and validation platform placed it directly alongside the kind of in-vehicle network traffic the BMS team analyses day to day, and the internship benefited from being carried out in a team already familiar with automotive \gls{ecu} communication, \gls{can} bus behaviour, and the general constraints of embedded automotive software.
 
 The project was carried out as a final-year engineering internship (\gls{pfe}). It was framed as an individually driven technical project: the student was responsible for the full life cycle of CANvisionNative, from requirements to design, implementation, and validation, with periodic guidance from an academic supervisor at ESPRIT.
 
@@ -21,7 +21,7 @@ The project was carried out as a final-year engineering internship (\gls{pfe}). 
 
 The project sits in the broader context of automotive cybersecurity. Modern vehicles, and electric vehicles in particular, are built around internal networks of \gls{ecu}s that communicate over a \gls{can} bus. This bus was designed for reliability, not for security, and it has been repeatedly shown in the security literature to be vulnerable to message injection, flooding, and replay attacks (Chapter~\ref{chap:requirements} reviews this in more detail).
 
-The project, \textbf{CANvisionNative}, is a hybrid-architecture \gls{ids} for vehicle \gls{can} bus networks. It combines:
+The project, \textbf{CANvisionNative}, is an intelligent \gls{can} diagnostic and validation platform for Battery Management Systems that incorporates machine-learning-based anomaly detection. It combines:
 
 \begin{itemize}
     \item a Windows desktop client (\gls{wpf}, \gls{mvvm}) for visualization, replay control, and analyst interaction;
@@ -36,7 +36,7 @@ The system was designed to be usable both as a forensic tool — importing a rec
 
 Three problems motivated this project.
 
-\textbf{First}, the \gls{can} bus, standardized as ISO~11898~\cite{iso11898}, has no built-in security. Any device connected to the bus can send frames, and no frame carries a sender identity or a signature. An intrusion detection system is therefore one of the only practical ways to add a security layer to an existing vehicle without redesigning its electrical architecture.
+\textbf{First}, the \gls{can} bus, standardized as ISO~11898~\cite{iso11898}, has no built-in security. Any device connected to the bus can send frames, and no frame carries a sender identity or a signature. Continuous, anomaly-based monitoring is therefore one of the only practical ways to add a security-relevant layer of visibility to an existing vehicle without redesigning its electrical architecture.
 
 \textbf{Second}, a single detection strategy is not enough. Timing-based detection catches flooding attacks but misses slow, low-rate attacks. Payload-based detection catches out-of-range values but misses attacks that stay within plausible ranges. Machine-learning models trained on one vehicle rarely transfer cleanly to another vehicle, because message layout, frequency, and normal-value ranges are vehicle-specific. This suggested a design combining several independent detection layers, fused into a single score, rather than relying on one algorithm.
 
@@ -48,12 +48,12 @@ Beyond building the system, this project also required a rigorous validation pha
 
 \subsection{General objective}
 
-The general objective of this project is to design, implement, and rigorously validate a multi-layer intrusion detection system for vehicle \gls{can} bus networks that adapts to the specific vehicle being analysed and explains its own alerts in plain language.
+The general objective of this project is to design, implement, and rigorously validate a multi-layer \gls{can} diagnostic and validation platform for Battery Management Systems, incorporating machine-learning-based anomaly detection, that adapts to the specific vehicle being analysed and explains its own alerts in plain language.
 
 \subsection{Specific objectives}
 
 \begin{enumerate}
-    \item Design and implement a multi-layer \gls{can} bus intrusion detection pipeline combining timing, payload, machine-learning, and temporal-persistence signals into a single fusion score.
+    \item Design and implement a multi-layer \gls{can} anomaly-detection pipeline combining timing, payload, machine-learning, and temporal-persistence signals into a single fusion score.
     \item Support multiple input sources: recorded logs (\gls{csv}, \gls{mf4}, candump, Vector \gls{can}), a live attack simulator, and live hardware capture through an ELM327 or SocketCAN adapter.
     \item Train and integrate vehicle-specific machine-learning models so that detection adapts to the vehicle being analysed instead of relying on one generic model.
     \item Build a desktop client that lets an analyst import a log, replay it, review detected anomalies, and export a report.

@@ -1,12 +1,12 @@
 \chapter*{General Conclusion}
 \addcontentsline{toc}{chapter}{General Conclusion}
 
-This report presented CANvisionNative, a hybrid-architecture intrusion detection system for vehicle \gls{can} bus networks, from its motivation through its design, implementation, and validation.
+This report presented CANvisionNative, a hybrid-architecture \gls{can} diagnostic and validation platform for Battery Management Systems, from its motivation through its design, implementation, and validation.
 
 \section*{Achievements}
 \addcontentsline{toc}{section}{Achievements}
 
-The project delivered a working desktop client and backend pipeline supporting three input modes (replay, live simulation, and live hardware capture through a shared code path), a four-layer detection pipeline (timing, payload, machine learning, temporal persistence) fused into a single score, a vehicle-specific model store trained on more than seven million \gls{can} frames across sixteen vehicle- and dataset-specific sources, and a natural-language explanation layer combining rule-based reasoning with a Large Language Model provider chain that degrades gracefully when no external model is reachable. Beyond the software itself, the project delivered a rigorous, evidence-based validation of that software against a real one-hour vehicle recording, which is documented in full in Chapter~\ref{chap:validation}.
+The project delivered a working desktop client and backend pipeline supporting three input modes: replay, live simulation, and live hardware capture, all through a shared code path. It delivered a four-layer detection pipeline (timing, payload, machine learning, temporal persistence) fused into a single score, and a vehicle-specific model store trained on more than seven million \gls{can} frames across sixteen vehicle- and dataset-specific sources. It also delivered a natural-language explanation layer combining rule-based reasoning with a Large Language Model provider chain that degrades gracefully when no external model is reachable. Beyond the software itself, the project delivered a rigorous, evidence-based validation of that software against a real one-hour vehicle recording, documented in full in Chapter~\ref{chap:validation}.
 
 \section*{Objectives reached}
 \addcontentsline{toc}{section}{Objectives reached}
@@ -21,7 +21,7 @@ Chapter~\ref{chap:requirements} positioned this project against existing \gls{ca
 \section*{Engineering contributions}
 \addcontentsline{toc}{section}{Engineering contributions}
 
-Six confirmed software defects were found through evidence-based testing and corrected: incorrect vehicle-model selection, driving-state misclassification, mislabeled root-cause attribution (found duplicated across four files), a replay-parser inconsistency across log formats, a permanently-stopped alert-polling timer, and a stale-data leak in the \gls{ai} explanation cache. Each was diagnosed to its exact root cause before being changed, and each fix was verified with direct, reproducible evidence — measured on the same real recording before and after — rather than by tuning detection thresholds. This produced a measured 25\% reduction in alert volume and eliminated machine-learning score saturation entirely, without artificially suppressing any alert.
+Six confirmed software defects were found through evidence-based testing and corrected: incorrect vehicle-model selection, driving-state misclassification, mislabeled root-cause attribution (found duplicated across four files), a replay-parser inconsistency across log formats, a permanently-stopped alert-polling timer, and a stale-data leak in the \gls{ai} explanation cache. Each was diagnosed to its exact root cause before being changed. Each fix was then verified with direct, reproducible evidence, measured on the same real recording before and after, rather than by tuning detection thresholds. Together, these fixes produced a measured 25\% reduction in alert volume and eliminated machine-learning score saturation entirely, without artificially suppressing any alert.
 
 \section*{Limitations}
 \addcontentsline{toc}{section}{Limitations}
@@ -34,6 +34,6 @@ As detailed in Chapter~\ref{chap:validation}, the live hardware capture path rem
 The immediate next step is the hardware validation described in Chapter~\ref{chap:requirements} as milestone M2, followed by extending the evidence-based root-cause methodology of Chapter~\ref{chap:validation} to additional vehicle profiles, and refining the scope of the historical-case reference feature discussed in Section~\ref{sec:validation-ai}.
 
 \bigskip
-Overall, this project shows that a desktop-class, multi-layer, explainable intrusion detection system for vehicle \gls{can} bus networks can be built with commodity hardware and open datasets, and — just as importantly — that it can be held to the same standard of evidence as any other safety-relevant piece of software before it is trusted.
+Overall, this project shows that a desktop-class, multi-layer, explainable \gls{can} diagnostic and validation platform for Battery Management Systems can be built with commodity hardware and open datasets. Just as importantly, it shows that such a platform can be held to the same standard of evidence as any other safety-relevant piece of software before it is trusted.
 
 \cleardoublepage

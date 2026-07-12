@@ -17,7 +17,7 @@ A second category of tools targets vehicle diagnostics rather than raw \gls{can}
 
 \subsection{Existing intrusion detection approaches}
 
-Published intrusion detection approaches for the \gls{can} bus generally fall into three families. \textbf{Signature-based detection} matches traffic against known attack patterns; it is precise for known attacks but cannot catch a new one. \textbf{Specification-based detection} encodes expected behaviour by hand (expected identifiers, frequency ranges, payload ranges); it does not need attack data, but it needs a manually written specification for every vehicle and does not generalize. \textbf{Anomaly-based detection} learns what normal traffic looks like from timing and/or payload statistics and flags deviations; it is the most broadly applicable of the three, because it only needs a sample of normal traffic, and it is the family CANvisionNative belongs to.
+Published intrusion detection approaches for the \gls{can} bus generally fall into three families. \textbf{Signature-based detection} matches traffic against known attack patterns; it is precise for known attacks but cannot catch a new one. \textbf{Specification-based detection} encodes expected behaviour by hand (expected identifiers, frequency ranges, payload ranges); it does not need attack data, but it needs a manually written specification for every vehicle and does not generalize. \textbf{Anomaly-based detection} learns what normal traffic looks like from timing and/or payload statistics and flags deviations; it is the most broadly applicable of the three, because it only needs a sample of normal traffic, and it is the detection family the anomaly-detection layer of CANvisionNative belongs to.
 
 \subsection{Current limitations}
 
@@ -26,6 +26,8 @@ Across the tools and approaches above, three limitations recur. First, most anom
 \subsection{Why CANvisionNative is different}
 
 CANvisionNative addresses these three limitations directly. It fuses four independent detection signals (timing, payload, machine learning, temporal persistence) into one score, so an attack missed by one layer can still be caught by another. It selects a trained model per vehicle profile at run time, rather than a single generic model; this exact selection step was one of the six defects verified during validation (Chapter~\ref{chap:validation}). And it adds a natural-language explanation layer, combining rule-based reasoning with a Large Language Model, so an alert comes with a description of the likely attack pattern and a recommended action rather than a bare score.
+
+In practice, this positions CANvisionNative between the two categories reviewed above. It monitors traffic continuously and learns what normal behaviour looks like, the way the anomaly-detection literature does, but it is packaged as a diagnostic and validation platform an analyst can actually use during a validation campaign, with an import-replay-review-export workflow, rather than as a bare research detector that only outputs a score.
 
 \section{Functional requirements}
 
