@@ -5,8 +5,8 @@
 \babel@toc {french}{}\relax 
 \contentsline {chapter}{Résumé}{}{chapter*.3}%
 \babel@toc {english}{}\relax 
-\contentsline {chapter}{General Introduction}{ix}{chapter*.7}%
-\contentsline {section}{Report structure}{ix}{section*.8}%
+\contentsline {chapter}{General Introduction}{ix}{chapter*.9}%
+\contentsline {section}{Report structure}{ix}{section*.10}%
 \contentsline {chapter}{\numberline {1}General Framework}{1}{chapter.1}%
 \contentsline {section}{\numberline {1.1}Introduction}{1}{section.1.1}%
 \contentsline {section}{\numberline {1.2}Host organization}{1}{section.1.2}%
@@ -110,13 +110,13 @@
 \contentsline {section}{\numberline {5.11}Limitations}{60}{section.5.11}%
 \contentsline {section}{\numberline {5.12}Future improvements}{60}{section.5.12}%
 \contentsline {section}{\numberline {5.13}Conclusion}{60}{section.5.13}%
-\contentsline {chapter}{General Conclusion}{61}{chapter*.59}%
-\contentsline {section}{Achievements}{61}{section*.60}%
-\contentsline {section}{Objectives reached}{61}{section*.61}%
-\contentsline {section}{Scientific contributions}{61}{section*.62}%
-\contentsline {section}{Engineering contributions}{62}{section*.63}%
-\contentsline {section}{Limitations}{62}{section*.64}%
-\contentsline {section}{Future work}{62}{section*.65}%
+\contentsline {chapter}{General Conclusion}{61}{chapter*.61}%
+\contentsline {section}{Achievements}{61}{section*.62}%
+\contentsline {section}{Objectives reached}{61}{section*.63}%
+\contentsline {section}{Scientific contributions}{61}{section*.64}%
+\contentsline {section}{Engineering contributions}{62}{section*.65}%
+\contentsline {section}{Limitations}{62}{section*.66}%
+\contentsline {section}{Future work}{62}{section*.67}%
 \contentsline {chapter}{\numberline {A}REST API Endpoints}{64}{appendix.A}%
 \contentsline {chapter}{\numberline {B}Configuration}{66}{appendix.B}%
 \contentsline {section}{\numberline {B.1}Requirements}{66}{appendix.B.1}%
