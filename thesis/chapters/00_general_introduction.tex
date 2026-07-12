@@ -9,7 +9,7 @@ Over the last fifteen years, security researchers have repeatedly shown that thi
 
 An intrusion detection system for the \gls{can} bus has to work under constraints that are different from a typical network \gls{ids}: frames are small (up to 8 bytes of payload), periodic, and vehicle-specific, and a single trained model rarely generalizes across manufacturers. This motivates a system that combines several complementary detection strategies (timing, payload, machine learning, temporal persistence) and that adapts to the specific vehicle being monitored.
 
-This report describes the design, implementation, and validation of \textbf{CANvisionNative}, a hybrid desktop and backend \gls{ids} built to detect anomalies on recorded and live \gls{can} traffic, to explain detected anomalies in plain language, and to export the results for later analysis. The project also includes a full engineering validation phase, in which the system was tested against a real one-hour vehicle recording, defects were identified with concrete evidence, fixed, and re-validated.
+This report describes the design, implementation, and validation of \textbf{CANvisionNative}, an intelligent \gls{can} diagnostic and validation platform for Battery Management Systems that incorporates machine-learning-based anomaly detection. The platform is built to detect anomalies on recorded and live \gls{can} traffic, to explain detected anomalies in plain language, and to export the results for later analysis. The project also includes a full engineering validation phase, in which the system was tested against a real one-hour vehicle recording, defects were identified with concrete evidence, fixed, and re-validated.
 
 \section*{Report structure}
 \addcontentsline{toc}{section}{Report structure}
