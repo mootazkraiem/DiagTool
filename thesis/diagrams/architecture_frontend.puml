@@ -1,7 +1,7 @@
 @startuml
 skinparam backgroundColor white
 skinparam defaultFontName Helvetica
-skinparam defaultFontSize 12
+skinparam defaultFontSize 14
 skinparam shadowing false
 skinparam roundcorner 6
 skinparam component {
@@ -10,15 +10,10 @@ skinparam component {
   ArrowColor #2C5AA0
 }
 
-component "XAML Views\n(Home, Dashboard, ...)" as Views
-component "ViewModels\n(SectionViewModels.cs)" as VMs
-component "VehicleDataService\n(shared state + poll timer)" as VDS
-component "PythonApiClient\n(HTTP wrapper)" as API
+component "Screens\n(Home, Dashboard, Telemetry,\nDiagnostics, Log Playback,\nAnomaly Intel, Settings)" as Screens
+component "Shared Client Services\n(API client + live state)" as Services
 component "Backend REST API" as Backend
 
-Views <--> VMs
-VMs <--> VDS
-VMs <--> API
-VDS <--> Backend
-API <--> Backend
+Screens --> Services
+Services --> Backend
 @enduml

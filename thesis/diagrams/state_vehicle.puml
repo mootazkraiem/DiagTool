@@ -1,7 +1,7 @@
 @startuml
 skinparam backgroundColor white
 skinparam defaultFontName Helvetica
-skinparam defaultFontSize 12
+skinparam defaultFontSize 14
 skinparam shadowing false
 skinparam roundcorner 6
 skinparam state {
@@ -12,16 +12,9 @@ skinparam state {
 
 [*] --> Parking
 
-Parking --> Idle : engine/traction\nactivity detected
-Idle --> Driving : sustained motion\nfeatures detected
-Driving --> Idle : motion features\ndrop off
-Idle --> Parking : no activity for\nrolling window
+Parking --> Idle : activity detected
+Idle --> Driving : sustained motion
+Driving --> Idle : motion drops off
+Idle --> Parking : no activity
 Driving --> Parking : session ends
-
-note right of Driving
-  K-Means classification from
-  14 timing/payload features,
-  scaled with RobustScaler
-  before classify_state()
-end note
 @enduml

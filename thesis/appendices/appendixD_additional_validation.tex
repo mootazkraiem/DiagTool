@@ -34,11 +34,11 @@ CRITICAL & 2{,}875 & 24.0\% \\
 \hline
 \textbf{Dominant layer (bucket)} & \textbf{Count} & \textbf{Share} \\
 \hline
-Timing (\texttt{timing\_burst})       & 5{,}031 & 42.0\% \\
+Timing (timing\_burst)       & 5{,}031 & 42.0\% \\
 \hline
-Payload (\texttt{continuity\_break})  & 4{,}451 & 37.2\% \\
+Payload (continuity\_break)  & 4{,}451 & 37.2\% \\
 \hline
-ML (\texttt{ml\_outlier})             & 2{,}489 & 20.8\% \\
+ML (ml\_outlier)             & 2{,}489 & 20.8\% \\
 \hline
 \textbf{Total} & \textbf{11{,}971} & \textbf{100\%} \\
 \hline
@@ -47,7 +47,7 @@ ML (\texttt{ml\_outlier})             & 2{,}489 & 20.8\% \\
 
 \section{Top alerting CAN identifiers}
 
-Figure~\ref{fig:app-top-canids} ranks the eight most frequent identifiers in the post-correction alert list. The identifiers \texttt{0x7EC}, \texttt{0x7E4}, \texttt{0x7BB}, \texttt{0x7A8}, \texttt{0x7B3}, and \texttt{0x7A0} all fall in the \texttt{0x7A0}--\texttt{0x7EC} range reserved for \gls{uds} diagnostic request/response pairs, consistent with the recording's active-polling capture method described in Appendix~\ref{app:datasets}. Identifier \texttt{0x19}, the single most frequent alert source, and \texttt{0x13} are broadcast identifiers rather than diagnostic ones, and correspond to the high-frequency battery and drivetrain messages discussed in Section~\ref{sec:validation-rootcause}.
+Figure~\ref{fig:app-top-canids} ranks the eight most frequent identifiers in the post-correction alert list. The identifiers 0x7EC, 0x7E4, 0x7BB, 0x7A8, 0x7B3, and 0x7A0 all fall in the 0x7A0--0x7EC range reserved for \gls{uds} diagnostic request/response pairs, consistent with the recording's active-polling capture method described in Appendix~\ref{app:datasets}. Identifier 0x19, the single most frequent alert source, and 0x13 are broadcast identifiers rather than diagnostic ones, and correspond to the high-frequency battery and drivetrain messages discussed in Section~\ref{sec:validation-rootcause}.
 
 \begin{figure}[H]
 \centering
@@ -76,7 +76,7 @@ Figure~\ref{fig:screen-settings} shows the Settings view, including the hardware
 \label{fig:screen-settings}
 \end{figure}
 
-Figure~\ref{fig:screen-export-csv} shows a rendering of the real exported CSV file, reconstructed from the raw export because the exporter writes the \texttt{Score} column with a French-locale decimal comma (for example \texttt{0,415}) without quoting it, which shifts every later column when the file is opened with a plain, comma-delimited reader. This is a genuine, minor formatting quirk of the export path, noted here for completeness; it does not affect any of the validation results in Chapter~\ref{chap:validation}, all of which were read from the underlying JSON summary rather than the CSV export.
+Figure~\ref{fig:screen-export-csv} shows a rendering of the real exported CSV file, reconstructed from the raw export because the exporter writes the Score column with a French-locale decimal comma (for example 0,415) without quoting it, which shifts every later column when the file is opened with a plain, comma-delimited reader. This is a genuine, minor formatting quirk of the export path, noted here for completeness; it does not affect any of the validation results in Chapter~\ref{chap:validation}, all of which were read from the underlying JSON summary rather than the CSV export.
 
 \begin{figure}[H]
 \centering

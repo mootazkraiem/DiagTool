@@ -1,7 +1,7 @@
 \chapter{REST API Endpoints}
 \label{app:api}
 
-Table~\ref{tab:api-endpoints} lists the \gls{rest} endpoints exposed by the backend, grouped by function. All endpoints are served on \texttt{http://127.0.0.1:8765} and consumed by the desktop client only.
+Table~\ref{tab:api-endpoints} lists the \gls{rest} endpoints exposed by the backend, grouped by function. All endpoints are served on http://127.0.0.1:8765 and consumed by the desktop client only.
 
 \footnotesize
 \begin{longtable}{|p{1.4cm}|p{7.3cm}|p{6.0cm}|}
@@ -14,102 +14,102 @@ Table~\ref{tab:api-endpoints} lists the \gls{rest} endpoints exposed by the back
 \textbf{Method} & \textbf{Path} & \textbf{Purpose} \\
 \hline
 \endhead
-GET  & \texttt{/health}                              & Backend health check \\
+GET  & /health                              & Backend health check \\
 \hline
-GET  & \texttt{/vehicle}                              & Synthetic / live vehicle snapshot \\
+GET  & /vehicle                              & Synthetic / live vehicle snapshot \\
 \hline
-GET  & \texttt{/metrics}                               & Runtime metrics \\
+GET  & /metrics                               & Runtime metrics \\
 \hline
-GET  & \texttt{/api/db/stats}                          & SQLite database statistics (frame count, DB size, recent alerts) \\
+GET  & /api/db/stats                          & SQLite database statistics (frame count, DB size, recent alerts) \\
 \hline
-POST & \texttt{/analyze}                                & Offline batch analysis of one or more uploaded log files \\
+POST & /analyze                                & Offline batch analysis of one or more uploaded log files \\
 \hline
-GET  & \texttt{/incidents}                             & Grouped incidents from the last analysis \\
+GET  & /incidents                             & Grouped incidents from the last analysis \\
 \hline
-POST & \texttt{/inject}                                & Attack injection into an uploaded log \\
+POST & /inject                                & Attack injection into an uploaded log \\
 \hline
-POST & \texttt{/feedback}                              & Analyst feedback on a frame label \\
+POST & /feedback                              & Analyst feedback on a frame label \\
 \hline
-POST & \texttt{/infer}                                 & One-off inference on posted features \\
+POST & /infer                                 & One-off inference on posted features \\
 \hline
-POST & \texttt{/api/validation/score\_file}            & Batch validation scoring \\
+POST & /api/validation/score\_file            & Batch validation scoring \\
 \hline
-POST & \texttt{/api/live/start}                        & Start live simulated session \\
+POST & /api/live/start                        & Start live simulated session \\
 \hline
-POST & \texttt{/api/live/stop}                         & Stop live session \\
+POST & /api/live/stop                         & Stop live session \\
 \hline
-GET  & \texttt{/api/live/signals}                      & Recent raw live frames \\
+GET  & /api/live/signals                      & Recent raw live frames \\
 \hline
-GET  & \texttt{/api/live/decoded-signals}               & Recent decoded live signals \\
+GET  & /api/live/decoded-signals               & Recent decoded live signals \\
 \hline
-GET  & \texttt{/api/live/alerts}                        & Live alert buffer \\
+GET  & /api/live/alerts                        & Live alert buffer \\
 \hline
-GET  & \texttt{/api/explain/\{alert\_index\}}           & AI explanation for an alert \\
+GET  & /api/explain/\{alert\_index\}           & AI explanation for an alert \\
 \hline
-GET  & \texttt{/api/live/status}                        & Live/simulator status \\
+GET  & /api/live/status                        & Live/simulator status \\
 \hline
-GET  & \texttt{/api/runtime/statistics}                 & Runtime detection statistics \\
+GET  & /api/runtime/statistics                 & Runtime detection statistics \\
 \hline
-GET  & \texttt{/api/runtime/health}                     & Runtime engine health \\
+GET  & /api/runtime/health                     & Runtime engine health \\
 \hline
-POST & \texttt{/api/replay/start}                       & Start a replay subprocess \\
+POST & /api/replay/start                       & Start a replay subprocess \\
 \hline
-POST & \texttt{/api/replay/stop}                        & Stop the running replay \\
+POST & /api/replay/stop                        & Stop the running replay \\
 \hline
-GET  & \texttt{/api/replay/status}                      & Replay progress / completion state \\
+GET  & /api/replay/status                      & Replay progress / completion state \\
 \hline
-GET  & \texttt{/api/replay/results}                     & Latest replay result file \\
+GET  & /api/replay/results                     & Latest replay result file \\
 \hline
-GET  & \texttt{/api/replay/alerts}                       & Alerts from the latest replay summary \\
+GET  & /api/replay/alerts                       & Alerts from the latest replay summary \\
 \hline
-GET  & \texttt{/api/replay/partial-alerts}               & Partial alerts while replay is running \\
+GET  & /api/replay/partial-alerts               & Partial alerts while replay is running \\
 \hline
-POST & \texttt{/api/simulator/generate}                 & Generate a simulated attack \\
+POST & /api/simulator/generate                 & Generate a simulated attack \\
 \hline
-GET  & \texttt{/api/simulator/attacks}                  & List available simulated attack types \\
+GET  & /api/simulator/attacks                  & List available simulated attack types \\
 \hline
-GET  & \texttt{/api/validation/reports}                 & List validation report files \\
+GET  & /api/validation/reports                 & List validation report files \\
 \hline
-GET  & \texttt{/api/vehicles}                           & Supported vehicle profile list \\
+GET  & /api/vehicles                           & Supported vehicle profile list \\
 \hline
-GET  & \texttt{/api/vehicles/\{vehicle\_id\}/can\_ids}   & CAN identifiers defined in a vehicle's DBC \\
+GET  & /api/vehicles/\{vehicle\_id\}/can\_ids   & CAN identifiers defined in a vehicle's DBC \\
 \hline
-POST & \texttt{/api/offline/analyze}                    & Start offline batch analysis \\
+POST & /api/offline/analyze                    & Start offline batch analysis \\
 \hline
-GET  & \texttt{/api/offline/status/\{session\_id\}}      & Offline analysis progress \\
+GET  & /api/offline/status/\{session\_id\}      & Offline analysis progress \\
 \hline
-GET  & \texttt{/api/offline/frames/\{session\_id\}}      & Paginated decoded frames \\
+GET  & /api/offline/frames/\{session\_id\}      & Paginated decoded frames \\
 \hline
-GET  & \texttt{/api/offline/summary/\{session\_id\}}     & Offline analysis summary \\
+GET  & /api/offline/summary/\{session\_id\}     & Offline analysis summary \\
 \hline
-POST & \texttt{/api/mf4/convert}                        & Convert an MF4 file to CSV \\
+POST & /api/mf4/convert                        & Convert an MF4 file to CSV \\
 \hline
-POST & \texttt{/api/live/hardware/connect}               & Connect a physical CAN adapter \\
+POST & /api/live/hardware/connect               & Connect a physical CAN adapter \\
 \hline
-POST & \texttt{/api/live/hardware/disconnect}            & Disconnect the adapter \\
+POST & /api/live/hardware/disconnect            & Disconnect the adapter \\
 \hline
-GET  & \texttt{/api/live/hardware/status}                & Hardware connection status \\
+GET  & /api/live/hardware/status                & Hardware connection status \\
 \hline
-GET  & \texttt{/api/live/hardware/ports}                 & Available serial ports \\
+GET  & /api/live/hardware/ports                 & Available serial ports \\
 \hline
-GET  & \texttt{/api/live/hardware/check}                 & Hardware availability check \\
+GET  & /api/live/hardware/check                 & Hardware availability check \\
 \hline
-GET  & \texttt{/api/system/info}                        & System / build information \\
+GET  & /api/system/info                        & System / build information \\
 \hline
-GET  & \texttt{/api/settings}                           & Current settings \\
+GET  & /api/settings                           & Current settings \\
 \hline
-POST & \texttt{/api/settings}                           & Update settings \\
+POST & /api/settings                           & Update settings \\
 \hline
-POST & \texttt{/api/chat}                               & Conversational Q\&A about an alert \\
+POST & /api/chat                               & Conversational Q\&A about an alert \\
 \hline
-POST & \texttt{/api/session/record/start}                & Start session recording \\
+POST & /api/session/record/start                & Start session recording \\
 \hline
-POST & \texttt{/api/session/record/stop}                 & Stop session recording \\
+POST & /api/session/record/stop                 & Stop session recording \\
 \hline
-GET  & \texttt{/api/session/record/status}               & Recording status \\
+GET  & /api/session/record/status               & Recording status \\
 \hline
-GET  & \texttt{/api/session/list}                       & List recorded sessions \\
+GET  & /api/session/list                       & List recorded sessions \\
 \hline
-GET  & \texttt{/api/system/health}                      & Aggregated system health \\
+GET  & /api/system/health                      & Aggregated system health \\
 \hline
 \end{longtable}

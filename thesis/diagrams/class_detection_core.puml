@@ -1,7 +1,7 @@
 @startuml
 skinparam backgroundColor white
 skinparam defaultFontName Helvetica
-skinparam defaultFontSize 12
+skinparam defaultFontSize 14
 skinparam shadowing false
 skinparam roundcorner 6
 skinparam class {
@@ -10,38 +10,14 @@ skinparam class {
   ArrowColor #2C5AA0
 }
 
-class RealtimeEngine {
-  + vehicle_id : str
-  + process_frame(frame) : dict
-}
+class RealtimeEngine
+class ScoringEngine
+class RuntimeModelStore
+class StateModelBundle
+class RunStatistics
 
-class ScoringEngine {
-  - weights : dict
-  - thresholds : dict
-  + score(timing, payload, ml) : dict
-}
-
-class RuntimeModelStore {
-  - kmeans : KMeans
-  - state_scaler : RobustScaler
-  - vehicles : dict
-  + classify_state(features) : str
-  + score(state, features, vehicle) : float
-}
-
-class StateModelBundle {
-  - models : dict
-  + score(state, features) : float
-}
-
-class IDSStatistics {
-  + on_frame()
-  + on_alert(alert)
-  + save_reports()
-}
-
-RealtimeEngine "1" *-- "1" ScoringEngine
-RealtimeEngine "1" *-- "1" RuntimeModelStore
-RuntimeModelStore "1" o-- "many" StateModelBundle
-RealtimeEngine "1" ..> "1" IDSStatistics : reports to
+RealtimeEngine *-- ScoringEngine
+RealtimeEngine *-- RuntimeModelStore
+RuntimeModelStore o-- StateModelBundle : per vehicle profile
+RealtimeEngine ..> RunStatistics : reports to
 @enduml

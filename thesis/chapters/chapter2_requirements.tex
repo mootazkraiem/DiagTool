@@ -19,7 +19,7 @@ A separate line of published and research tooling targets the \gls{can} bus spec
 
 \subsection{Category 3: Static viewers and diagnostic scanners}
 
-A third category covers lighter-weight tools: open-source utilities such as \texttt{candump} and SavvyCAN, and \gls{obd} (SAE~J1979~\cite{sae_j1979}) or \gls{uds} (ISO~14229~\cite{iso14229}) diagnostic scanners. The open-source viewers display raw frames with no replay control, no anomaly awareness, and no unified dashboard. The diagnostic scanners take a different but equally narrow approach: they query specific \gls{ecu}s for known parameters (fault codes, sensor values) through a request/response protocol, so they only see what they explicitly ask for and have no notion of monitoring the bus continuously. Neither sub-type gives an engineer runtime intelligence about what the traffic as a whole is doing.
+A third category covers lighter-weight tools: open-source utilities such as candump and SavvyCAN, and \gls{obd} (SAE~J1979~\cite{sae_j1979}) or \gls{uds} (ISO~14229~\cite{iso14229}) diagnostic scanners. The open-source viewers display raw frames with no replay control, no anomaly awareness, and no unified dashboard. The diagnostic scanners take a different but equally narrow approach: they query specific \gls{ecu}s for known parameters (fault codes, sensor values) through a request/response protocol, so they only see what they explicitly ask for and have no notion of monitoring the bus continuously. Neither sub-type gives an engineer runtime intelligence about what the traffic as a whole is doing.
 
 \subsection{Current limitations}
 
@@ -34,7 +34,7 @@ On the detection side specifically, it fuses four independent signals (timing, p
 \section{Functional requirements}
 
 \begin{itemize}
-    \item \textbf{FR1 --- Import a recorded log.} The system shall let the user import a \gls{can} log file in \gls{csv}, \gls{mf4}, Vector \gls{can} (\texttt{.asc}), candump (\texttt{.log}), or PCAN text (\texttt{.txt}) format, and convert it to a canonical frame stream (timestamp, identifier, payload).
+    \item \textbf{FR1 --- Import a recorded log.} The system shall let the user import a \gls{can} log file in \gls{csv}, \gls{mf4}, Vector \gls{can} (.asc), candump (.log), or PCAN text (.txt) format, and convert it to a canonical frame stream (timestamp, identifier, payload).
     \item \textbf{FR2 --- Select a vehicle profile.} The system shall let the user select the vehicle that produced the log (or the closest matching profile), so that the correct \gls{dbc} file and the correct trained model are used.
     \item \textbf{FR3 --- Replay the log.} The system shall replay the imported frames through the detection pipeline, in order, at a user-selectable speed (0.5$\times$ up to a maximum speed), and report progress.
     \item \textbf{FR4 --- Detect anomalies.} For every frame, the system shall compute a fusion anomaly score from four detection layers (timing, payload, machine learning, temporal persistence) and raise an alert when the score exceeds the configured threshold.
@@ -56,7 +56,7 @@ On the detection side specifically, it fuses four independent signals (timing, p
     \item \textbf{NFR4 --- Portability of input formats.} Every supported log format shall enter the detection pipeline through the same canonical frame representation, so that detection behaviour does not depend on which format was used to record the data.
     \item \textbf{NFR5 --- Extensibility.} Adding a new vehicle profile shall only require adding a \gls{dbc} file and a trained model directory, without changing the detection engine code.
     \item \textbf{NFR6 --- Graceful degradation.} If the \gls{llm} provider is unavailable, the system shall still produce a rule-based explanation instead of failing the request.
-    \item \textbf{NFR7 --- Platform.} The desktop client shall run on Windows 10/11 using .NET Framework 4.8 and \gls{wpf}; the backend shall run as a local Python process exposing a \gls{rest} \gls{api} on \texttt{localhost}. The full software and hardware requirements are listed in Table~\ref{tab:app-requirements} and Table~\ref{tab:app-hardware} (Appendix~\ref{app:config}).
+    \item \textbf{NFR7 --- Platform.} The desktop client shall run on Windows 10/11 using .NET Framework 4.8 and \gls{wpf}; the backend shall run as a local Python process exposing a \gls{rest} \gls{api} on localhost. The full software and hardware requirements are listed in Table~\ref{tab:app-requirements} and Table~\ref{tab:app-hardware} (Appendix~\ref{app:config}).
 \end{itemize}
 
 \section{Actors}
@@ -225,7 +225,7 @@ FR8 & Live simulation (hardware layer design) & Interactive UI audit, Chapter~\r
 \hline
 FR9 & Hardware layer software interface, Section on Hardware, Chapter~\ref{chap:impl} & Code-complete; physical vehicle test pending, no compatible EV available (Limitations) \\
 \hline
-FR10 & Session recording (\texttt{backend/hardware/}) & Interactive UI audit, Chapter~\ref{chap:validation} \\
+FR10 & Session recording (backend/hardware/) & Interactive UI audit, Chapter~\ref{chap:validation} \\
 \hline
 FR11 & Settings, Section on Settings, Chapter~\ref{chap:impl} & Interactive UI audit, Chapter~\ref{chap:validation} \\
 \hline

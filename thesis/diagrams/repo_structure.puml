@@ -1,32 +1,20 @@
 @startuml
 skinparam backgroundColor white
 skinparam defaultFontName Helvetica
-skinparam defaultFontSize 12
+skinparam defaultFontSize 14
 skinparam shadowing false
-skinparam packageStyle rectangle
-skinparam package {
+skinparam roundcorner 6
+skinparam component {
   BackgroundColor #EAF2FF
   BorderColor #2C5AA0
+  ArrowColor #2C5AA0
 }
 
-package "can_project/" {
-  package "C# client" {
-    [UI/]
-    [ViewModels/]
-    [Services/]
-    [Models/]
-  }
-  package "backend/" {
-    [api/]
-    [decoding/]
-    [data_processing/]
-    [ml/]
-    [hardware/]
-    [db/]
-  }
-  package "assets/" {
-    [dbc_files/]
-    [models/]
-  }
-}
+component "WPF Client Project" as Client
+component "Python Backend Project" as Backend
+component "Shared Assets\n(trained models, DBC files, datasets)" as Assets
+
+Client --> Backend
+Client ..> Assets
+Backend ..> Assets
 @enduml

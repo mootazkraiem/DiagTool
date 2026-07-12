@@ -46,17 +46,17 @@ CAN adapter & ELM327 USB (slcan), PEAK PCAN-USB, or a SocketCAN-compatible inter
 \section{Key Python dependencies}
 
 \begin{itemize}
-    \item \texttt{fastapi}, \texttt{uvicorn} — REST API server
-    \item \texttt{scikit-learn}, \texttt{joblib} — Isolation Forest and K-Means pipeline
-    \item \texttt{pandas}, \texttt{numpy} — feature engineering
-    \item \texttt{asammdf} — MF4 decoding
-    \item \texttt{cantools} — DBC-based signal decoding
-    \item \texttt{python-can} — hardware CAN adapter access
+    \item fastapi, uvicorn — REST API server
+    \item scikit-learn, joblib — Isolation Forest and K-Means pipeline
+    \item pandas, numpy — feature engineering
+    \item asammdf — MF4 decoding
+    \item cantools — DBC-based signal decoding
+    \item python-can — hardware CAN adapter access
 \end{itemize}
 
 \section{Backend startup}
 
-The backend runs as a local \gls{rest} server on \texttt{127.0.0.1:8765}. The desktop client automatically starts and stops this process when a compatible Python interpreter is found, and exposes the same functionality if the backend is instead started manually beforehand.
+The backend runs as a local \gls{rest} server on 127.0.0.1:8765. The desktop client automatically starts and stops this process when a compatible Python interpreter is found, and exposes the same functionality if the backend is instead started manually beforehand.
 
 \section{Persisted configuration}
 

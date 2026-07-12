@@ -11,7 +11,7 @@ This chapter describes how the design presented in Chapter~\ref{chap:design} was
     \item \textbf{Hardware.} A standard Windows desktop/laptop workstation was used for development, training, and validation; no specialized hardware was required for the software work. The live hardware capture path targets an ELM327 (serial/slcan), a PEAK PCAN-USB adapter, or native SocketCAN, but validating this path end to end requires a physical vehicle to connect it to, and no compatible electric vehicle was available during the project (Chapter~\ref{chap:validation}, Limitations).
     \item \textbf{Operating system.} Windows 10/11, the target platform for the \gls{wpf} desktop client.
     \item \textbf{Languages.} C\# (.NET Framework 4.8) for the desktop client, Python for the backend.
-    \item \textbf{Key libraries.} \gls{wpf} and CommunityToolkit.Mvvm for the client, FastAPI and uvicorn for the \gls{rest} \gls{api}, scikit-learn~\cite{pedregosa2011scikit} for Isolation Forest and K-Means, pandas and \texttt{asammdf} for data processing and \gls{mf4} decoding~\cite{asam_mdf}, \texttt{python-can} for the hardware layer, PDFsharp for PDF export.
+    \item \textbf{Key libraries.} \gls{wpf} and CommunityToolkit.Mvvm for the client, FastAPI and uvicorn for the \gls{rest} \gls{api}, scikit-learn~\cite{pedregosa2011scikit} for Isolation Forest and K-Means, pandas and asammdf for data processing and \gls{mf4} decoding~\cite{asam_mdf}, python-can for the hardware layer, PDFsharp for PDF export.
     \item \textbf{Tooling.} Visual Studio for the C\# client, a standard Python virtual environment for the backend, SQLite as the embedded database, requiring no separate server process.
 \end{itemize}
 
@@ -93,7 +93,7 @@ Every supported log format is converted, at import time, into the same canonical
 
 \begin{itemize}
     \item \textbf{.csv} --- generic timestamp/identifier/byte columns, or SavvyCAN-style columns.
-    \item \textbf{.mf4} --- ASAM \gls{mf4}~\cite{asam_mdf} binary logs, decoded with \texttt{asammdf} (Section~\ref{sec:impl-mf4}).
+    \item \textbf{.mf4} --- ASAM \gls{mf4}~\cite{asam_mdf} binary logs, decoded with asammdf (Section~\ref{sec:impl-mf4}).
     \item \textbf{.asc} --- Vector \gls{can} text format.
     \item \textbf{.log} --- candump / SocketCAN text format, including the timestamped variant used by several public datasets.
     \item \textbf{.txt} --- PCAN text format, falling back to candump parsing if the PCAN pattern is not matched.
@@ -119,23 +119,23 @@ A small registry of vehicle profiles (Table~\ref{tab:vehicles}) maps each vehicl
 \hline
 \textbf{Identifier} & \textbf{Display name} & \textbf{Bitrate} \\
 \hline
-\texttt{nissan\_leaf}    & Nissan Leaf (2019, 40/62 kWh) & 500 kbps \\
+nissan\_leaf    & Nissan Leaf (2019, 40/62 kWh) & 500 kbps \\
 \hline
-\texttt{hyundai\_ioniq5} & Hyundai Ioniq 5               & 500 kbps \\
+hyundai\_ioniq5 & Hyundai Ioniq 5               & 500 kbps \\
 \hline
-\texttt{hyundai\_kia}    & Hyundai / Kia (generic)       & 500 kbps \\
+hyundai\_kia    & Hyundai / Kia (generic)       & 500 kbps \\
 \hline
-\texttt{skoda\_enyaq}    & Škoda Enyaq iV (VW MEB)       & 500 kbps \\
+skoda\_enyaq    & Škoda Enyaq iV (VW MEB)       & 500 kbps \\
 \hline
-\texttt{vw\_skoda\_audi} & VW / Škoda / Audi (generic)   & 500 kbps \\
+vw\_skoda\_audi & VW / Škoda / Audi (generic)   & 500 kbps \\
 \hline
-\texttt{renault\_zoe}    & Renault Zoe                   & 500 kbps \\
+renault\_zoe    & Renault Zoe                   & 500 kbps \\
 \hline
-\texttt{tesla\_model3}   & Tesla Model 3                 & 500 kbps \\
+tesla\_model3   & Tesla Model 3                 & 500 kbps \\
 \hline
-\texttt{kia\_ev6}        & Kia EV6                       & 500 kbps \\
+kia\_ev6        & Kia EV6                       & 500 kbps \\
 \hline
-\texttt{bmw\_i3}         & BMW i3 (2017, 60 Ah REX)      & 500 kbps \\
+bmw\_i3         & BMW i3 (2017, 60 Ah REX)      & 500 kbps \\
 \hline
 \end{tabular}
 \end{table}
@@ -173,7 +173,7 @@ The Settings view lets the analyst configure the alert threshold, the \gls{llm} 
 
 \section{Hardware}
 
-The hardware module wraps \texttt{python-can} to support ELM327 (over an slcan serial connection), PEAK PCAN-USB, and native SocketCAN. Connecting sets the engine's active vehicle identifier, so live frames are scored with the correct per-vehicle model, exactly as a replay does. Disconnecting resets it to the generic profile, so a later, unrelated request does not keep scoring against a vehicle that is no longer connected.
+The hardware module wraps python-can to support ELM327 (over an slcan serial connection), PEAK PCAN-USB, and native SocketCAN. Connecting sets the engine's active vehicle identifier, so live frames are scored with the correct per-vehicle model, exactly as a replay does. Disconnecting resets it to the generic profile, so a later, unrelated request does not keep scoring against a vehicle that is no longer connected.
 
 \section{Conclusion}
 

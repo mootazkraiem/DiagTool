@@ -77,7 +77,7 @@ License / access & Released publicly by the authors for research use. \\
 \hline
 Vehicle & Real vehicle traffic captured on a dynamometer test bench, with both ambient (attack-free) and labelled-attack recordings, including a distinction between plain injection and masquerade attacks. \\
 \hline
-Format & candump-style timestamped text log (\texttt{(ts) can0 ID\#hexdata}). \\
+Format & candump-style timestamped text log ((ts) can0 ID\#hexdata). \\
 \hline
 Purpose in this project & Only the ambient (attack-free) recordings were used, as part of the training corpus, to expose the models to real, normal traffic patterns from a source independent of the community EV logs. \\
 \hline
@@ -103,7 +103,7 @@ License / access & Publicly released by HCRL for research use. \\
 \hline
 Vehicle & Real vehicle CAN traffic with labelled attack and normal traffic. \\
 \hline
-Format & CSV, \texttt{timestamp, can\_id, dlc, b0..b7} columns, plus a label column. \\
+Format & CSV, timestamp, can\_id, dlc, b0..b7 columns, plus a label column. \\
 \hline
 Purpose in this project & Only the normal-traffic rows (no attack labels) were used, as part of the training corpus, for the same reason as the ROAD ambient data: real, normal traffic diversity from a second independent public source. \\
 \hline
@@ -152,4 +152,4 @@ The Kia EV6 recording from the CSS Electronics EV Data Pack was the only real-ve
 
 \section{Cross-validation dataset}
 
-To test for cross-session and cross-dataset state leakage in the AI explanation module (Section~\ref{sec:validation-ai}), a second, independent real recording was used: a Renault Clio DoS-attack candump log, from a different vehicle and a different capture tool, containing frames on identifiers unrelated to the Kia EV6 recording (for example \texttt{0xC6}, \texttt{0x511}). This dataset was chosen specifically because it shares no vehicle profile, no logger format, and no identifier space with the Kia EV6 recording, which makes any cross-contamination between the two immediately obvious rather than masked by coincidental overlap.
+To test for cross-session and cross-dataset state leakage in the AI explanation module (Section~\ref{sec:validation-ai}), a second, independent real recording was used: a Renault Clio DoS-attack candump log, from a different vehicle and a different capture tool, containing frames on identifiers unrelated to the Kia EV6 recording (for example 0xC6, 0x511). This dataset was chosen specifically because it shares no vehicle profile, no logger format, and no identifier space with the Kia EV6 recording, which makes any cross-contamination between the two immediately obvious rather than masked by coincidental overlap.

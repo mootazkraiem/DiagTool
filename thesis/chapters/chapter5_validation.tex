@@ -7,7 +7,7 @@ Building a detection platform is only half of the engineering work. The other ha
 
 \section{Validation methodology}
 
-The validation work followed one rule throughout: \emph{every claim had to be backed by reproducible evidence before any code was changed}. Threshold tuning, blind retraining, or reducing the alert count by construction were explicitly excluded as acceptable fixes. A defect was only considered found once it could be triggered on demand and explained at the code level, and only considered fixed once the same reproduction steps, run again, produced the expected result.
+The validation work followed one rule throughout: every claim had to be backed by reproducible evidence before any code was changed. Threshold tuning, blind retraining, or reducing the alert count by construction were explicitly excluded as acceptable fixes. A defect was only considered found once it could be triggered on demand and explained at the code level, and only considered fixed once the same reproduction steps, run again, produced the expected result.
 
 This was applied in three passes, summarized in Table~\ref{tab:qa-timeline} and Figure~\ref{fig:validation-workflow}.
 
@@ -66,14 +66,14 @@ Before the data-driven root-cause analysis, the application was exercised intera
 
 \subsection{Repository audit}
 
-Before changing any code, the repository was audited against its own internal documentation (\texttt{ROADMAP.md}, \texttt{SETUP.md}, \texttt{QA\_PLAN.md}) to build an accurate map of every module before touching it, following the same principle applied throughout: understand before modifying, and never fix what is not demonstrably broken.
+Before changing any code, the repository was audited against its own internal documentation (ROADMAP.md, SETUP.md, QA\_PLAN.md) to build an accurate map of every module before touching it, following the same principle applied throughout: understand before modifying, and never fix what is not demonstrably broken.
 
 \section{Real-data validation setup}
 \label{sec:validation-setup}
 
 \subsection{Dataset}
 
-The main validation dataset is a real, one-hour Kia EV6 recording (\texttt{00000158-64CBC290.MF4}) from the CSS Electronics EV Data Pack, captured by a CANedge logger performing active \gls{uds} polling of the vehicle's \gls{ecu}s rather than passively recording broadcast traffic. After \gls{mf4} conversion, the recording contains \textbf{97{,}741 frames}. Appendix~\ref{app:datasets} explains in detail why this specific recording became the official validation dataset. A second, independent dataset — a real Renault Clio \gls{dos}-attack candump log, from a different vehicle and a different logger format — was used specifically to test for cross-dataset state leakage (Section~\ref{sec:validation-ai}).
+The main validation dataset is a real, one-hour Kia EV6 recording (00000158-64CBC290.MF4) from the CSS Electronics EV Data Pack, captured by a CANedge logger performing active \gls{uds} polling of the vehicle's \gls{ecu}s rather than passively recording broadcast traffic. After \gls{mf4} conversion, the recording contains \textbf{97{,}741 frames}. Appendix~\ref{app:datasets} explains in detail why this specific recording became the official validation dataset. A second, independent dataset — a real Renault Clio \gls{dos}-attack candump log, from a different vehicle and a different logger format — was used specifically to test for cross-dataset state leakage (Section~\ref{sec:validation-ai}).
 
 \subsection{MF4 validation workflow}
 
@@ -124,11 +124,11 @@ Four defects were found directly from the root-cause analysis above. Two further
 
 \textbf{Investigation.} The vehicle identifier was traced from the UI selector, through the \gls{rest} call, into the replay subprocess, and finally into the scoring call itself.
 
-\textbf{Root cause.} \texttt{RealtimeEngine.process\_frame()} never passed the selected vehicle identifier to \texttt{RuntimeModelStore.score()}. As a result, every replay was scored with the generic, non-vehicle-specific model, regardless of which vehicle profile the analyst selected.
+\textbf{Root cause.} The scoring step never received the vehicle identifier the analyst had selected in the client. Internally, the replay engine set up its scoring component without passing along which vehicle profile was active. As a result, every replay was scored with the generic, non-vehicle-specific model, regardless of which vehicle profile the analyst selected.
 
-\textbf{Fix.} The vehicle identifier was threaded through the engine's constructor and every call site that creates it: the replay engine, the offline analyzer, the live hardware interface (including a reset to the generic profile on disconnect), the \gls{rest} endpoint, and the full C\# call chain down to the view model bound to the vehicle selector.
+\textbf{Fix.} The vehicle identifier was threaded through every stage that sets up scoring: the replay engine, the offline analyzer, the live hardware interface (including a reset to the generic profile on disconnect), the backend endpoint, and the full client-side call chain down to the vehicle selector control.
 
-\textbf{Evidence.} The corrected subprocess command line was captured directly from the operating system's process list and confirmed to include \texttt{--vehicle kia\_ev6}; the \texttt{/api/vehicles} endpoint was confirmed to return an identifier (\texttt{kia\_ev6}) that matches the on-disk trained-model directory exactly, closing the loop from the UI selector to the model actually loaded.
+\textbf{Evidence.} The corrected replay process was captured directly from the operating system's process list and confirmed to launch with the selected vehicle explicitly specified; the backend's vehicle-list endpoint was confirmed to return an identifier that matches the on-disk trained-model directory exactly, closing the loop from the UI selector to the model actually loaded.
 
 \textbf{Result.} Every replay now scores frames with the model bundle matching the selected vehicle profile, closing the gap between FR2 and the actual detection behaviour.
 
@@ -137,11 +137,11 @@ Four defects were found directly from the root-cause analysis above. Two further
 
 \textbf{Problem.} The state classifier reported \textbf{99.93\%} of the recording (97{,}677 of 97{,}741 frames) as ``parking'', despite the recording being an active one-hour drive.
 
-\textbf{Investigation.} The feature vector and the scaling call feeding \texttt{classify\_state()} were compared, field by field, against the feature list and scaler actually used when the K-Means model was trained.
+\textbf{Investigation.} The feature vector and the scaling step feeding the state classifier were compared, field by field, against the feature list and scaler actually used when the K-Means model was trained.
 
-\textbf{Root cause.} Two compounding defects were found. First, the feature vector passed to \texttt{kmeans.predict} was built from an 11-feature list intended for the scoring model, not the 14-feature list the K-Means model was actually trained on, which raised \texttt{ValueError: X has 11 features, but KMeans is expecting 14 features} on every single call. Second, this exception was silently caught by a broad \texttt{except} clause that always returned ``parking'', making the failure deterministic rather than intermittent, and therefore invisible without deliberately reproducing the exact exception.
+\textbf{Root cause.} Two compounding defects were found. First, the feature vector passed to the state classifier was built from an 11-feature list intended for the scoring model, not the 14-feature list the K-Means model was actually trained on. This mismatch caused the classifier to raise a feature-count error (``expected 14 features, got 11'') on every single call. Second, this error was silently caught by an overly broad error handler that always returned ``parking'' as a fallback, making the failure deterministic rather than intermittent, and therefore invisible without deliberately reproducing the exact error.
 
-\textbf{Fix.} The feature list used for state classification was corrected to the full 14-feature order the K-Means model was trained on, and the missing \texttt{RobustScaler.transform()} call was added before \texttt{kmeans.predict()}, matching the training-time scaling exactly.
+\textbf{Fix.} The feature list used for state classification was corrected to the full 14-feature order the K-Means model was trained on, and a missing normalization step was added before classification, matching the training-time scaling exactly.
 
 \textbf{Evidence.} After the fix, the same recording classified as \textbf{99.93\% ``driving''} (97{,}667 of 97{,}741 frames), 64 ``unknown'', and 10 ``parking'' — the inverse distribution, and a credible one for an hour-long drive.
 
@@ -151,13 +151,13 @@ Four defects were found directly from the root-cause analysis above. Two further
 
 \textbf{Problem.} The label shown to the analyst as the ``dominant detection layer'' of an alert did not match what the fusion score actually computed.
 
-\textbf{Investigation.} The code path producing the displayed reason label was traced back from the \gls{api} response to the internal reason string, and compared against \texttt{ScoringEngine.score()}'s actual inputs.
+\textbf{Investigation.} The code path producing the displayed reason label was traced back from the \gls{api} response to the internal reason string, and compared against the fusion-scoring component's actual inputs.
 
-\textbf{Root cause.} The label was computed by taking the maximum of every \texttt{key=value} pair in the alert's internal reason string, including two diagnostic-only fields — \texttt{freq} (a raw frequency in Hz, sometimes in the thousands) and \texttt{can\_id\_entropy} (a raw entropy value) — that are never part of the actual fusion score. Because these two fields are numerically far larger than the properly normalized 0--2 range of the four real fusion inputs, they almost always won the comparison, mislabeling the displayed cause of the alert. The same defect, written independently, was found duplicated across four files (six occurrences in total): three in the main \gls{api} module, and one each in the live hardware interface, the live simulator, and the statistics module.
+\textbf{Root cause.} The label was computed by taking the maximum of every value in the alert's internal reason string, including two diagnostic-only fields, a raw frequency reading (sometimes in the thousands of Hz) and a raw entropy value, that are never part of the actual fusion score. Because these two fields are numerically far larger than the properly normalized 0--2 range of the four real fusion inputs, they almost always won the comparison, mislabeling the displayed cause of the alert. The same defect, written independently, was found duplicated across four files (six occurrences in total): three in the main \gls{api} module, and one each in the live hardware interface, the live simulator, and the statistics module.
 
 \textbf{Fix.} All six occurrences were corrected to restrict the comparison to the four fields that genuinely feed the fusion score (timing, payload, machine learning, persistence).
 
-\textbf{Evidence.} \texttt{ScoringEngine.score()} was confirmed, by inspecting its signature, to accept only the three normalized layer scores as input (persistence is derived internally from a rolling window), proving the mislabeled field never affected real detection, only the displayed explanation. After the fix, the live \texttt{/api/replay/alerts} endpoint was confirmed to return correctly attributed labels (for example \texttt{continuity\_break} when the payload layer genuinely dominates).
+\textbf{Evidence.} The fusion-scoring component was confirmed, by inspecting its inputs, to use only the three normalized layer scores (persistence is derived internally from a rolling window), proving the mislabeled field never affected real detection, only the displayed explanation. After the fix, the live alert feed was confirmed to return correctly attributed labels, for example naming the payload layer when it genuinely dominates.
 
 \textbf{Result.} The displayed root-cause label now matches the fusion score's real inputs everywhere in the codebase, which directly improves the trustworthiness of both the analyst-facing alert list and the AI explanation built from it.
 
@@ -167,7 +167,7 @@ Four defects were found directly from the root-cause analysis above. Two further
 
 \textbf{Investigation.} The replay engine's loading code was compared against the shared, format-aware loader described in Section~\ref{sec:impl-parser}, which the offline batch analyzer already used successfully for the same formats.
 
-\textbf{Root cause.} The replay engine had its own, separate loading code that called a generic \gls{csv} reader directly, bypassing the shared, format-aware parser. Any \texttt{.log}, \texttt{.asc}, or \texttt{.txt} file selected through the same file picker used for \gls{csv} files was silently mis-parsed as malformed \gls{csv}.
+\textbf{Root cause.} The replay engine had its own, separate loading code that called a generic \gls{csv} reader directly, bypassing the shared, format-aware parser. Any .log, .asc, or .txt file selected through the same file picker used for \gls{csv} files was silently mis-parsed as malformed \gls{csv}.
 
 \textbf{Fix.} The replay engine was changed to call the same shared, format-aware loader already used by the offline batch analyzer, removing the duplicated \gls{csv}-only code path entirely.
 
@@ -198,9 +198,9 @@ Four defects were found directly from the root-cause analysis above. Two further
 
 \textbf{Root cause.} The \gls{ai} explanation endpoint resolves an alert index against a shared, process-lifetime list that, before this fix, was only ever populated by two other endpoints (offline batch analysis and attack injection) — never by a completed replay. This meant an explanation request could silently resolve against unrelated data left over from a previous analysis or injection run, or, during the short window before a replay finished, against whatever an even earlier session had left behind.
 
-\textbf{Fix.} Two changes closed this. On replay completion, the replay's own alerts are now published into the same shared state already used by the other two endpoints, mirroring a pattern one of them already used. On every replay \emph{start}, that shared state is cleared immediately, so no previous session's data can be resolved, even during the short window before the new replay completes.
+\textbf{Fix.} Two changes closed this. On replay completion, the replay's own alerts are now published into the same shared state already used by the other two endpoints, mirroring a pattern one of them already used. On every replay start, that shared state is cleared immediately, so no previous session's data can be resolved, even during the short window before the new replay completes.
 
-\textbf{Evidence.} The explanation for every checked alert index was confirmed to match that alert's own identifier and score in both datasets, with no trace of the other dataset's data. A second, more targeted test seeded the shared state with the Renault Clio data, started the Kia EV6 replay, and queried the explanation endpoint \emph{while the replay was still running, before completion}: it correctly returned an empty result instead of the seeded stale data, confirming the start-of-replay clearing closes the exact timing window the completion-only fix could not.
+\textbf{Evidence.} The explanation for every checked alert index was confirmed to match that alert's own identifier and score in both datasets, with no trace of the other dataset's data. A second, more targeted test seeded the shared state with the Renault Clio data, started the Kia EV6 replay, and queried the explanation endpoint while the replay was still running, before completion: it correctly returned an empty result instead of the seeded stale data, confirming the start-of-replay clearing closes the exact timing window the completion-only fix could not.
 
 \textbf{Result.} An explanation now always corresponds to the alert currently on screen, in both the completed-replay and mid-replay cases, satisfying the trust requirement behind NFR3.
 
@@ -223,7 +223,7 @@ Replay duration            & 685 s              & 341.2 s \\
 \hline
 Throughput                 & $\sim$143 fps       & $\sim$286 fps \\
 \hline
-\texttt{vehicle\_state} distribution & 99.93\% parking & 99.93\% driving \\
+vehicle\_state distribution & 99.93\% parking & 99.93\% driving \\
 \hline
 ML-score saturation ($\geq$0.999) & 77.6--78.6\%   & 0.0\% \\
 \hline
@@ -264,7 +264,7 @@ Figure~\ref{fig:chart-state} isolates the Fix 2 evidence already summarized in S
 \label{fig:chart-state}
 \end{figure}
 
-Figure~\ref{fig:chart-severity} and Figure~\ref{fig:chart-reason} break down the 11,971 post-correction alerts by severity and by dominant detection layer. The reason-distribution chart is itself evidence for Fix 3: none of the three buckets is \texttt{can\_id\_entropy} or \texttt{freq}, because those two fields were removed from the comparison entirely and were never part of the real fusion score in the first place (Section~\ref{sec:design-pipeline}).
+Figure~\ref{fig:chart-severity} and Figure~\ref{fig:chart-reason} break down the 11,971 post-correction alerts by severity and by dominant detection layer. The reason-distribution chart is itself evidence for Fix 3: none of the three buckets is can\_id\_entropy or freq, because those two fields were removed from the comparison entirely and were never part of the real fusion score in the first place (Section~\ref{sec:design-pipeline}).
 
 \begin{figure}[H]
 \centering
@@ -289,7 +289,7 @@ Figure~\ref{fig:chart-fusion-hist} shows the fusion-score distribution of the fi
 \label{fig:chart-fusion-hist}
 \end{figure}
 
-Figure~\ref{fig:screen-anomaly-intel} (Chapter~\ref{chap:impl}) already shows this live alert list and a freshly-generated explanation for the selected alert, captured on the same 97,741-frame recording used throughout this section: the selected alert's identifier, severity, and score in the context bar (\texttt{0x7EC}, LOW, 0.415) match exactly the summary text produced by the explanation engine, with no trace of an unrelated alert.
+Figure~\ref{fig:screen-anomaly-intel} (Chapter~\ref{chap:impl}) already shows this live alert list and a freshly-generated explanation for the selected alert, captured on the same 97,741-frame recording used throughout this section: the selected alert's identifier, severity, and score in the context bar (0x7EC, LOW, 0.415) match exactly the summary text produced by the explanation engine, with no trace of an unrelated alert.
 
 \section{Export validation}
 
@@ -344,7 +344,7 @@ This section states explicitly why the frozen repository state reached at the en
     \item \textbf{What ``ready'' does not cover.} Readiness here is a software-level judgment, not a certification. The live hardware capture path is code-complete but has not been exercised against a physical vehicle (see Limitations below), and the CSV formatting defect described in Chapter~\ref{chap:impl}'s Export section remains open as a known, low-severity issue.
 \end{itemize}
 
-Taken together, these points are the basis for treating the frozen repository as production-ready \emph{from a software engineering standpoint}: every known defect in the software itself has been fixed and verified, even though one input mode (physical hardware) still needs a real-vehicle test before it can be called validated in the same sense as replay and simulation.
+Taken together, these points are the basis for treating the frozen repository as production-ready from a software engineering standpoint: every known defect in the software itself has been fixed and verified, even though one input mode (physical hardware) still needs a real-vehicle test before it can be called validated in the same sense as replay and simulation.
 
 \section{Discussion}
 
@@ -352,7 +352,7 @@ Every defect in Table~\ref{tab:fixes-summary} shares a common shape: the surroun
 
 \section{Limitations}
 
-The live hardware capture path (Chapter~\ref{chap:design}) remains code-complete but unvalidated against a physical vehicle, because no compatible electric vehicle was available to test it against during the project. The \gls{ai} explanation's ``similar historical case'' feature was found, during this validation phase, to intentionally persist across sessions by design (Chapter~\ref{chap:design}); this is documented here as a known, deliberate characteristic rather than a defect, but it means an analyst comparing two unrelated vehicles may see a cross-referenced historical case, which is worth keeping in mind when reading an explanation. The \gls{csv} exporter writes the \texttt{Score} column with a French-locale decimal comma without quoting it, which shifts every later column when the file is read by a plain comma-delimited parser (Appendix~\ref{app:additional-validation}); this is a minor formatting defect in the export path itself, distinct from the six defects listed in Table~\ref{tab:fixes-summary}, and does not affect any detection or explanation result. Finally, the root-cause analysis in Section~\ref{sec:validation-rootcause} was performed on one recording from one vehicle; the timing- and payload-dominant shares found structurally explainable there are not guaranteed to hold in the same proportions on a different vehicle or driving pattern.
+The live hardware capture path (Chapter~\ref{chap:design}) remains code-complete but unvalidated against a physical vehicle, because no compatible electric vehicle was available to test it against during the project. The \gls{ai} explanation's ``similar historical case'' feature was found, during this validation phase, to intentionally persist across sessions by design (Chapter~\ref{chap:design}); this is documented here as a known, deliberate characteristic rather than a defect, but it means an analyst comparing two unrelated vehicles may see a cross-referenced historical case, which is worth keeping in mind when reading an explanation. The \gls{csv} exporter writes the Score column with a French-locale decimal comma without quoting it, which shifts every later column when the file is read by a plain comma-delimited parser (Appendix~\ref{app:additional-validation}); this is a minor formatting defect in the export path itself, distinct from the six defects listed in Table~\ref{tab:fixes-summary}, and does not affect any detection or explanation result. Finally, the root-cause analysis in Section~\ref{sec:validation-rootcause} was performed on one recording from one vehicle; the timing- and payload-dominant shares found structurally explainable there are not guaranteed to hold in the same proportions on a different vehicle or driving pattern.
 
 \section{Future improvements}
 

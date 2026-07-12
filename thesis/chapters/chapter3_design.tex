@@ -36,7 +36,7 @@ scikit-learn & Google Gemini & Ollama & Git \\
 
 \textbf{scikit-learn.} scikit-learn is a Python machine-learning library providing classical, well-supported algorithms. It was chosen because the platform's anomaly-scoring and state-classification needs (Isolation Forest~\cite{liu2008isolation}, K-Means~\cite{macqueen1967methods}) are well served by these classical methods, without the added weight of a deep-learning framework.
 
-\textbf{asammdf and python-can.} \texttt{asammdf}~\cite{asam_mdf} decodes ASAM \gls{mf4} binary log files, and \texttt{python-can} provides a common interface to physical \gls{can} adapters. Both were chosen as the standard, actively maintained open-source libraries for these two data-access needs in the Python ecosystem.
+\textbf{asammdf and python-can.} asammdf~\cite{asam_mdf} decodes ASAM \gls{mf4} binary log files, and python-can provides a common interface to physical \gls{can} adapters. Both were chosen as the standard, actively maintained open-source libraries for these two data-access needs in the Python ecosystem.
 
 \textbf{Google Gemini and Ollama.} Gemini is a cloud-hosted large language model, and Ollama runs a language model locally. The platform uses Gemini as its primary explanation provider, with a local Ollama model as an offline fallback, so an analyst can still get a natural-language explanation without an internet connection.
 
@@ -46,7 +46,7 @@ scikit-learn & Google Gemini & Ollama & Git \\
 
 \section{Overall architecture}
 
-CANvisionNative is built as two cooperating processes on the same machine: a Windows desktop client and a local Python backend, communicating over \gls{http} on \texttt{localhost}. Figure~\ref{fig:overall-arch} shows the layered view of the system.
+CANvisionNative is built as two cooperating processes on the same machine: a Windows desktop client and a local Python backend, communicating over \gls{http} on localhost. Figure~\ref{fig:overall-arch} shows the layered view of the system.
 
 \begin{figure}[H]
 \centering
@@ -92,7 +92,7 @@ The backend keeps a small SQLite database for session bookkeeping and historical
 
 \section{REST API}
 
-The backend exposes 49 endpoints under a small number of prefixes: \texttt{/api/replay/*} (start, stop, status, alerts), \texttt{/api/live/*} (simulation and hardware capture), \texttt{/api/explain/\{index\}} (\gls{ai} explanation), \texttt{/analyze} (offline batch analysis), \texttt{/api/vehicles} (profile registry), \texttt{/api/session/*} (recording), \texttt{/api/db/*} (database access), and \texttt{/api/settings}. The full endpoint list is given in Appendix~\ref{app:api}. All endpoints return \gls{json} and are consumed exclusively by the desktop client over \texttt{localhost}.
+The backend exposes 49 endpoints under a small number of prefixes: /api/replay/* (start, stop, status, alerts), /api/live/* (simulation and hardware capture), /api/explain/\{index\} (\gls{ai} explanation), /analyze (offline batch analysis), /api/vehicles (profile registry), /api/session/* (recording), /api/db/* (database access), and /api/settings. The full endpoint list is given in Appendix~\ref{app:api}. All endpoints return \gls{json} and are consumed exclusively by the desktop client over localhost.
 
 Figure~\ref{fig:rest-api-flow} groups these endpoints by the backend component they ultimately reach: the replay, live, and offline-analysis endpoints all drive the detection engine, the explanation endpoint drives the \gls{ai} explanation engine, and the vehicle, session, and settings endpoints read and write the data layer directly.
 
@@ -106,7 +106,7 @@ Figure~\ref{fig:rest-api-flow} groups these endpoints by the backend component t
 \section{Replay engine}
 \label{sec:design-replay}
 
-The replay engine is launched as a subprocess by the \texttt{/api/replay/start} endpoint. It reads the input file through a single, format-aware loader (Section~\ref{sec:impl-parser}) shared with the offline batch analyzer, so that every supported format enters the pipeline as the same canonical \texttt{(timestamp, can\_id, payload)} stream. Each frame is then passed, in order, to the same \texttt{RealtimeEngine} used by the live and simulated paths, guaranteeing that replay, live, and simulated detection behave identically for the same input. Figure~\ref{fig:seq-replay} shows the full replay lifecycle as a sequence diagram. Section~\ref{sec:impl-replay} describes its implementation in detail, and Chapter~\ref{chap:validation} documents two defects that were found and fixed in this exact module.
+The replay engine is launched as a subprocess by the /api/replay/start endpoint. It reads the input file through a single, format-aware loader (Section~\ref{sec:impl-parser}) shared with the offline batch analyzer, so that every supported format enters the pipeline as the same canonical (timestamp, can\_id, payload) stream. Each frame is then passed, in order, to the same RealtimeEngine used by the live and simulated paths, guaranteeing that replay, live, and simulated detection behave identically for the same input. Figure~\ref{fig:seq-replay} shows the full replay lifecycle as a sequence diagram. Section~\ref{sec:impl-replay} describes its implementation in detail, and Chapter~\ref{chap:validation} documents two defects that were found and fixed in this exact module.
 
 \begin{figure}[H]
 \centering
@@ -233,12 +233,12 @@ Each trained Isolation Forest was checked against a held-out split of its own tr
 
 \subsection{Isolation Forest scoring}
 
-Each vehicle profile that has a trained model bundle stores one scikit-learn~\cite{pedregosa2011scikit} Isolation Forest~\cite{liu2008isolation} per driving state (for example, \emph{idle} and \emph{driving}), each with its own fitted scaler. Scoring a frame means: scale the feature vector with that state's scaler, compute the forest's decision score, and linearly remap the result so that the model's own decision threshold maps to a score of 0.5, and increasingly negative (more anomalous) values map towards 1.0. If no bundle exists for the requested vehicle, the store falls back to a generic bundle, and if even that has no model for the current state, the engine falls back to a lightweight heuristic derived from the timing and payload layers, so that scoring never fails outright.
+Each vehicle profile that has a trained model bundle stores one scikit-learn~\cite{pedregosa2011scikit} Isolation Forest~\cite{liu2008isolation} per driving state (for example, idle and driving), each with its own fitted scaler. Scoring a frame means: scale the feature vector with that state's scaler, compute the forest's decision score, and linearly remap the result so that the model's own decision threshold maps to a score of 0.5, and increasingly negative (more anomalous) values map towards 1.0. If no bundle exists for the requested vehicle, the store falls back to a generic bundle, and if even that has no model for the current state, the engine falls back to a lightweight heuristic derived from the timing and payload layers, so that scoring never fails outright.
 
 \subsection{State classification}
 \label{sec:impl-state}
 
-Before scoring, the engine must decide which driving state the vehicle is currently in, since a different Isolation Forest is trained per state. This is done with a K-Means~\cite{macqueen1967methods} model shared across vehicles: the current feature vector is scaled with a dedicated scaler and passed to the K-Means model, and the resulting cluster index is mapped to a state name (\emph{parking}, \emph{idle}, \emph{driving}) through a small lookup table produced at training time.
+Before scoring, the engine must decide which driving state the vehicle is currently in, since a different Isolation Forest is trained per state. This is done with a K-Means~\cite{macqueen1967methods} model shared across vehicles: the current feature vector is scaled with a dedicated scaler and passed to the K-Means model, and the resulting cluster index is mapped to a state name (parking, idle, driving) through a small lookup table produced at training time.
 
 Two implementation details matter here and are directly connected to a defect documented in Chapter~\ref{chap:validation}: the feature vector passed to the state classifier must have the exact same length and order as the one used to fit the K-Means model (fourteen features), and it must be scaled the same way it was scaled at training time before the model is called. Skipping either step does not raise a visible error if the surrounding code catches exceptions broadly, which is what made this defect hard to notice without deliberate, evidence-based testing.
 
@@ -255,7 +255,7 @@ Figure~\ref{fig:runtime-inference} summarizes how the pieces above fit together 
 
 \section{Hardware layer}
 
-The hardware layer wraps the \texttt{python-can} library to support three transports: ELM327 over a serial/slcan connection, PEAK PCAN-USB, and native SocketCAN. It exposes connect, disconnect, and status endpoints, and feeds every received frame through the same \texttt{RealtimeEngine} instance used by replay, with the vehicle identifier selected in the Settings view. This design means the detection pipeline itself required no change to support live hardware; only the transport layer differs, which is why carrying this path through the project as code-complete but unvalidated, pending a compatible electric vehicle (Chapter~\ref{chap:requirements}), was an acceptable risk.
+The hardware layer wraps the python-can library to support three transports: ELM327 over a serial/slcan connection, PEAK PCAN-USB, and native SocketCAN. It exposes connect, disconnect, and status endpoints, and feeds every received frame through the same RealtimeEngine instance used by replay, with the vehicle identifier selected in the Settings view. This design means the detection pipeline itself required no change to support live hardware; only the transport layer differs, which is why carrying this path through the project as code-complete but unvalidated, pending a compatible electric vehicle (Chapter~\ref{chap:requirements}), was an acceptable risk.
 
 \section{AI explanation engine}
 \label{sec:design-ai}
@@ -282,7 +282,7 @@ Figure~\ref{fig:class-diagram} shows the simplified class diagram of the backend
 \label{fig:class-diagram}
 \end{figure}
 
-\texttt{RealtimeEngine} is the single entry point used by replay, live simulation, and hardware capture. It owns the current \texttt{vehicle\_id}, delegates timing/payload scoring and fusion to \texttt{ScoringEngine}, and delegates ML scoring to \texttt{RuntimeModelStore}, which holds one \texttt{StateModelBundle} per vehicle profile (plus a generic fallback bundle) and is responsible for selecting the correct per-state, per-vehicle model. \texttt{IDSStatistics} accumulates per-run counters and severity/alert-reason distributions and writes the final summary report consumed by both the desktop client and the \gls{ai} explanation engine.
+RealtimeEngine is the single entry point used by replay, live simulation, and hardware capture. It owns the current vehicle identifier, delegates timing/payload scoring and fusion to ScoringEngine, and delegates ML scoring to RuntimeModelStore, which holds one StateModelBundle per vehicle profile (plus a generic fallback bundle) and is responsible for selecting the correct per-state, per-vehicle model. RunStatistics accumulates per-run counters and severity/alert-reason distributions and writes the final summary report consumed by both the desktop client and the \gls{ai} explanation engine.
 
 \section{Deployment diagram}
 

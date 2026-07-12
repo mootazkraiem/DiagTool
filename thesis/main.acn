@@ -111,8 +111,8 @@
 \glossaryentry{AI?\glossentry{ai}|setentrycounter[]{page}"\glsnumberformat}{20}
 \glossaryentry{API?\glossentry{api}|setentrycounter[]{page}"\glsnumberformat}{20}
 \glossaryentry{MVVM?\glossentry{mvvm}|setentrycounter[]{page}"\glsnumberformat}{20}
-\glossaryentry{API?\glossentry{api}|setentrycounter[]{page}"\glsnumberformat}{21}
-\glossaryentry{HTTP?\glossentry{http}|setentrycounter[]{page}"\glsnumberformat}{21}
+\glossaryentry{API?\glossentry{api}|setentrycounter[]{page}"\glsnumberformat}{20}
+\glossaryentry{HTTP?\glossentry{http}|setentrycounter[]{page}"\glsnumberformat}{20}
 \glossaryentry{DBC?\glossentry{dbc}|setentrycounter[]{page}"\glsnumberformat}{21}
 \glossaryentry{MF4?\glossentry{mf4}|setentrycounter[]{page}"\glsnumberformat}{21}
 \glossaryentry{CSV?\glossentry{csv}|setentrycounter[]{page}"\glsnumberformat}{21}
@@ -172,7 +172,6 @@
 \glossaryentry{UDS?\glossentry{uds}|setentrycounter[]{page}"\glsnumberformat}{47}
 \glossaryentry{API?\glossentry{api}|setentrycounter[]{page}"\glsnumberformat}{47}
 \glossaryentry{REST?\glossentry{rest}|setentrycounter[]{page}"\glsnumberformat}{47}
-\glossaryentry{REST?\glossentry{rest}|setentrycounter[]{page}"\glsnumberformat}{47}
 \glossaryentry{API?\glossentry{api}|setentrycounter[]{page}"\glsnumberformat}{48}
 \glossaryentry{API?\glossentry{api}|setentrycounter[]{page}"\glsnumberformat}{48}
 \glossaryentry{CSV?\glossentry{csv}|setentrycounter[]{page}"\glsnumberformat}{49}
@@ -196,6 +195,7 @@
 \glossaryentry{AI?\glossentry{ai}|setentrycounter[]{page}"\glsnumberformat}{59}
 \glossaryentry{CAN?\glossentry{can}|setentrycounter[]{page}"\glsnumberformat}{59}
 \glossaryentry{REST?\glossentry{rest}|setentrycounter[]{page}"\glsnumberformat}{61}
+\glossaryentry{REST?\glossentry{rest}|setentrycounter[]{page}"\glsnumberformat}{64}
 \glossaryentry{MF4?\glossentry{mf4}|setentrycounter[]{page}"\glsnumberformat}{66}
 \glossaryentry{UDS?\glossentry{uds}|setentrycounter[]{page}"\glsnumberformat}{66}
 \glossaryentry{ECU?\glossentry{ecu}|setentrycounter[]{page}"\glsnumberformat}{66}
