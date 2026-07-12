@@ -8,16 +8,20 @@ This appendix gives a one-page summary of every dataset used in this project and
 \footnotesize
 \caption{Every dataset used, and its source.}
 \label{tab:data-sources-summary}
-\begin{tabularx}{\textwidth}{@{}p{4.2cm}p{4.0cm}X@{}}
-\toprule
+\begin{tabularx}{\textwidth}{|p{4.2cm}|p{4.0cm}|X|}
+\hline
 \textbf{Dataset} & \textbf{Vehicle / origin} & \textbf{Source} \\
-\midrule
+\hline
 CSS Electronics EV Data Pack (primary validation dataset) & Kia EV6 (real production vehicle) & Published by CSS Electronics, a commercial manufacturer of CANedge \gls{can} data loggers, as a free public sample data pack. \\
+\hline
 ROAD dataset~\cite{verma2020road} & Real vehicle, dynamometer test bench & Released publicly by its authors for \gls{can} intrusion-detection research. \\
+\hline
 Car-Hacking dataset~\cite{seo2018gids} & Real vehicle & Released publicly by the Hacking and Countermeasure Research Lab (HCRL). \\
+\hline
 Community EV \gls{can} logs & Nissan Leaf, BMW i3, Kia EV6, Kia Soul, Tesla, Jaguar I-PACE, MG ZS EV, Hyundai Ioniq 5, Škoda Enyaq, and other platforms & Shared publicly by EV enthusiast and vehicle-research communities. \\
+\hline
 Renault Clio DoS-attack log (cross-validation dataset) & Renault Clio (real vehicle) & Independent real candump recording, used only to test for cross-dataset state leakage (Section~\ref{sec:validation-ai}). \\
-\bottomrule
+\hline
 \end{tabularx}
 \end{table}
 

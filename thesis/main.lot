@@ -9,32 +9,29 @@
 \contentsline {table}{\numberline {2.2}{\ignorespaces Risk analysis.}}{15}{table.caption.18}%
 \contentsline {table}{\numberline {2.3}{\ignorespaces Requirements traceability: from requirement to implementation to validation.}}{17}{table.caption.20}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {3.1}{\ignorespaces Technology choices and the main alternative considered.}}{19}{table.caption.21}%
-\contentsline {table}{\numberline {3.2}{\ignorespaces Technologies used, by category.}}{20}{table.caption.22}%
+\contentsline {table}{\numberline {3.1}{\ignorespaces Candidate machine-learning algorithms for anomaly scoring.}}{28}{table.caption.29}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {4.1}{\ignorespaces Repository statistics (source code only).}}{32}{table.caption.34}%
-\contentsline {table}{\numberline {4.2}{\ignorespaces Supported vehicle profiles.}}{37}{table.caption.40}%
-\contentsline {table}{\numberline {4.3}{\ignorespaces Candidate machine-learning algorithms for anomaly scoring.}}{40}{table.caption.42}%
+\contentsline {table}{\numberline {4.1}{\ignorespaces Supported vehicle profiles.}}{40}{table.caption.41}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {5.1}{\ignorespaces QA timeline.}}{47}{table.caption.46}%
-\contentsline {table}{\numberline {5.2}{\ignorespaces Testing matrix: what was covered, and how.}}{48}{table.caption.48}%
-\contentsline {table}{\numberline {5.3}{\ignorespaces Root-cause breakdown of the 15,945 baseline alerts.}}{50}{table.caption.50}%
-\contentsline {table}{\numberline {5.4}{\ignorespaces Before/after comparison on the real Kia EV6 recording (97,741 frames).}}{54}{table.caption.51}%
-\contentsline {table}{\numberline {5.5}{\ignorespaces Summary of engineering fixes and their validation status.}}{58}{table.caption.59}%
+\contentsline {table}{\numberline {5.1}{\ignorespaces QA timeline.}}{44}{table.caption.43}%
+\contentsline {table}{\numberline {5.2}{\ignorespaces Testing matrix: what was covered, and how.}}{45}{table.caption.45}%
+\contentsline {table}{\numberline {5.3}{\ignorespaces Root-cause breakdown of the 15,945 baseline alerts.}}{47}{table.caption.47}%
+\contentsline {table}{\numberline {5.4}{\ignorespaces Before/after comparison on the real Kia EV6 recording (97,741 frames).}}{51}{table.caption.48}%
+\contentsline {table}{\numberline {5.5}{\ignorespaces Summary of engineering fixes and their validation status.}}{55}{table.caption.56}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {A.1}{\ignorespaces Backend REST API endpoints.}}{64}{table.A.1}%
+\contentsline {table}{\numberline {A.1}{\ignorespaces Backend REST API endpoints.}}{61}{table.A.1}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {B.1}{\ignorespaces Software requirements.}}{66}{table.caption.69}%
-\contentsline {table}{\numberline {B.2}{\ignorespaces Hardware requirements.}}{66}{table.caption.70}%
-\contentsline {table}{\numberline {B.3}{\ignorespaces Default fusion and severity configuration.}}{67}{table.caption.71}%
+\contentsline {table}{\numberline {B.1}{\ignorespaces Software requirements.}}{63}{table.caption.66}%
+\contentsline {table}{\numberline {B.2}{\ignorespaces Hardware requirements.}}{63}{table.caption.67}%
+\contentsline {table}{\numberline {B.3}{\ignorespaces Default fusion and severity configuration.}}{64}{table.caption.68}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {C.1}{\ignorespaces Main sources of the training corpus.}}{68}{table.caption.72}%
-\contentsline {table}{\numberline {C.2}{\ignorespaces CSS Electronics EV Data Pack (Kia EV6) — primary validation dataset.}}{69}{table.caption.73}%
-\contentsline {table}{\numberline {C.3}{\ignorespaces ROAD dataset~\blx@tocontentsinit {0}\cite {verma2020road} — training corpus.}}{69}{table.caption.74}%
-\contentsline {table}{\numberline {C.4}{\ignorespaces Car-Hacking dataset~\blx@tocontentsinit {0}\cite {seo2018gids} — training corpus.}}{70}{table.caption.75}%
-\contentsline {table}{\numberline {C.5}{\ignorespaces Community EV CAN logs — training corpus.}}{70}{table.caption.76}%
+\contentsline {table}{\numberline {C.1}{\ignorespaces Main sources of the training corpus.}}{65}{table.caption.69}%
+\contentsline {table}{\numberline {C.2}{\ignorespaces CSS Electronics EV Data Pack (Kia EV6) — primary validation dataset.}}{66}{table.caption.70}%
+\contentsline {table}{\numberline {C.3}{\ignorespaces ROAD dataset~\blx@tocontentsinit {0}\cite {verma2020road} — training corpus.}}{66}{table.caption.71}%
+\contentsline {table}{\numberline {C.4}{\ignorespaces Car-Hacking dataset~\blx@tocontentsinit {0}\cite {seo2018gids} — training corpus.}}{67}{table.caption.72}%
+\contentsline {table}{\numberline {C.5}{\ignorespaces Community EV CAN logs — training corpus.}}{67}{table.caption.73}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {D.1}{\ignorespaces Severity distribution after correction.}}{72}{table.caption.77}%
-\contentsline {table}{\numberline {D.2}{\ignorespaces Reason-attribution distribution after the Fix 3 correction.}}{72}{table.caption.78}%
+\contentsline {table}{\numberline {D.1}{\ignorespaces Severity distribution after correction.}}{69}{table.caption.74}%
+\contentsline {table}{\numberline {D.2}{\ignorespaces Reason-attribution distribution after the Fix 3 correction.}}{69}{table.caption.75}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {E.1}{\ignorespaces Every dataset used, and its source.}}{76}{table.caption.84}%
+\contentsline {table}{\numberline {E.1}{\ignorespaces Every dataset used, and its source.}}{73}{table.caption.81}%

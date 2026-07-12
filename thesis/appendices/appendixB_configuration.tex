@@ -9,15 +9,18 @@ Table~\ref{tab:app-requirements} lists the software requirements to build and ru
 \centering
 \caption{Software requirements.}
 \label{tab:app-requirements}
-\begin{tabular}{@{}ll@{}}
-\toprule
+\begin{tabular}{|l|l|}
+\hline
 \textbf{Component} & \textbf{Version} \\
-\midrule
+\hline
 Windows              & 10 or 11, 64-bit \\
+\hline
 .NET Runtime         & 4.8 \\
+\hline
 Python               & 3.11 -- 3.14 \\
+\hline
 Git                  & Any (for cloning the repository) \\
-\bottomrule
+\hline
 \end{tabular}
 \end{table}
 
@@ -25,15 +28,18 @@ Git                  & Any (for cloning the repository) \\
 \centering
 \caption{Hardware requirements.}
 \label{tab:app-hardware}
-\begin{tabular}{@{}p{2.6cm}p{5.3cm}p{6.4cm}@{}}
-\toprule
+\begin{tabular}{|p{2.6cm}|p{5.3cm}|p{6.4cm}|}
+\hline
 \textbf{Component} & \textbf{Requirement} & \textbf{Notes} \\
-\midrule
+\hline
 Desktop / laptop & Any machine able to run Windows 10/11 and Python 3.11+ & Used for every mode (replay, simulation, hardware capture) \\
+\hline
 Disk space & A few GB free & Trained model store, DBC files, and recorded logs \\
+\hline
 USB port & 1 free port & Only for the ELM327 / USB-CAN adapter below \\
+\hline
 CAN adapter & ELM327 USB (slcan), PEAK PCAN-USB, or a SocketCAN-compatible interface & Required only for live hardware capture (FR9); not needed for replay or simulation \\
-\bottomrule
+\hline
 \end{tabular}
 \end{table}
 
@@ -50,15 +56,11 @@ CAN adapter & ELM327 USB (slcan), PEAK PCAN-USB, or a SocketCAN-compatible inter
 
 \section{Backend startup}
 
-\begin{lstlisting}[language=bash]
-python -m uvicorn backend.api.server:app --host 127.0.0.1 --port 8765
-\end{lstlisting}
-
-The desktop client automatically starts and stops this process when a Python interpreter is found at the expected path, and exposes the same functionality if the backend is instead started manually beforehand.
+The backend runs as a local \gls{rest} server on \texttt{127.0.0.1:8765}. The desktop client automatically starts and stops this process when a compatible Python interpreter is found, and exposes the same functionality if the backend is instead started manually beforehand.
 
 \section{Persisted configuration}
 
-Client-side settings (alert threshold, LLM provider key, hardware interface parameters) are persisted to \texttt{\%AppData\%\textbackslash CANvision\textbackslash config.json} and reloaded on startup. The LLM provider key, if configured, is applied as an environment variable so the backend can pick it up without a separate configuration step.
+Client-side settings (alert threshold, LLM provider key, hardware interface parameters) are persisted locally in a per-user configuration file and reloaded on startup. The LLM provider key, if configured, is applied automatically so the backend can pick it up without a separate configuration step.
 
 \section{Fusion score configuration}
 
@@ -66,14 +68,17 @@ Client-side settings (alert threshold, LLM provider key, hardware interface para
 \centering
 \caption{Default fusion and severity configuration.}
 \label{tab:app-fusion-config}
-\begin{tabular}{@{}ll@{}}
-\toprule
+\begin{tabular}{|l|l|}
+\hline
 \textbf{Parameter} & \textbf{Value} \\
-\midrule
+\hline
 Fusion score range     & 0.0 -- 2.0 \\
+\hline
 Layer weights          & timing 0.35, payload 0.35, ML 0.20, persistence 0.10 \\
+\hline
 Severity thresholds    & LOW $\geq$ 0.30, MEDIUM $\geq$ 0.55, HIGH $\geq$ 0.80, CRITICAL $\geq$ 1.00 \\
+\hline
 Backend port           & 8765 \\
-\bottomrule
+\hline
 \end{tabular}
 \end{table}

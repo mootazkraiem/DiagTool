@@ -87,19 +87,26 @@ Import log, Select vehicle profile, Review alerts, Export report, Configure sett
 \centering
 \caption{Textual description of the main use cases.}
 \label{tab:usecase-table}
-\begin{tabularx}{\textwidth}{@{}p{3.2cm}X@{}}
-\toprule
+\begin{tabularx}{\textwidth}{|p{3.2cm}|X|}
+\hline
 \textbf{Use case} & \textbf{Description} \\
-\midrule
+\hline
 Import log & The analyst selects a log file; the system detects its format and converts it to the canonical frame stream (FR1). \\
+\hline
 Select vehicle profile & The analyst chooses the vehicle that produced the log, so the correct \gls{dbc} file and trained model are used (FR2). \\
+\hline
 Replay log & The system replays the canonical frame stream through the detection pipeline at a user-selectable speed, including the Detect anomaly use case (FR3, FR4). \\
+\hline
 Detect anomaly & For every frame, the system computes the four-layer fusion score and raises an alert above the configured threshold (FR4, FR5). Shared by replay, live simulation, and hardware capture. \\
+\hline
 Review alerts & The analyst browses the alert list, filters by severity, and inspects the layer-attribution breakdown of a selected alert. \\
+\hline
 Request explanation & The analyst asks for a natural-language explanation of a selected alert; the system builds context and queries the LLM provider chain, falling back to a rule-based template if needed (FR6). \\
+\hline
 Export report & The analyst exports the current alert list as \gls{csv} or as a formatted PDF report (FR7). \\
+\hline
 Configure settings & The analyst sets the alert threshold, the LLM provider key, and the hardware interface parameters, persisted between sessions (FR11). \\
-\bottomrule
+\hline
 \end{tabularx}
 \end{table}
 
@@ -133,17 +140,22 @@ Table~\ref{tab:risks} lists the main risks identified during the project and how
 \centering
 \caption{Risk analysis.}
 \label{tab:risks}
-\begin{tabular}{@{}p{3.3cm}p{2.7cm}p{1.7cm}p{6.5cm}@{}}
-\toprule
+\begin{tabular}{|p{3.3cm}|p{2.7cm}|p{1.7cm}|p{6.5cm}|}
+\hline
 \textbf{Risk} & \textbf{Likelihood} & \textbf{Impact} & \textbf{Mitigation} \\
-\midrule
+\hline
 No compatible electric vehicle available for hardware validation & High (materialized) & Medium & Design and implement the hardware layer against the same interface as replay and simulation, so it can be validated later without changing the detection pipeline (Chapter~\ref{chap:design}). \\
+\hline
 LLM provider unavailable or unauthenticated & Medium & Low & Provider chain with automatic fallback: Gemini $\rightarrow$ local Ollama model $\rightarrow$ rule-based template. \\
+\hline
 Vehicle-specific model not selected correctly & Medium (materialized) & High & Root-cause investigation with direct evidence rather than threshold tuning; full fix and validation documented in Chapter~\ref{chap:validation}. \\
+\hline
 False positives eroding analyst trust & Medium & High & Multi-layer fusion with a temporal-persistence term instead of a single-frame score; before/after alert-rate measurement in Chapter~\ref{chap:validation}. \\
+\hline
 Different log formats behaving inconsistently & Medium (materialized) & Medium & Single canonical parsing entry point shared by every input path, verified in Chapter~\ref{chap:validation}. \\
+\hline
 Explanation shown for the wrong alert (stale cache) & Low (materialized) & High & Root-caused to two cache-lifecycle gaps and fixed at both the completion and the start of every replay, verified with a seeded cross-dataset test (Chapter~\ref{chap:validation}). \\
-\bottomrule
+\hline
 \end{tabular}
 \end{table}
 
@@ -153,12 +165,14 @@ The project was carried out over the full six-month internship, through a sequen
 
 \begin{figure}[H]
 \centering
+\resizebox{\textwidth}{!}{%
 \begin{ganttchart}[
     hgrid, vgrid,
     bar/.append style={fill=cyan!60},
     bar height=0.6,
+    bar label font=\small,
     y unit chart=0.7cm,
-    x unit=0.4cm
+    x unit=0.55cm
 ]{1}{26}
 \gantttitle{Project weeks (6 months)}{26} \\
 \gantttitlelist{1,...,26}{1} \\
@@ -173,7 +187,8 @@ The project was carried out over the full six-month internship, through a sequen
 \ganttbar{Root-cause validation (real data)}{17}{21} \\
 \ganttbar{Engineering correction \& re-validation}{20}{24} \\
 \ganttbar{Report writing}{23}{26}
-\end{ganttchart}
+\end{ganttchart}%
+}
 \caption{Project planning (Gantt chart, in weeks, over the six-month internship).}
 \label{fig:gantt}
 \end{figure}
@@ -188,22 +203,32 @@ Table~\ref{tab:traceability} traces each functional requirement to the design an
 \centering
 \caption{Requirements traceability: from requirement to implementation to validation.}
 \label{tab:traceability}
-\begin{tabularx}{\textwidth}{@{}p{1.3cm}Xp{3.4cm}@{}}
-\toprule
+\begin{tabularx}{\textwidth}{|p{1.3cm}|X|p{3.4cm}|}
+\hline
 \textbf{Req.} & \textbf{Implemented in} & \textbf{Validated by} \\
-\midrule
+\hline
 FR1 & Canonical parser, Section~\ref{sec:impl-parser} & Fix 4, Chapter~\ref{chap:validation} \\
+\hline
 FR2 & Vehicle profile system, Section~\ref{sec:impl-vehicle} & Fix 1, Chapter~\ref{chap:validation} \\
+\hline
 FR3 & Replay engine, Section~\ref{sec:impl-replay} & Before/after throughput, Table~\ref{tab:before-after} \\
+\hline
 FR4 & Detection pipeline, Section~\ref{sec:design-pipeline} & Root-cause analysis, Table~\ref{tab:rootcause} \\
+\hline
 FR5 & Fusion scoring, Section~\ref{sec:design-pipeline} & Severity distribution, Figure~\ref{fig:chart-severity} \\
+\hline
 FR6 & AI explanation module, Section~\ref{sec:design-ai} & Fix 6, Section~\ref{sec:validation-ai} \\
+\hline
 FR7 & Export, Section on Export, Chapter~\ref{chap:impl} & Export validation, Chapter~\ref{chap:validation} \\
+\hline
 FR8 & Live simulation (hardware layer design) & Interactive UI audit, Chapter~\ref{chap:validation} \\
+\hline
 FR9 & Hardware layer software interface, Section on Hardware, Chapter~\ref{chap:impl} & Code-complete; physical vehicle test pending, no compatible EV available (Limitations) \\
+\hline
 FR10 & Session recording (\texttt{backend/hardware/}) & Interactive UI audit, Chapter~\ref{chap:validation} \\
+\hline
 FR11 & Settings, Section on Settings, Chapter~\ref{chap:impl} & Interactive UI audit, Chapter~\ref{chap:validation} \\
-\bottomrule
+\hline
 \end{tabularx}
 \end{table}
 

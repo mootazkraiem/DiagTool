@@ -15,14 +15,16 @@ This was applied in three passes, summarized in Table~\ref{tab:qa-timeline} and 
 \centering
 \caption{QA timeline.}
 \label{tab:qa-timeline}
-\begin{tabularx}{\textwidth}{@{}lX@{}}
-\toprule
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
 \textbf{Pass} & \textbf{Description} \\
-\midrule
+\hline
 1. Interactive UI audit & Manual, jury-style exploratory testing of the running application: every screen, every control, wrong-order actions (importing twice, detecting before a model is loaded, spamming clicks), destructive actions, resizing and minimizing during a replay. \\
+\hline
 2. Root-cause analysis of alert volume & Full replay of a real one-hour Kia EV6 recording; every one of the resulting alerts explained and attributed to a dominant cause, until coverage reached 100\%. \\
+\hline
 3. Correction and re-validation & Each confirmed software defect fixed individually, re-validated with direct evidence, then a full end-to-end re-run of the corrected pipeline (import, replay, detection, AI explanation, export) on the same real recording. \\
-\bottomrule
+\hline
 \end{tabularx}
 \end{table}
 
@@ -39,17 +41,22 @@ Table~\ref{tab:testing-matrix} lists what was tested at each pass, the method us
 \centering
 \caption{Testing matrix: what was covered, and how.}
 \label{tab:testing-matrix}
-\begin{tabularx}{\textwidth}{@{}lXX@{}}
-\toprule
+\begin{tabularx}{\textwidth}{|l|X|X|}
+\hline
 \textbf{Target} & \textbf{Method} & \textbf{Coverage} \\
-\midrule
+\hline
 Desktop UI (all screens) & Interactive UI automation (button clicks, file dialogs, keyboard input) & Navigation, import, replay controls, wrong-order and repeated actions \\
+\hline
 Detection pipeline & Direct backend \gls{api} calls + full replay on real data & Vehicle selection, state classification, fusion scoring, reason attribution \\
+\hline
 Parsers & Synthetic fixtures per format (\gls{csv}, candump, Vector \gls{can}) + real recordings & Canonical frame extraction, byte-for-byte comparison against known-good output \\
+\hline
 AI explanation & Direct \gls{api} calls across two independent real datasets & Per-alert correctness, cross-session/cross-dataset leakage \\
+\hline
 Export & Manual export + direct file inspection & \gls{csv} column correctness, PDF rendering and pagination \\
+\hline
 End-to-end & Full application walk-through (import $\to$ replay $\to$ detection $\to$ AI $\to$ export) & Integration of every layer above, on the real Kia EV6 recording \\
-\bottomrule
+\hline
 \end{tabularx}
 \end{table}
 
@@ -90,16 +97,18 @@ Replaying the 97{,}741-frame recording through the pipeline, before any correcti
 \centering
 \caption{Root-cause breakdown of the 15,945 baseline alerts.}
 \label{tab:rootcause}
-\begin{tabular}{@{}p{3.4cm}rp{7.5cm}@{}}
-\toprule
+\begin{tabular}{|p{3.4cm}|r|p{7.5cm}|}
+\hline
 \textbf{Dominant cause} & \textbf{Share} & \textbf{Explanation} \\
-\midrule
+\hline
 Machine-learning layer & 61.42\% & Wrong model selected + state misclassification (Fixes 1 and 2) \\
+\hline
 Timing layer            & 31.51\% & Sparse \gls{uds} polling intervals, structurally $\sim$50--100\% per-identifier alert rate \\
+\hline
 Payload layer            & 7.07\%  & Genuine sensor-value entropy in a real battery-telemetry message \\
-\midrule
+\hline
 \textbf{Total explained} & \textbf{100\%} & \\
-\bottomrule
+\hline
 \end{tabular}
 \end{table}
 
@@ -204,16 +213,20 @@ Table~\ref{tab:before-after} summarizes every measurement taken on the same 97{,
 \centering
 \caption{Before/after comparison on the real Kia EV6 recording (97,741 frames).}
 \label{tab:before-after}
-\begin{tabular}{@{}lrr@{}}
-\toprule
+\begin{tabular}{|l|r|r|}
+\hline
 \textbf{Metric} & \textbf{Before} & \textbf{After} \\
-\midrule
+\hline
 Total alerts               & 15{,}945 (16.3\%) & 11{,}971 (12.25\%) \\
+\hline
 Replay duration            & 685 s              & 341.2 s \\
+\hline
 Throughput                 & $\sim$143 fps       & $\sim$286 fps \\
+\hline
 \texttt{vehicle\_state} distribution & 99.93\% parking & 99.93\% driving \\
+\hline
 ML-score saturation ($\geq$0.999) & 77.6--78.6\%   & 0.0\% \\
-\bottomrule
+\hline
 \end{tabular}
 \end{table}
 
@@ -290,17 +303,22 @@ Table~\ref{tab:fixes-summary} summarizes every confirmed defect addressed during
 \centering
 \caption{Summary of engineering fixes and their validation status.}
 \label{tab:fixes-summary}
-\begin{tabularx}{\textwidth}{@{}lXc@{}}
-\toprule
+\begin{tabularx}{\textwidth}{|l|X|c|}
+\hline
 \textbf{\#} & \textbf{Defect} & \textbf{Status} \\
-\midrule
+\hline
 1 & Vehicle model never selected for scoring & Fixed, verified \\
+\hline
 2 & Driving-state misclassified as ``parking'' & Fixed, verified \\
+\hline
 3 & Raw diagnostic fields dominating the displayed alert cause (6 occurrences) & Fixed, verified \\
+\hline
 4 & Non-CSV replay formats bypassing the canonical parser & Fixed, verified \\
+\hline
 5 & Alert-polling timer left permanently stopped after an import & Fixed, verified \\
+\hline
 6 & AI explanation cache serving stale, cross-session data & Fixed, verified (two-part fix) \\
-\bottomrule
+\hline
 \end{tabularx}
 \end{table}
 

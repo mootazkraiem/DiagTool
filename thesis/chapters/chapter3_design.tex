@@ -3,7 +3,7 @@
 
 \section{Introduction}
 
-This chapter presents the architecture of CANvisionNative: the technology choices, the overall layered architecture, the desktop client, the backend, the database, the \gls{rest} \gls{api}, the replay engine, the detection pipeline, the \gls{ai} explanation engine, the hardware layer, and the deployment architecture. Every diagram in this chapter is a UML diagram produced with PlantUML, generated directly from the actual architecture described in Chapter~\ref{chap:impl}.
+This chapter presents the architecture of CANvisionNative: the technology choices, the overall layered architecture, the desktop client, the backend, the database, the \gls{rest} \gls{api}, the replay engine, the detection pipeline, the machine-learning approach behind it, the \gls{ai} explanation engine, the hardware layer, and the deployment architecture. The machine-learning work is presented here, in the design chapter, because it was carried out before the implementation phase described in Chapter~\ref{chap:impl}. Every diagram in this chapter is a UML diagram produced with PlantUML, generated directly from the actual architecture described in Chapter~\ref{chap:impl}.
 
 \section{Technologies used}
 \label{sec:tech-used}
@@ -12,7 +12,18 @@ Figure~\ref{fig:tech-logos} shows the full technology stack, as presented during
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{tech_logos.png}
+\begin{tabular}{cccc}
+\includegraphics[height=1.4cm]{dotnet.pdf} &
+\includegraphics[height=1.4cm]{python.pdf} &
+\includegraphics[height=1.4cm]{fastapi.pdf} &
+\includegraphics[height=1.4cm]{sqlite.pdf} \\
+C\# / .NET / WPF & Python & FastAPI & SQLite \\[0.6cm]
+\includegraphics[height=1.4cm]{scikitlearn.pdf} &
+\includegraphics[height=1.4cm]{googlegemini.pdf} &
+\includegraphics[height=1.4cm]{ollama.pdf} &
+\includegraphics[height=1.4cm]{git.pdf} \\
+scikit-learn & Google Gemini & Ollama & Git \\
+\end{tabular}
 \caption{Technology stack used across the desktop client, backend, machine learning, and AI explanation layers.}
 \label{fig:tech-logos}
 \end{figure}
@@ -136,6 +147,112 @@ The four detection layers are then computed:
 
 The four layers are combined into one fusion score by a fixed weighted sum, and the fused score is compared against four severity thresholds (LOW, MEDIUM, HIGH, CRITICAL). Only frames whose fused score crosses the configured alert threshold are turned into alerts, subject to a per-identifier debounce so that a single burst is not reported as dozens of near-duplicate alerts. The exact weight and threshold values are listed in Table~\ref{tab:app-fusion-config} (Appendix~\ref{app:config}).
 
+\section{Machine learning approach}
+\label{sec:ml-approach}
+
+The machine-learning side of the detection pipeline, how a raw frame becomes a feature vector, how the learning algorithms were chosen, and how the models are trained, was worked out as part of this design phase, before the runtime engine that uses it was built. This section covers that full pipeline; Chapter~\ref{chap:impl} shows how the runtime engine calls into it and refers back here rather than re-explaining the algorithms.
+
+\subsection{Feature engineering}
+\label{sec:impl-feature-eng}
+
+For every \gls{can} identifier, the engine maintains a small rolling window of recent inter-arrival times and byte-level differences. From this window it derives fourteen features at each frame: the current and rolling-mean/variance inter-arrival time, the current and rolling byte difference, message frequency and rate, a burstiness ratio, the coefficient of variation of inter-arrival time, changed-byte count, and the Shannon entropy of both the identifier stream and the payload bytes. Every feature is clipped to a fixed range and log-scaled before being handed to the models, matching the transform used when the models were trained. Figure~\ref{fig:feature-pipeline} shows this as a pipeline: cleaning, the per-identifier rolling window, the three feature groups (timing, payload, entropy), and the final fourteen-value vector.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{feature_engineering_pipeline.png}
+\caption{Feature engineering pipeline: from a raw frame to the final 14-feature vector.}
+\label{fig:feature-pipeline}
+\end{figure}
+
+\subsection{Model selection}
+\label{sec:ml-selection}
+
+\subsubsection{Problem definition}
+
+The core learning problem is to decide, for a given vehicle and a given driving state, whether a frame's features look normal or anomalous, without access to a reliable set of labelled attacks for every vehicle. A second, smaller learning problem is to decide which driving state (parking, idle, driving) the vehicle is currently in, so that the right anomaly model is used.
+
+\subsubsection{Supervised versus unsupervised learning}
+
+A supervised approach would need a labelled dataset of normal and attack frames for every vehicle profile CANvisionNative supports. This was rejected as the main detection strategy for three reasons. Most of the training corpus (Appendix~\ref{app:datasets}) is normal, unlabelled traffic gathered from real vehicles and community logs; only a small part (ROAD, Car-Hacking) carries attack labels, and those labels come from a different vehicle and a different attack methodology than any vehicle an analyst might import. A supervised model trained on one manufacturer's attack patterns is also unlikely to generalize to an attack style it has never seen, which defeats the purpose of an anomaly-detection layer meant to catch unknown attacks. And, most practically, gathering real attack traffic on every supported vehicle was not feasible within this project. An unsupervised, anomaly-based approach avoids all three problems: it only needs a sample of normal traffic for the vehicle it is trained on, which the training corpus provides in quantity.
+
+\subsubsection{Candidate algorithms}
+
+Table~\ref{tab:ml-comparison} compares the unsupervised and supervised candidates considered for the anomaly-scoring layer.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\caption{Candidate machine-learning algorithms for anomaly scoring.}
+\label{tab:ml-comparison}
+\begin{tabularx}{\textwidth}{|p{3.1cm}|X|p{2.6cm}|}
+\hline
+\textbf{Algorithm} & \textbf{Advantages} & \textbf{Disadvantages} \\
+\hline
+Isolation Forest & Fast to train and to score; no distance computation, so it scales well with more features; does not assume a particular data distribution; works well on the kind of tabular, numeric features produced by CAN feature engineering. & Less interpretable than a hand-written rule; needs a contamination parameter to be set. \\
+\hline
+One-Class SVM & Well-studied, clear geometric interpretation (a boundary around normal data). & Training cost grows quickly with dataset size; sensitive to kernel and parameter choice; slower to score in a real-time loop. \\
+\hline
+Local Outlier Factor (LOF) & Captures local density variations, useful when normal traffic has several distinct clusters. & Expensive at inference time (distance to neighbours must be recomputed), which conflicts with the per-frame, real-time scoring requirement (NFR1). \\
+\hline
+DBSCAN & No need to pre-specify the number of clusters; can find arbitrarily shaped clusters. & Designed for offline clustering, not per-sample scoring; does not naturally give a continuous anomaly score for a new point. \\
+\hline
+Random Forest (supervised) & Strong accuracy when labelled data is available; interpretable feature importance. & Requires labelled attack data per vehicle, which is not available at the scale needed (see above). \\
+\hline
+Autoencoder & Can model complex, non-linear normal patterns given enough data. & Needs more training data and tuning effort per vehicle than the corpus reasonably supports; harder to justify and explain to a non-specialist analyst; heavier at inference time than a tree-based model. \\
+\hline
+\textbf{K-Means} & Simple, fast, easy to explain (cluster centroids); works well for a small, well-separated number of operating states. & Assumes roughly convex clusters; not intended as an anomaly detector by itself. \\
+\hline
+\end{tabularx}
+\normalsize
+\end{table}
+
+\subsubsection{Selection criteria and engineering justification}
+
+Three criteria drove the final choice. The algorithm had to score a single frame fast enough to sustain real-time replay and live capture (NFR1). It had to work with only normal training data, per the supervised-versus-unsupervised discussion above. And its behaviour had to be explainable to an analyst without a machine-learning background (NFR3), at least at the level of ``how anomalous is this compared to what this vehicle normally does''.
+
+\textbf{Isolation Forest} was selected for the anomaly-scoring layer because it satisfies all three: it scores a single feature vector in microseconds, it trains directly from normal traffic without needing labelled attacks, and its anomaly score has a simple interpretation (how easy the point was to isolate from the rest of the data). One-Class SVM and LOF were both considered and rejected mainly on the first criterion: LOF's per-sample cost scales with the size of the reference dataset, which conflicts with sustained real-time scoring, and One-Class SVM's training cost becomes a problem when retraining on a multi-million-frame corpus. DBSCAN was rejected because it does not naturally produce a per-sample anomaly score, only cluster membership. The Autoencoder was rejected mainly on the third criterion combined with training cost: justifying and debugging a neural model's output to an analyst, and to this report's jury, is harder than justifying an Isolation Forest's path-length score, for a gain in accuracy that was not demonstrated to be necessary for this problem.
+
+\textbf{K-Means} was selected for the separate driving-state classification step, not as an anomaly detector, because the underlying problem is a genuine clustering problem with a small, known number of expected states (parking, idle, driving) that separate reasonably well on timing and payload features. Its simplicity also matters operationally: it is the same algorithm whose state-classification defect is documented in Chapter~\ref{chap:validation}, and a simple, inspectable model was part of what made that defect possible to diagnose precisely instead of remaining a mysterious accuracy problem.
+
+\subsubsection{The contamination parameter}
+
+Isolation Forest requires a contamination parameter, an estimate of the expected proportion of anomalies in the training data, used to convert raw path-length scores into a binary normal/anomalous decision at training time. Because the training corpus (Appendix~\ref{app:datasets}) is overwhelmingly normal traffic, contamination was set low and treated as a training-time calibration constant rather than a detection threshold: the detection threshold an analyst actually configures (Table~\ref{tab:app-fusion-config}, Appendix~\ref{app:config}) is applied later, to the fused, remapped 0--2 score described earlier in this chapter, not to the raw Isolation Forest output directly.
+
+\subsection{Training pipeline}
+
+Figure~\ref{fig:ml-training} shows the offline training pipeline that produces every vehicle's model bundle: cleaning and normalizing the raw corpus, running it through the same feature engineering used at runtime, splitting into training and validation subsets, training the shared K-Means state classifier, training one Isolation Forest per state and per vehicle, and validating against the held-out split before exporting the fitted models to the runtime model store.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{ml_training_pipeline.png}
+\caption{Machine learning training pipeline, from the raw corpus to the runtime model store.}
+\label{fig:ml-training}
+\end{figure}
+
+Each trained Isolation Forest was checked against a held-out split of its own training corpus before export, confirming that the fitted contamination level produced a normal/anomalous split consistent with the training-time expectation, and that scoring a held-out batch did not raise a shape or scaling error. This is a model-level sanity check, distinct from the system-level validation described in Chapter~\ref{chap:validation}: it confirms the model file itself is usable, not that the runtime engine calls it correctly. Chapter~\ref{chap:validation}'s Fix 1 and Fix 2 are examples where a model passed this model-level validation perfectly, while the runtime code around it still called it incorrectly, which is why both levels of validation were necessary.
+
+\subsection{Isolation Forest scoring}
+
+Each vehicle profile that has a trained model bundle stores one scikit-learn~\cite{pedregosa2011scikit} Isolation Forest~\cite{liu2008isolation} per driving state (for example, \emph{idle} and \emph{driving}), each with its own fitted scaler. Scoring a frame means: scale the feature vector with that state's scaler, compute the forest's decision score, and linearly remap the result so that the model's own decision threshold maps to a score of 0.5, and increasingly negative (more anomalous) values map towards 1.0. If no bundle exists for the requested vehicle, the store falls back to a generic bundle, and if even that has no model for the current state, the engine falls back to a lightweight heuristic derived from the timing and payload layers, so that scoring never fails outright.
+
+\subsection{State classification}
+\label{sec:impl-state}
+
+Before scoring, the engine must decide which driving state the vehicle is currently in, since a different Isolation Forest is trained per state. This is done with a K-Means~\cite{macqueen1967methods} model shared across vehicles: the current feature vector is scaled with a dedicated scaler and passed to the K-Means model, and the resulting cluster index is mapped to a state name (\emph{parking}, \emph{idle}, \emph{driving}) through a small lookup table produced at training time.
+
+Two implementation details matter here and are directly connected to a defect documented in Chapter~\ref{chap:validation}: the feature vector passed to the state classifier must have the exact same length and order as the one used to fit the K-Means model (fourteen features), and it must be scaled the same way it was scaled at training time before the model is called. Skipping either step does not raise a visible error if the surrounding code catches exceptions broadly, which is what made this defect hard to notice without deliberate, evidence-based testing.
+
+\subsection{Runtime inference}
+
+Figure~\ref{fig:runtime-inference} summarizes how the pieces above fit together for a single incoming frame at runtime: parsing, feature extraction, state classification, vehicle-specific model bundle selection, Isolation Forest scoring, fusion with the timing and payload layers, severity classification, and alerting.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{runtime_inference_pipeline.png}
+\caption{Runtime inference pipeline, from an incoming frame to an alert.}
+\label{fig:runtime-inference}
+\end{figure}
+
 \section{Hardware layer}
 
 The hardware layer wraps the \texttt{python-can} library to support three transports: ELM327 over a serial/slcan connection, PEAK PCAN-USB, and native SocketCAN. It exposes connect, disconnect, and status endpoints, and feeds every received frame through the same \texttt{RealtimeEngine} instance used by replay, with the vehicle identifier selected in the Settings view. This design means the detection pipeline itself required no change to support live hardware; only the transport layer differs, which is why carrying this path through the project as code-complete but unvalidated, pending a compatible electric vehicle (Chapter~\ref{chap:requirements}), was an acceptable risk.
@@ -180,4 +297,4 @@ Figure~\ref{fig:deployment} shows how the system is deployed on a single worksta
 
 \section{Conclusion}
 
-This chapter presented the layered architecture of CANvisionNative, its desktop and backend components, its database schema, its \gls{rest} \gls{api}, the replay engine, the four-layer detection pipeline, the hardware transport layer, and the \gls{ai} explanation workflow, together with the class, entity-relationship, and deployment diagrams that summarize the design. The next chapter describes how this design was implemented.
+This chapter presented the layered architecture of CANvisionNative, its desktop and backend components, its database, its \gls{rest} \gls{api}, the replay engine, the four-layer detection pipeline, the machine-learning approach behind it, the hardware transport layer, and the \gls{ai} explanation workflow, together with the class and deployment diagrams that summarize the design. The next chapter describes how this design was implemented.
