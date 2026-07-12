@@ -115,7 +115,7 @@ Four defects were found directly from the root-cause analysis above. Two further
 
 \textbf{Investigation.} The vehicle identifier was traced from the UI selector, through the \gls{rest} call, into the replay subprocess, and finally into the scoring call itself.
 
-\textbf{Root cause.} \texttt{RealtimeEngine.process\_frame()} never passed the selected vehicle identifier to \texttt{RuntimeModelStore.score()}, so every replay — regardless of which vehicle profile the analyst selected — was scored with the generic, non-vehicle-specific model.
+\textbf{Root cause.} \texttt{RealtimeEngine.process\_frame()} never passed the selected vehicle identifier to \texttt{RuntimeModelStore.score()}. As a result, every replay was scored with the generic, non-vehicle-specific model, regardless of which vehicle profile the analyst selected.
 
 \textbf{Fix.} The vehicle identifier was threaded through the engine's constructor and every call site that creates it: the replay engine, the offline analyzer, the live hardware interface (including a reset to the generic profile on disconnect), the \gls{rest} endpoint, and the full C\# call chain down to the view model bound to the vehicle selector.
 
@@ -168,7 +168,7 @@ Four defects were found directly from the root-cause analysis above. Two further
 
 \subsection{Fix 5 — Alert-polling timer left stopped}
 
-\textbf{Problem.} After importing a log from the Home screen, no later replay — even a fresh, correctly configured one — could deliver alerts to the Anomaly Intel view for the rest of the application's lifetime.
+\textbf{Problem.} After importing a log from the Home screen, no later replay could deliver alerts to the Anomaly Intel view for the rest of the application's lifetime, not even a fresh, correctly configured one.
 
 \textbf{Investigation.} This defect only appeared through the live desktop client, not through direct backend \gls{api} calls, which is why it was missed by the backend-only tests behind Fixes 1--4 and only surfaced during the end-to-end re-validation pass.
 

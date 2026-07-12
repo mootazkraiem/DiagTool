@@ -66,7 +66,7 @@ CANvisionNative is built as two cooperating processes on the same machine: a Win
 \label{fig:overall-arch}
 \end{figure}
 
-The desktop client only talks to the \gls{rest} \gls{api} layer. The \gls{api} layer routes requests to the detection engine and to the data layer, and the detection engine calls the \gls{ai} explanation engine when an alert explanation is requested. This separation means the detection logic can be exercised directly through the \gls{api}, independently of the desktop client, which is exactly how a large part of the validation in Chapter~\ref{chap:validation} was carried out.
+The desktop client only talks to the \gls{rest} \gls{api} layer. The \gls{api} layer routes requests to the detection engine and to the data layer, and the detection engine calls the \gls{ai} explanation engine when an alert explanation is requested. This separation means the detection logic can be exercised directly through the \gls{api}, independently of the desktop client, which is how a large part of the validation in Chapter~\ref{chap:validation} was carried out.
 
 \subsection{Frontend architecture}
 

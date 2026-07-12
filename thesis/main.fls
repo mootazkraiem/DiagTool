@@ -1,6 +1,6 @@
-PWD c:\Users\benkr\OneDrive\can_project\thesis
+PWD C:\Users\benkr\OneDrive\can_project\thesis
 INPUT C:\Users\benkr\AppData\Local\MiKTeX\miktex\data\le\pdftex\pdflatex.fmt
-INPUT c:\Users\benkr\OneDrive\can_project\thesis\main.tex
+INPUT main.tex
 OUTPUT main.log
 INPUT C:\Users\benkr\AppData\Local\Programs\MiKTeX\tex\latex\base\report.cls
 INPUT C:\Users\benkr\AppData\Local\Programs\MiKTeX\tex\latex\base\report.cls
@@ -628,9 +628,9 @@ INPUT C:\Users\benkr\AppData\Local\Programs\MiKTeX\tex\latex\psnfss\t1pcr.fd
 INPUT C:\Users\benkr\AppData\Local\Programs\MiKTeX\tex\latex\psnfss\t1pcr.fd
 INPUT C:\Users\benkr\AppData\Local\Programs\MiKTeX\tex\latex\psnfss\t1pcr.fd
 INPUT C:\Users\benkr\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\courier\pcrr8t.tfm
-INPUT C:\Users\benkr\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\times\ptmri8t.tfm
 INPUT C:\Users\benkr\AppData\Local\Programs\MiKTeX\fonts\vf\adobe\courier\pcrr8t.vf
 INPUT C:\Users\benkr\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\courier\pcrr8r.tfm
+INPUT C:\Users\benkr\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\times\ptmri8t.tfm
 INPUT .\diagrams\project_timeline.png
 INPUT .\diagrams\project_timeline.png
 INPUT .\diagrams\project_timeline.png
