@@ -23,9 +23,9 @@ The project sits in the broader context of automotive cybersecurity. Modern vehi
 The project, \textbf{CANvisionNative}, is an intelligent \gls{can} diagnostic and validation platform for Battery Management Systems that incorporates machine-learning-based anomaly detection. It combines:
 
 \begin{itemize}
-    \item a Windows desktop client (\gls{wpf}, \gls{mvvm}) for visualization, replay control, and analyst interaction;
-    \item a Python backend (FastAPI) that decodes \gls{can} frames, extracts features, scores anomalies, and generates natural-language explanations;
-    \item a machine-learning layer trained on more than seven million \gls{can} frames across sixteen vehicle- and dataset-specific sources;
+    \item a Windows desktop client (\gls{wpf}, \gls{mvvm}) for visualization, replay control, and analyst interaction
+    \item a Python backend (FastAPI) that decodes \gls{can} frames, extracts features, scores anomalies, and generates natural-language explanations
+    \item a machine-learning layer trained on more than seven million \gls{can} frames across sixteen vehicle- and dataset-specific sources
     \item support for three operating modes: replay of recorded logs, live simulation, and live hardware capture.
 \end{itemize}
 
@@ -75,9 +75,9 @@ Table~\ref{tab:methodology-comparison} compares the three methodological approac
 \toprule
 \textbf{Approach} & \textbf{Advantages} & \textbf{Disadvantages} \\
 \midrule
-Waterfall & Clear, predictable phases; easy to plan and document up front; well suited to fixed, well-understood requirements. & Requirements are frozen too early for an exploratory project; a defect found late (for example during validation) is expensive to trace back to an earlier phase; poor fit when the exact scope of the machine-learning layer or the validation effort cannot be fully specified in advance. \\
-Agile (general) & Iterative delivery of working software; requirements and design can evolve as understanding improves; feedback is incorporated continuously instead of only at the end. & Requires discipline to avoid scope drift; without a team, several Agile ceremonies (stand-ups, planning poker) lose most of their value. \\
-Scrum & Structures Agile delivery around a prioritized backlog and short, incremental delivery cycles, each producing a working increment that can be reviewed and built upon; makes it natural to reprioritize (for example, to insert a dedicated correction phase) once real evidence changes what matters most. & Formal Scrum assumes a cross-functional team with distinct roles (Product Owner, Scrum Master, development team) and regular ceremonies; a single-developer project cannot reproduce these roles literally and has to adapt the framework rather than apply it as written. \\
+Waterfall & Clear, predictable phases easy to plan and document up front well suited to fixed, well-understood requirements. & Requirements are frozen too early for an exploratory project a defect found late (for example during validation) is expensive to trace back to an earlier phase, poor fit when the exact scope of the machine-learning layer or the validation effort cannot be fully specified in advance. \\
+Agile (general) & Iterative delivery of working software requirements and design can evolve as understanding improves feedback is incorporated continuously instead of only at the end. & Requires discipline to avoid scope drift without a team, several Agile ceremonies (stand-ups, planning poker) lose most of their value. \\
+Scrum & Structures Agile delivery around a prioritized backlog and short, incremental delivery cycles, each producing a working increment that can be reviewed and built upon makes it natural to reprioritize (for example, to insert a dedicated correction phase) once real evidence changes what matters most. & Formal Scrum assumes a cross-functional team with distinct roles (Product Owner, Scrum Master, development team) and regular ceremonies a single-developer project cannot reproduce these roles literally and has to adapt the framework rather than apply it as written. \\
 \bottomrule
 \end{tabular}
 \end{table}
