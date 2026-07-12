@@ -5,55 +5,33 @@
 
 This chapter presents the architecture of CANvisionNative: the technology choices, the overall layered architecture, the desktop client, the backend, the database, the \gls{rest} \gls{api}, the replay engine, the detection pipeline, the \gls{ai} explanation engine, the hardware layer, and the deployment architecture. Every diagram in this chapter is a UML diagram produced with PlantUML, generated directly from the actual architecture described in Chapter~\ref{chap:impl}.
 
-\section{Technology choices}
-
-The desktop client is built with \gls{wpf} and the \gls{mvvm} pattern on .NET Framework 4.8, chosen because it gives a native, responsive Windows UI with strong data-binding support, well suited to the chart-heavy, multi-screen client this project required. The backend is a Python FastAPI application, chosen because it exposes a typed, self-documenting \gls{rest} \gls{api} with minimal boilerplate and integrates directly with the Python machine-learning stack (scikit-learn, pandas) already used for model training. SQLite was chosen for persistence because the system runs as a single local process on a single workstation, with no need for a networked database server. Communication between the two processes uses \gls{http} \gls{json} over \texttt{localhost}, which keeps the client and backend independently testable and lets the backend be driven directly for automated validation, as done throughout Chapter~\ref{chap:validation}.
-
-Table~\ref{tab:tech-comparison} summarizes the main alternative considered for each layer and why it was set aside in favour of the chosen technology.
-
-\begin{table}[H]
-\centering
-\caption{Technology choices and the main alternative considered.}
-\label{tab:tech-comparison}
-\begin{tabularx}{\textwidth}{@{}p{2.3cm}p{3.2cm}p{3.0cm}X@{}}
-\toprule
-\textbf{Layer} & \textbf{Chosen} & \textbf{Alternative considered} & \textbf{Why the alternative was set aside} \\
-\midrule
-Desktop client & WPF / MVVM (.NET 4.8) & Web-based client (Electron / browser) & Would add a packaging and update-delivery layer for no real benefit on a single-workstation tool, and .NET 4.8 was already the required target platform. \\
-Backend \gls{api} & FastAPI (Python) & Flask, Django & FastAPI's typed request/response models and automatic \gls{api} documentation reduced boilerplate, and its async support was not needed but did not cost anything either, Django's full-stack features (templating, admin site) were unnecessary for a pure \gls{api} backend. \\
-Persistence & SQLite & PostgreSQL / MySQL & A networked database server would add an operational dependency with no benefit, since the system runs as a single local process on a single workstation. \\
-\gls{ml} runtime & scikit-learn & PyTorch / TensorFlow & The selected algorithms (Isolation Forest, K-Means) are classical, non-neural methods well supported by scikit-learn, a deep-learning framework would add dependency weight without a corresponding algorithm need (Section~\ref{sec:ml-selection}). \\
-Client/backend transport & \gls{http} \gls{json} over localhost & gRPC, named pipes & \gls{http} \gls{json} is simple to test directly (curl, browser, automated scripts), which was used throughout Chapter~\ref{chap:validation} to drive the backend independently of the desktop client. \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
 \section{Technologies used}
 \label{sec:tech-used}
 
-Table~\ref{tab:tech-used} lists every technology used in the project, grouped by category, as a quick reference alongside the more detailed justification given above and in Section~\ref{sec:ml-selection}.
+Figure~\ref{fig:tech-logos} shows the full technology stack, as presented during the project defense. Each technology is introduced individually below: what it is, and why it was the right fit for this platform.
 
-\begin{table}[H]
+\begin{figure}[H]
 \centering
-\caption{Technologies used, by category.}
-\label{tab:tech-used}
-\begin{tabularx}{\textwidth}{@{}p{3.4cm}X@{}}
-\toprule
-\textbf{Category} & \textbf{Technologies} \\
-\midrule
-Languages & C\# (.NET Framework 4.8), Python \\
-Desktop client & \gls{wpf}, \gls{mvvm}, CommunityToolkit.Mvvm, XAML, Newtonsoft.Json \\
-Backend / \gls{api} & FastAPI, uvicorn \\
-Machine learning & scikit-learn~\cite{pedregosa2011scikit} (Isolation Forest~\cite{liu2008isolation}, K-Means~\cite{macqueen1967methods}), pandas \\
-Data processing & \texttt{asammdf}~\cite{asam_mdf} (\gls{mf4} decoding), \texttt{python-can} (hardware interface) \\
-Persistence & SQLite \\
-AI explanation & Google Gemini API, Ollama (local \gls{llm} fallback) \\
-Export & PDFsharp \\
-Documentation \& diagrams & \LaTeX{}, PlantUML \\
-Version control & Git \\
-\bottomrule
-\end{tabularx}
-\end{table}
+\includegraphics[width=0.85\textwidth]{tech_logos.png}
+\caption{Technology stack used across the desktop client, backend, machine learning, and AI explanation layers.}
+\label{fig:tech-logos}
+\end{figure}
+
+\textbf{C\# and WPF (.NET Framework 4.8).} WPF is Microsoft's UI framework for native Windows desktop applications, paired here with the \gls{mvvm} pattern. It was chosen because it gives a responsive, native Windows interface with strong data-binding support, well suited to a chart-heavy, multi-screen client, and .NET 4.8 was already the required target platform for this project.
+
+\textbf{Python and FastAPI.} FastAPI is a Python web framework for building typed, self-documenting \gls{rest} APIs. It was chosen because it integrates directly with the Python machine-learning stack (scikit-learn, pandas) already used for model training, and it exposes a clean \gls{api} with minimal boilerplate.
+
+\textbf{SQLite.} SQLite is a lightweight, embedded database that runs in-process, with no separate server to install or manage. It was chosen because the system runs as a single local process on a single workstation, so a networked database server would add an operational dependency with no real benefit.
+
+\textbf{scikit-learn.} scikit-learn is a Python machine-learning library providing classical, well-supported algorithms. It was chosen because the platform's anomaly-scoring and state-classification needs (Isolation Forest~\cite{liu2008isolation}, K-Means~\cite{macqueen1967methods}) are well served by these classical methods, without the added weight of a deep-learning framework.
+
+\textbf{asammdf and python-can.} \texttt{asammdf}~\cite{asam_mdf} decodes ASAM \gls{mf4} binary log files, and \texttt{python-can} provides a common interface to physical \gls{can} adapters. Both were chosen as the standard, actively maintained open-source libraries for these two data-access needs in the Python ecosystem.
+
+\textbf{Google Gemini and Ollama.} Gemini is a cloud-hosted large language model, and Ollama runs a language model locally. The platform uses Gemini as its primary explanation provider, with a local Ollama model as an offline fallback, so an analyst can still get a natural-language explanation without an internet connection.
+
+\textbf{PDFsharp.} PDFsharp is a .NET library for generating PDF documents. It was chosen for the export feature because it lets the client build a formatted report directly from C\#, without depending on an external PDF service.
+
+\textbf{Communication.} The desktop client and the backend communicate over \gls{http} \gls{json} on the local machine, which keeps the two independently testable and lets the backend be driven directly for automated validation, as done throughout Chapter~\ref{chap:validation}.
 
 \section{Overall architecture}
 
@@ -70,9 +48,9 @@ The desktop client only talks to the \gls{rest} \gls{api} layer. The \gls{api} l
 
 \subsection{Frontend architecture}
 
-The desktop client follows the \gls{mvvm} pattern. Each screen (Home, Dashboard, Telemetry, Diagnostics, Log Playback, Anomaly Intel, Settings) has a XAML view and a corresponding ViewModel in \texttt{ViewModels/SectionViewModels.cs}.
+The desktop client follows the \gls{mvvm} pattern. Each screen (Home, Dashboard, Telemetry, Diagnostics, Log Playback, Anomaly Intel, Settings) has a XAML view and a corresponding ViewModel.
 
-Two services sit between the ViewModels and the backend, as shown in Figure~\ref{fig:frontend-arch}. \texttt{PythonApiClient} is a thin \gls{http} client wrapping every backend endpoint. \texttt{VehicleDataService} is the shared, in-memory client state (current snapshot, alert history, replay runtime metrics), it owns a polling timer that periodically calls the backend and raises events the ViewModels subscribe to.
+Two services sit between the ViewModels and the backend, as shown in Figure~\ref{fig:frontend-arch}. An \gls{api} client service is a thin \gls{http} client wrapping every backend endpoint. A shared data service holds the in-memory client state (current snapshot, alert history, replay runtime metrics); it owns a polling timer that periodically calls the backend and raises events the ViewModels subscribe to.
 
 \begin{figure}[H]
 \centering
@@ -85,30 +63,21 @@ Navigation between sections is driven by a section catalog and a navigation serv
 
 \subsection{Backend architecture}
 
-The backend is a single FastAPI application (\texttt{backend/api/server.py}) organized around five responsibilities:
+The backend is a single FastAPI application organized around five responsibilities:
 
 \begin{enumerate}
-    \item \textbf{Decoding} (\texttt{backend/decoding/}) vehicle profile registry and \gls{dbc}-based signal decoding.
-    \item \textbf{Data processing} (\texttt{backend/data\_processing/}) log parsing and \gls{mf4}-to-\gls{csv} conversion.
-    \item \textbf{Machine learning} (\texttt{backend/ml/}) feature engineering, the runtime detection engine, training scripts, and the \gls{ai} explainer.
-    \item \textbf{Hardware} (\texttt{backend/hardware/}) the live \gls{can} adapter interface and session recorder.
-    \item \textbf{Persistence} (\texttt{backend/db/}) the SQLite session and alert store.
+    \item \textbf{Decoding} --- vehicle profile registry and \gls{dbc}-based signal decoding.
+    \item \textbf{Data processing} --- log parsing and \gls{mf4}-to-\gls{csv} conversion.
+    \item \textbf{Machine learning} --- feature engineering, the runtime detection engine, training scripts, and the \gls{ai} explainer.
+    \item \textbf{Hardware} --- the live \gls{can} adapter interface and session recorder.
+    \item \textbf{Persistence} --- the SQLite session and alert store.
 \end{enumerate}
 
-Long-running work (a replay, an offline analysis) is executed in a background subprocess or thread so that the \gls{api} stays responsive, the client polls a status endpoint until the work completes.
+Long-running work, such as a replay or an offline analysis, runs in a background subprocess or thread so the \gls{api} stays responsive; the client polls a status endpoint until the work completes.
 
 \subsection{Database}
 
-The backend keeps a small SQLite database (\texttt{backend/db/canvision.db}) for session bookkeeping and historical alerts, independent of the per-replay summary files used for the live client views. Figure~\ref{fig:er-diagram} shows its three tables.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{er_diagram.png}
-\caption{Entity-relationship diagram of the SQLite persistence layer.}
-\label{fig:er-diagram}
-\end{figure}
-
-A \texttt{session} groups the frames and alerts produced by one live, replay, or injection run. \texttt{live\_frames} keeps every captured frame with its raw bytes and the engine's normal/anomalous classification, including an optional \texttt{user\_label} so a human reviewer can correct the label for future retraining. \texttt{alert\_history} keeps one row per raised alert, including the parsed detection-layer reason string and the recommended response, indexed on \texttt{session\_id} and \texttt{severity} for fast filtering.
+The backend keeps a small SQLite database for session bookkeeping and historical alerts. SQLite was chosen because the whole system runs as a single local process on a single workstation, so a networked database server would only add an operational dependency with no real benefit. The database stores three things: each recorded session (a live, replay, or injection run), every captured frame within that session with its normal/anomalous classification, and the history of raised alerts. This is enough to support session bookkeeping, historical alert review, and re-training from analyst-corrected labels, without needing anything beyond a local, file-based store.
 
 \section{REST API}
 
@@ -126,7 +95,7 @@ Figure~\ref{fig:rest-api-flow} groups these endpoints by the backend component t
 \section{Replay engine}
 \label{sec:design-replay}
 
-The replay engine (\texttt{backend/ml/runtime/replay\_runner.py}) is launched as a subprocess by the \texttt{/api/replay/start} endpoint. It reads the input file through a single, format-aware loader (Section~\ref{sec:impl-parser}) shared with the offline batch analyzer, so that every supported format enters the pipeline as the same canonical \texttt{(timestamp, can\_id, payload)} stream. Each frame is then passed, in order, to the same \texttt{RealtimeEngine} used by the live and simulated paths, guaranteeing that replay, live, and simulated detection behave identically for the same input. Figure~\ref{fig:seq-replay} shows the full replay lifecycle as a sequence diagram. Section~\ref{sec:impl-replay} describes its implementation in detail, and Chapter~\ref{chap:validation} documents two defects that were found and fixed in this exact module.
+The replay engine is launched as a subprocess by the \texttt{/api/replay/start} endpoint. It reads the input file through a single, format-aware loader (Section~\ref{sec:impl-parser}) shared with the offline batch analyzer, so that every supported format enters the pipeline as the same canonical \texttt{(timestamp, can\_id, payload)} stream. Each frame is then passed, in order, to the same \texttt{RealtimeEngine} used by the live and simulated paths, guaranteeing that replay, live, and simulated detection behave identically for the same input. Figure~\ref{fig:seq-replay} shows the full replay lifecycle as a sequence diagram. Section~\ref{sec:impl-replay} describes its implementation in detail, and Chapter~\ref{chap:validation} documents two defects that were found and fixed in this exact module.
 
 \begin{figure}[H]
 \centering
@@ -169,7 +138,7 @@ The four layers are combined into one fusion score by a fixed weighted sum, and 
 
 \section{Hardware layer}
 
-The hardware layer (\texttt{backend/hardware/can\_interface.py}) wraps the \texttt{python-can} library to support three transports: ELM327 over a serial/slcan connection, PEAK PCAN-USB, and native SocketCAN. It exposes connect, disconnect, and status endpoints, and feeds every received frame through the same \texttt{RealtimeEngine} instance used by replay, with the vehicle identifier selected in the Settings view. This design means the detection pipeline itself required no change to support live hardware once an adapter is available, only the transport layer differs, which is why the code-complete-but-hardware-blocked status described in Chapter~\ref{chap:requirements} was an acceptable risk to carry through the project.
+The hardware layer wraps the \texttt{python-can} library to support three transports: ELM327 over a serial/slcan connection, PEAK PCAN-USB, and native SocketCAN. It exposes connect, disconnect, and status endpoints, and feeds every received frame through the same \texttt{RealtimeEngine} instance used by replay, with the vehicle identifier selected in the Settings view. This design means the detection pipeline itself required no change to support live hardware once an adapter is available, only the transport layer differs, which is why the code-complete-but-hardware-blocked status described in Chapter~\ref{chap:requirements} was an acceptable risk to carry through the project.
 
 \section{AI explanation engine}
 \label{sec:design-ai}
