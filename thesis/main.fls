@@ -1,6 +1,6 @@
-PWD C:\Users\benkr\OneDrive\can_project\thesis
+PWD c:\Users\benkr\OneDrive\can_project\thesis
 INPUT C:\Users\benkr\AppData\Local\MiKTeX\miktex\data\le\pdftex\pdflatex.fmt
-INPUT main.tex
+INPUT c:\Users\benkr\OneDrive\can_project\thesis\main.tex
 OUTPUT main.log
 INPUT C:\Users\benkr\AppData\Local\Programs\MiKTeX\tex\latex\base\report.cls
 INPUT C:\Users\benkr\AppData\Local\Programs\MiKTeX\tex\latex\base\report.cls
@@ -599,6 +599,9 @@ INPUT .\main.lot
 INPUT .\main.lot
 INPUT main.lot
 OUTPUT main.lot
+INPUT .\main.acr
+INPUT .\main.acr
+INPUT main.acr
 INPUT .\chapters\00_general_introduction.tex
 INPUT .\chapters\00_general_introduction.tex
 INPUT chapters\00_general_introduction.tex
