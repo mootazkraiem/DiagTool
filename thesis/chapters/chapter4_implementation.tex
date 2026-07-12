@@ -3,16 +3,16 @@
 
 \section{Introduction}
 
-This chapter describes how the design presented in Chapter~\ref{chap:design} was implemented. It covers the development environment, the desktop application, the backend, the replay engine and parsers, the \gls{mf4} conversion path, the vehicle profile system, the machine-learning pipeline, the \gls{ai} explanation module, the charting and export features, the settings module, and the hardware layer. Only short, illustrative snippets are shown; full listings are not included, in line with the reporting guidelines followed for this document.
+This chapter describes how the design presented in Chapter~\ref{chap:design} was implemented. It covers the development environment, the desktop application, the backend, the replay engine and parsers, the \gls{mf4} conversion path, the vehicle profile system, the machine-learning pipeline, the \gls{ai} explanation module, the charting and export features, the settings module, and the hardware layer. Only short, illustrative snippets are shown, full listings are not included, in line with the reporting guidelines followed for this document.
 
 \section{Development environment}
 
 \begin{itemize}
-    \item \textbf{Hardware.} A standard Windows desktop/laptop workstation was used for development, training, and validation; no specialized hardware was required for the software work. The live hardware capture path targets an ELM327 (serial/slcan), a PEAK PCAN-USB adapter, or native SocketCAN, but validating this path end to end requires a physical adapter connected to a vehicle, which did not arrive during the project (Chapter~\ref{chap:validation}, Limitations).
+    \item \textbf{Hardware.} A standard Windows desktop/laptop workstation was used for development, training, and validation, no specialized hardware was required for the software work. The live hardware capture path targets an ELM327 (serial/slcan), a PEAK PCAN-USB adapter, or native SocketCAN, but validating this path end to end requires a physical adapter connected to a vehicle, which did not arrive during the project (Chapter~\ref{chap:validation}, Limitations).
     \item \textbf{Operating system.} Windows 10/11, the target platform for the \gls{wpf} desktop client.
-    \item \textbf{Languages.} C\# (.NET Framework 4.8) for the desktop client; Python for the backend.
-    \item \textbf{Key libraries.} \gls{wpf} and CommunityToolkit.Mvvm for the client; FastAPI and uvicorn for the \gls{rest} \gls{api}; scikit-learn~\cite{pedregosa2011scikit} for Isolation Forest and K-Means; pandas and \texttt{asammdf} for data processing and \gls{mf4} decoding~\cite{asam_mdf}; \texttt{python-can} for the hardware layer; PDFsharp (via \texttt{PdfReportBuilder.cs}) for PDF export.
-    \item \textbf{Tooling.} Visual Studio for the C\# client; a standard Python virtual environment for the backend; SQLite as the embedded database, requiring no separate server process.
+    \item \textbf{Languages.} C\# (.NET Framework 4.8) for the desktop client, Python for the backend.
+    \item \textbf{Key libraries.} \gls{wpf} and CommunityToolkit.Mvvm for the client, FastAPI and uvicorn for the \gls{rest} \gls{api}, scikit-learn~\cite{pedregosa2011scikit} for Isolation Forest and K-Means, pandas and \texttt{asammdf} for data processing and \gls{mf4} decoding~\cite{asam_mdf}, \texttt{python-can} for the hardware layer, PDFsharp (via \texttt{PdfReportBuilder.cs}) for PDF export.
+    \item \textbf{Tooling.} Visual Studio for the C\# client, a standard Python virtual environment for the backend, SQLite as the embedded database, requiring no separate server process.
 \end{itemize}
 
 \section{Repository organization}
@@ -44,7 +44,7 @@ Table~\ref{tab:repo-stats} gives the size of each side of the repository, measur
 \midrule
 Python backend (\texttt{backend/})                        & 135 & 18{,}363 \\
 C\# client (\texttt{UI/}, \texttt{ViewModels/}, \texttt{Services/}, \texttt{Models/}, \texttt{Converters/}) & 33  & 10{,}084 \\
-XAML views (\texttt{UI/*.xaml})                            & 13  & — \\
+XAML views (\texttt{UI/*.xaml})                            & 13  &   \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -65,7 +65,7 @@ Figure~\ref{fig:screen-home} shows the Home screen, the client's entry point: it
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{01_home.png}
-\caption{Home screen — Live Session / Offline Import choice, backend connection status.}
+\caption{Home screen   Live Session / Offline Import choice, backend connection status.}
 \label{fig:screen-home}
 \end{figure}
 
@@ -87,7 +87,7 @@ Figure~\ref{fig:screen-anomaly-intel} shows the Anomaly Intel view: the alert li
 \label{fig:screen-anomaly-intel}
 \end{figure}
 
-The remaining two live views, Telemetry and Diagnostics, are shown in Figure~\ref{fig:screen-telemetry} and Figure~\ref{fig:screen-diagnostics}. Telemetry draws the decoded signal channels (speed, state of charge, motor temperature, voltage) alongside the raw live signal monitor and per-identifier activity ranking; Diagnostics exposes adapter and bus health, a running IDS event log, and a set of recovery actions for the live session.
+The remaining two live views, Telemetry and Diagnostics, are shown in Figure~\ref{fig:screen-telemetry} and Figure~\ref{fig:screen-diagnostics}. Telemetry draws the decoded signal channels (speed, state of charge, motor temperature, voltage) alongside the raw live signal monitor and per-identifier activity ranking, Diagnostics exposes adapter and bus health, a running IDS event log, and a set of recovery actions for the live session.
 
 \begin{figure}[H]
 \centering
@@ -110,7 +110,7 @@ The backend entry point, \texttt{backend/api/server.py}, defines all \gls{rest} 
 \subsection{Replay engine}
 \label{sec:impl-replay}
 
-This section describes the concrete implementation of the replay engine introduced in Section~\ref{sec:design-replay}. \texttt{backend/ml/runtime/replay\_runner.py} is invoked as a subprocess by \texttt{POST /api/replay/start}. It loads the input file through the shared, format-aware loader described in Section~\ref{sec:impl-parser}, builds three aligned arrays (timestamps, identifiers, payloads), and feeds them one by one into a \texttt{RealtimeEngine} instance configured with the requested vehicle identifier. Every 1{,}000 frames it writes a partial-alerts file to disk so the client can show live progress before the run completes; at the end it writes a summary \gls{json} file containing the full alert list and per-run statistics, which is what \texttt{GET /api/replay/alerts} serves to the client.
+This section describes the concrete implementation of the replay engine introduced in Section~\ref{sec:design-replay}. \texttt{backend/ml/runtime/replay\_runner.py} is invoked as a subprocess by \texttt{POST /api/replay/start}. It loads the input file through the shared, format-aware loader described in Section~\ref{sec:impl-parser}, builds three aligned arrays (timestamps, identifiers, payloads), and feeds them one by one into a \texttt{RealtimeEngine} instance configured with the requested vehicle identifier. Every 1{,}000 frames it writes a partial-alerts file to disk so the client can show live progress before the run completes, at the end it writes a summary \gls{json} file containing the full alert list and per-run statistics, which is what \texttt{GET /api/replay/alerts} serves to the client.
 
 A background thread on the server side (\texttt{monitor\_replay\_process}) waits for the subprocess to exit and updates the replay status to \texttt{completed} or \texttt{error}. It also publishes this replay's own alerts into the state consumed by the \gls{ai} explanation endpoint, a step added during the validation phase described in Chapter~\ref{chap:validation}.
 
@@ -120,11 +120,11 @@ A background thread on the server side (\texttt{monitor\_replay\_process}) waits
 Every supported log format is converted, at import time, into the same canonical stream: a sequence of \texttt{(timestamp, can\_id, payload)} tuples. A single dispatch function, \texttt{\_load\_file}, selects the correct parser by file extension:
 
 \begin{itemize}
-    \item \texttt{.csv} — generic \texttt{timestamp, can\_id, b0..b7} columns, or SavvyCAN-style columns.
-    \item \texttt{.mf4} — ASAM \gls{mf4}~\cite{asam_mdf} binary logs, decoded with \texttt{asammdf} (Section~\ref{sec:impl-mf4}).
-    \item \texttt{.asc} — Vector \gls{can} text format.
-    \item \texttt{.log} — candump / socketCAN text format, including the timestamped \texttt{(seconds) interface id\#data} variant used by several public datasets.
-    \item \texttt{.txt} — PCAN text format, falling back to candump parsing if the PCAN pattern is not matched.
+    \item \texttt{.csv}   generic \texttt{timestamp, can\_id, b0..b7} columns, or SavvyCAN-style columns.
+    \item \texttt{.mf4}   ASAM \gls{mf4}~\cite{asam_mdf} binary logs, decoded with \texttt{asammdf} (Section~\ref{sec:impl-mf4}).
+    \item \texttt{.asc}   Vector \gls{can} text format.
+    \item \texttt{.log}   candump / socketCAN text format, including the timestamped \texttt{(seconds) interface id\#data} variant used by several public datasets.
+    \item \texttt{.txt}   PCAN text format, falling back to candump parsing if the PCAN pattern is not matched.
 \end{itemize}
 
 This single dispatch point is what both the replay engine and the offline batch analyzer call, so that a defect in one format's parser cannot silently produce a different frame stream for replay than for offline analysis. Chapter~\ref{chap:validation} documents a defect found in exactly this area: before the fix, the replay engine had its own, separate, \gls{csv}-only loading code that ignored this shared dispatcher.
@@ -160,7 +160,7 @@ This single dispatch point is what both the replay engine and the offline batch 
 \end{tabular}
 \end{table}
 
-Selecting a profile in the client sets the \texttt{vehicle\_id} sent to every replay and live-capture request, which in turn selects both the \gls{dbc} decoding tables and the trained model bundle used for scoring, as described next. The nine profiles in Table~\ref{tab:vehicles} are the ones with full signal decoding through a named \gls{dbc} file; the trained model store (Appendix~\ref{app:datasets}) additionally holds model bundles for training-only sources without commercial vehicle names, such as the ROAD and Car-Hacking benchmark datasets, which is why the model store has more entries than Table~\ref{tab:vehicles}.
+Selecting a profile in the client sets the \texttt{vehicle\_id} sent to every replay and live-capture request, which in turn selects both the \gls{dbc} decoding tables and the trained model bundle used for scoring, as described next. The nine profiles in Table~\ref{tab:vehicles} are the ones with full signal decoding through a named \gls{dbc} file, the trained model store (Appendix~\ref{app:datasets}) additionally holds model bundles for training-only sources without commercial vehicle names, such as the ROAD and Car-Hacking benchmark datasets, which is why the model store has more entries than Table~\ref{tab:vehicles}.
 
 \section{Machine learning pipeline}
 
@@ -187,7 +187,7 @@ The core learning problem is to decide, for a given vehicle and a given driving 
 
 \subsubsection{Supervised versus unsupervised learning}
 
-A supervised approach would need a labelled dataset of normal and attack frames for every vehicle profile CANvisionNative supports. This was rejected as the main detection strategy for three reasons. Most of the training corpus (Appendix~\ref{app:datasets}) is normal, unlabelled traffic gathered from real vehicles and community logs; only a small part (ROAD, Car-Hacking) carries attack labels, and those labels come from a different vehicle and a different attack methodology than any vehicle an analyst might import. A supervised model trained on one manufacturer's attack patterns is also unlikely to generalize to an attack style it has never seen, which defeats the purpose of an anomaly-detection layer meant to catch unknown attacks. And, most practically, gathering real attack traffic on every supported vehicle was not feasible within this project. An unsupervised, anomaly-based approach avoids all three problems: it only needs a sample of normal traffic for the vehicle it is trained on, which the training corpus provides in quantity.
+A supervised approach would need a labelled dataset of normal and attack frames for every vehicle profile CANvisionNative supports. This was rejected as the main detection strategy for three reasons. Most of the training corpus (Appendix~\ref{app:datasets}) is normal, unlabelled traffic gathered from real vehicles and community logs, only a small part (ROAD, Car-Hacking) carries attack labels, and those labels come from a different vehicle and a different attack methodology than any vehicle an analyst might import. A supervised model trained on one manufacturer's attack patterns is also unlikely to generalize to an attack style it has never seen, which defeats the purpose of an anomaly-detection layer meant to catch unknown attacks. And, most practically, gathering real attack traffic on every supported vehicle was not feasible within this project. An unsupervised, anomaly-based approach avoids all three problems: it only needs a sample of normal traffic for the vehicle it is trained on, which the training corpus provides in quantity.
 
 \subsubsection{Candidate algorithms}
 
@@ -202,13 +202,13 @@ Table~\ref{tab:ml-comparison} compares the unsupervised and supervised candidate
 \toprule
 \textbf{Algorithm} & \textbf{Advantages} & \textbf{Disadvantages} \\
 \midrule
-Isolation Forest & Fast to train and to score; no distance computation, so it scales well with more features; does not assume a particular data distribution; works well on the kind of tabular, numeric features produced by CAN feature engineering. & Less interpretable than a hand-written rule; needs a contamination parameter to be set. \\
-One-Class SVM & Well-studied, clear geometric interpretation (a boundary around normal data). & Training cost grows quickly with dataset size; sensitive to kernel and parameter choice; slower to score in a real-time loop. \\
+Isolation Forest & Fast to train and to score, no distance computation, so it scales well with more features, does not assume a particular data distribution, works well on the kind of tabular, numeric features produced by CAN feature engineering. & Less interpretable than a hand-written rule, needs a contamination parameter to be set. \\
+One-Class SVM & Well-studied, clear geometric interpretation (a boundary around normal data). & Training cost grows quickly with dataset size, sensitive to kernel and parameter choice, slower to score in a real-time loop. \\
 Local Outlier Factor (LOF) & Captures local density variations, useful when normal traffic has several distinct clusters. & Expensive at inference time (distance to neighbours must be recomputed), which conflicts with the per-frame, real-time scoring requirement (NFR1). \\
-DBSCAN & No need to pre-specify the number of clusters; can find arbitrarily shaped clusters. & Designed for offline clustering, not per-sample scoring; does not naturally give a continuous anomaly score for a new point. \\
-Random Forest (supervised) & Strong accuracy when labelled data is available; interpretable feature importance. & Requires labelled attack data per vehicle, which is not available at the scale needed (see above). \\
-Autoencoder & Can model complex, non-linear normal patterns given enough data. & Needs more training data and tuning effort per vehicle than the corpus reasonably supports; harder to justify and explain to a non-specialist analyst; heavier at inference time than a tree-based model. \\
-\textbf{K-Means} & Simple, fast, easy to explain (cluster centroids); works well for a small, well-separated number of operating states. & Assumes roughly convex clusters; not intended as an anomaly detector by itself. \\
+DBSCAN & No need to pre-specify the number of clusters, can find arbitrarily shaped clusters. & Designed for offline clustering, not per-sample scoring, does not naturally give a continuous anomaly score for a new point. \\
+Random Forest (supervised) & Strong accuracy when labelled data is available, interpretable feature importance. & Requires labelled attack data per vehicle, which is not available at the scale needed (see above). \\
+Autoencoder & Can model complex, non-linear normal patterns given enough data. & Needs more training data and tuning effort per vehicle than the corpus reasonably supports, harder to justify and explain to a non-specialist analyst, heavier at inference time than a tree-based model. \\
+\textbf{K-Means} & Simple, fast, easy to explain (cluster centroids), works well for a small, well-separated number of operating states. & Assumes roughly convex clusters, not intended as an anomaly detector by itself. \\
 \bottomrule
 \end{tabularx}
 \normalsize
@@ -239,7 +239,7 @@ Figure~\ref{fig:ml-training} shows the offline training pipeline that produces e
 
 \subsubsection{Validation methodology}
 
-Each trained Isolation Forest was checked against a held-out split of its own training corpus before export, confirming that the fitted contamination level produced a normal/anomalous split consistent with the training-time expectation, and that scoring a held-out batch did not raise a shape or scaling error. This is a model-level sanity check, distinct from the system-level validation described in Chapter~\ref{chap:validation}: it confirms the model file itself is usable, not that the runtime engine calls it correctly. Chapter~\ref{chap:validation}'s Fix 1 and Fix 2 are precisely examples where a model passed this model-level validation perfectly, while the runtime code around it still called it incorrectly — which is why both levels of validation were necessary.
+Each trained Isolation Forest was checked against a held-out split of its own training corpus before export, confirming that the fitted contamination level produced a normal/anomalous split consistent with the training-time expectation, and that scoring a held-out batch did not raise a shape or scaling error. This is a model-level sanity check, distinct from the system-level validation described in Chapter~\ref{chap:validation}: it confirms the model file itself is usable, not that the runtime engine calls it correctly. Chapter~\ref{chap:validation}'s Fix 1 and Fix 2 are precisely examples where a model passed this model-level validation perfectly, while the runtime code around it still called it incorrectly   which is why both levels of validation were necessary.
 
 \subsection{Isolation Forest scoring}
 
@@ -269,7 +269,7 @@ The explanation module (\texttt{backend/ml/explainer/}) implements the workflow 
 
 This context is then sent to a provider chain that tries Google Gemini first, then a locally running Ollama model, and finally a rule-based template. The template fills in the same fields (summary, detail, recommendation) directly from the numeric context, so an explanation is always produced even with no network access. Each resolved explanation is also appended to the historical anomaly store, so that later, similar anomalies can reference it.
 
-Explanations are cached by a key derived from the alert's own identifier and score, to avoid asking the language model the same question twice for the same alert within a run; Chapter~\ref{chap:validation} documents how the lifecycle of this cache, not the explanation logic itself, was the source of a validation defect, and how it was corrected.
+Explanations are cached by a key derived from the alert's own identifier and score, to avoid asking the language model the same question twice for the same alert within a run, Chapter~\ref{chap:validation} documents how the lifecycle of this cache, not the explanation logic itself, was the source of a validation defect, and how it was corrected.
 
 \section{Charts}
 
@@ -277,7 +277,7 @@ The client draws its charts (anomaly score history, per-identifier activity, sev
 
 \section{Export}
 
-Two export paths are implemented from the Anomaly Intel view, shown in Figure~\ref{fig:export-workflow}: \gls{csv} export writes the currently displayed alert list, including the parsed reason, KB match label, and explanation text where available, to a user-chosen file; PDF export (\texttt{Services/PdfReportBuilder.cs}, built on PDFsharp) renders a paginated A4 report with a header, summary statistics, and a formatted alert table, suitable for sharing outside the application. Both paths read from the same in-memory alert list the analyst is looking at, so an export always matches what is currently on screen.
+Two export paths are implemented from the Anomaly Intel view, shown in Figure~\ref{fig:export-workflow}: \gls{csv} export writes the currently displayed alert list, including the parsed reason, KB match label, and explanation text where available, to a user-chosen file, PDF export (\texttt{Services/PdfReportBuilder.cs}, built on PDFsharp) renders a paginated A4 report with a header, summary statistics, and a formatted alert table, suitable for sharing outside the application. Both paths read from the same in-memory alert list the analyst is looking at, so an export always matches what is currently on screen.
 
 \begin{figure}[H]
 \centering

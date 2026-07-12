@@ -23,7 +23,7 @@
 \contentsline {figure}{\numberline {3.10}{\ignorespaces Deployment diagram: single-workstation deployment with external LLM and hardware links.}}{30}{figure.caption.32}%
 \addvspace {10\p@ }
 \contentsline {figure}{\numberline {4.1}{\ignorespaces Repository organization: the WPF client, the Python backend, and shared assets.}}{32}{figure.caption.33}%
-\contentsline {figure}{\numberline {4.2}{\ignorespaces Home screen — Live Session / Offline Import choice, backend connection status.}}{33}{figure.caption.35}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces Home screen Live Session / Offline Import choice, backend connection status.}}{33}{figure.caption.35}%
 \contentsline {figure}{\numberline {4.3}{\ignorespaces Log Playback view after a completed replay of the 97,741-frame Kia EV6 recording.}}{34}{figure.caption.36}%
 \contentsline {figure}{\numberline {4.4}{\ignorespaces Anomaly Intel view: alert list, layer-attribution bars, and the Chat with AI explanation panel.}}{34}{figure.caption.37}%
 \contentsline {figure}{\numberline {4.5}{\ignorespaces Telemetry view: decoded signal channels, live signal monitor, and CAN-ID activity ranking.}}{35}{figure.caption.38}%
