@@ -150,6 +150,8 @@ public sealed class VehicleDataService : ObservableObject
 
     public void Start()
     {
+        // A finished offline analysis must not block live alert polling (IDLE only).
+        lock (sync) { mlAnalysisState = "IDLE"; }
         SetAppState(AppState.LiveSession);
         if (!refreshTimer.IsEnabled)
         {
@@ -417,6 +419,8 @@ public sealed class VehicleDataService : ObservableObject
         IReadOnlyList<RuntimeAlertEvent> finalHistory;
         lock (sync)
         {
+            // Offline analysis is finished: Log Playback rebuilds its lanes on COMPLETE.
+            mlAnalysisState     = "COMPLETE";
             detectedAttackType  = attackType;
             detectionConfidence = confidence;
             alertHistory        = combined;

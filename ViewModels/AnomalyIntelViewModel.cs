@@ -240,6 +240,10 @@ public sealed class AnomalyIntelViewModel : SectionViewModel
     private static string NormalizeAttackType(string raw)
     {
         var s = raw.ToUpperInvariant();
+        // Attack classes named by the backend knowledge base (offline analysis).
+        if (s.Contains("DOS") || s.Contains("FLOOD"))                       return "DOS / FLOOD";
+        if (s.Contains("FUZZ"))                                             return "FUZZY";
+        if (s.Contains("SPOOF") || s.Contains("IMPERSONATION"))             return "SPOOFING";
         if (s.Contains("TIMING") || s.Contains("BURST") || s == "RUNTIME") return "TIMING";
         if (s.Contains("PAYLOAD") || s.Contains("CONTINUITY"))             return "PAYLOAD";
         if (s.Contains("ML") || s.Contains("OUTLIER"))                      return "ML OUTLIER";

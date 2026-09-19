@@ -246,7 +246,7 @@ feedback_store = FeedbackStore(Path("data") / "anomaly_feedback.jsonl")
 
 # Log active AI provider at startup
 if os.environ.get("GOOGLE_API_KEY"):
-    logger.info("[AI] GOOGLE_API_KEY set — Gemini 1.5 Flash provider active.")
+    logger.info("[AI] GOOGLE_API_KEY set — Gemini provider active (%s).", os.environ.get("GEMINI_MODEL") or "gemini-flash-latest")
 else:
     logger.warning("[AI] GOOGLE_API_KEY not set — Gemini provider disabled. Set GOOGLE_API_KEY for free LLM explanations. Using Ollama (if running) or template fallback.")
 cache = AnalyzeCache()
@@ -785,6 +785,11 @@ async def analyze(
     # polling, etc.), and cap how many alerts get a full LLM call so a large
     # uploaded log can't turn into an effectively unbounded request.
     _MAX_LLM_EXPLAIN_PER_ANALYZE = 25
+    # Wall-clock budget for all AI explanations of one request. The app gives an
+    # offline analysis 90 s; once the budget is spent the remaining alerts get the
+    # rule-based explanation (and /api/explain still writes them up on demand).
+    _LLM_EXPLAIN_BUDGET_S = 30.0
+    _llm_spent_s = 0.0
 
     explained_results: list[AnalyzeResult] = []
     for _explain_idx, context in enumerate(contexts):
@@ -872,8 +877,10 @@ async def analyze(
             "reason":                    f"top_feature={top_f}, cluster={context.get('cluster', 0)}",
             "dominant_detection_layer":  layer_primary,
         }
-        if _explain_idx < _MAX_LLM_EXPLAIN_PER_ANALYZE:
+        if _explain_idx < _MAX_LLM_EXPLAIN_PER_ANALYZE and _llm_spent_s < _LLM_EXPLAIN_BUDGET_S:
+            _llm_started = time.perf_counter()
             explanation = await _loop.run_in_executor(None, llm_explain_alert, alert_adapted)
+            _llm_spent_s += time.perf_counter() - _llm_started
         else:
             explanation = {
                 "summary": f"{alert_adapted['severity']} on {alert_adapted['can_id']} — score {score:.3f}.",

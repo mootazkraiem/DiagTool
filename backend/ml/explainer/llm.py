@@ -4,7 +4,7 @@ Identity: domain-specific automotive cybersecurity analyst assistant.
 Focus: explainability, contextual reasoning, historical similarity, investigation.
 
 Provider chain (in order):
-1. Gemini 1.5 Flash — free tier (1M tokens/day). Needs GOOGLE_API_KEY env var.
+1. Gemini Flash (GEMINI_MODEL, default the gemini-flash-latest alias). Needs GOOGLE_API_KEY env var.
    Uses the Gemini REST API via urllib — no extra package required.
 2. Ollama — local LLM at localhost:11434. Tries llama3, mistral, gemma, phi3.
 3. Template — deterministic fallback, always works.
@@ -21,6 +21,7 @@ import json
 import logging
 import os
 import re
+import time
 import urllib.request
 import urllib.error
 import urllib.parse
@@ -32,10 +33,45 @@ from backend.ml.explainer.anomaly_store import save_anomaly
 
 logger = logging.getLogger(__name__)
 
-_GEMINI_URL = (
-    "https://generativelanguage.googleapis.com/v1beta/models/"
-    "gemini-1.5-flash:generateContent?key={key}"
-)
+# A pinned Gemini version is eventually retired (gemini-1.5-flash now returns 404),
+# so the default is Google's alias for the current Flash model. Set GEMINI_MODEL to
+# pin a specific version instead.
+_GEMINI_DEFAULT_MODEL = "gemini-flash-latest"
+_GEMINI_MAX_OUTPUT_TOKENS = 2048   # newer models spend part of this on thinking
+
+# After a failed call Gemini is skipped for a while, so one outage does not cost a
+# full failed round-trip on every alert of a large log.
+_GEMINI_RETRY_AFTER_S = 300.0      # model missing, bad key, bad request
+_GEMINI_RATE_LIMIT_RETRY_S = 60.0  # quota / rate limit (HTTP 429)
+_gemini_paused_until = 0.0
+
+
+def _gemini_url(api_key: str) -> str:
+    model = os.environ.get("GEMINI_MODEL", "").strip() or _GEMINI_DEFAULT_MODEL
+    return (
+        "https://generativelanguage.googleapis.com/v1beta/models/"
+        f"{model}:generateContent?key={api_key}"
+    )
+
+
+def _gemini_available() -> bool:
+    return time.monotonic() >= _gemini_paused_until
+
+
+def _pause_gemini_after(exc: Exception) -> None:
+    """Skip Gemini for a while after a client error; network blips are retried next call."""
+    global _gemini_paused_until
+    if not isinstance(exc, urllib.error.HTTPError) or not 400 <= exc.code < 500:
+        return
+    delay = _GEMINI_RATE_LIMIT_RETRY_S if exc.code == 429 else _GEMINI_RETRY_AFTER_S
+    _gemini_paused_until = time.monotonic() + delay
+    logger.warning("[analyst] Gemini HTTP %s - skipping Gemini for %.0f s.", exc.code, delay)
+
+
+def _candidate_text(candidate: dict[str, Any]) -> str:
+    """Joined answer text of a candidate, without thought parts."""
+    parts = (candidate.get("content") or {}).get("parts") or []
+    return "".join(p.get("text", "") for p in parts if not p.get("thought")).strip()
 _OLLAMA_URL = "http://localhost:11434/api/generate"
 _OLLAMA_MODELS = ["llama3", "gemma", "mistral", "phi3"]
 
@@ -472,7 +508,7 @@ def _try_gemini(
     alert: dict[str, Any], ctx: dict[str, Any], sig_ctx: str, web_ctx: str = ""
 ) -> dict[str, str] | None:
     api_key = os.environ.get("GOOGLE_API_KEY", "").strip()
-    if not api_key:
+    if not api_key or not _gemini_available():
         return None
     try:
         prompt = _build_analyst_prompt(alert, ctx, sig_ctx)
@@ -480,9 +516,9 @@ def _try_gemini(
             prompt += f"\n\n=== RECENT WEB RESEARCH ===\n{web_ctx}\nIncorporate relevant findings above into your analysis."
         body = {
             "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"temperature": 0.3, "maxOutputTokens": 700},
+            "generationConfig": {"temperature": 0.3, "maxOutputTokens": _GEMINI_MAX_OUTPUT_TOKENS},
         }
-        raw = _http_post(_GEMINI_URL.format(key=api_key), body, timeout=22)
+        raw = _http_post(_gemini_url(api_key), body, timeout=22)
         resp = json.loads(raw)
         candidates = resp.get("candidates")
         if not candidates:
@@ -493,7 +529,7 @@ def _try_gemini(
                 err.get("message", raw[:200]),
             )
             return None
-        text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+        text = _candidate_text(candidates[0])
         result = _parse_json_response(text)
         if result:
             result["kb_match_label"] = ctx["kb"]["attack_type"] if ctx.get("kb") else ""
@@ -501,6 +537,7 @@ def _try_gemini(
             return result
     except Exception as exc:
         logger.warning("[analyst] Gemini failed: %s", exc)
+        _pause_gemini_after(exc)
     return None
 
 
@@ -513,7 +550,7 @@ def _try_gemini_chat(
     web_ctx: str = "",
 ) -> str | None:
     api_key = os.environ.get("GOOGLE_API_KEY", "").strip()
-    if not api_key:
+    if not api_key or not _gemini_available():
         return None
     try:
         # Build multi-turn conversation from history (last 8 turns = 16 messages)
@@ -529,10 +566,11 @@ def _try_gemini_chat(
         body = {
             "contents": contents,
             # Google Search Grounding: Gemini will search the web automatically when useful
-            "tools": [{"google_search_retrieval": {"dynamic_retrieval_config": {"mode": "MODE_DYNAMIC", "dynamic_threshold": 0.4}}}],
-            "generationConfig": {"temperature": 0.5, "maxOutputTokens": 700},
+            # (google_search replaces the Gemini 1.5-era google_search_retrieval tool)
+            "tools": [{"google_search": {}}],
+            "generationConfig": {"temperature": 0.5, "maxOutputTokens": _GEMINI_MAX_OUTPUT_TOKENS},
         }
-        raw = _http_post(_GEMINI_URL.format(key=api_key), body, timeout=22)
+        raw = _http_post(_gemini_url(api_key), body, timeout=22)
         resp = json.loads(raw)
         candidates = resp.get("candidates")
         if not candidates:
@@ -543,7 +581,7 @@ def _try_gemini_chat(
                 err.get("message", raw[:200]),
             )
             return None
-        text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip()
+        text = _candidate_text(candidates[0])
         if text:
             grounding = candidates[0].get("groundingMetadata", {})
             queries = grounding.get("webSearchQueries", [])
@@ -554,6 +592,7 @@ def _try_gemini_chat(
             return text
     except Exception as exc:
         logger.warning("[analyst] Gemini chat failed: %s", exc)
+        _pause_gemini_after(exc)
     return None
 
 

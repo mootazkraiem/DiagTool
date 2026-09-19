@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
@@ -529,7 +530,8 @@ public sealed class HomeViewModel : SectionViewModel
             var analysisResponse = await analyzeTask.ConfigureAwait(true);
             AnalysisStatusText = "BUILDING INTELLIGENCE";
             var metrics = await pythonApiClient.GetMetricsAsync(CancellationToken.None).ConfigureAwait(true);
-            var apiAnomalies = ConvertApiAnomalies(analysisResponse);
+            var apiDetections = ConvertApiAnomalies(analysisResponse, packets);
+            var apiAnomalies = apiDetections.Select(d => d.Anomaly).ToList();
             if (apiAnomalies.Count > 0)
             {
                 VehicleDataService.UpdateAnomalies(apiAnomalies);
@@ -553,7 +555,7 @@ public sealed class HomeViewModel : SectionViewModel
                     latencyMs);
             }
 
-            VehicleDataService.CompleteReplayAnalysis(detectedAttack, confidence, Array.Empty<RuntimeAlertEvent>());
+            VehicleDataService.CompleteReplayAnalysis(detectedAttack, confidence, apiDetections.Select(d => d.Alert).ToList());
             AnalysisStatusText = $"ANALYSIS COMPLETE — {detectedAttack} · {analysisModel.ModelLabel}";
             AnalysisProgressPercent = 100;
             IsAnalysisIndeterminate = false;
@@ -583,13 +585,36 @@ public sealed class HomeViewModel : SectionViewModel
         return scores.Count == 0 ? 0 : scores.Max();
     }
 
-    private static List<CanAnomaly> ConvertApiAnomalies(PythonAnalyzeResponse? response)
+    // One backend detection, as the anomaly list and the alert history each need it.
+    internal sealed class ApiDetection
     {
-        var output = new List<CanAnomaly>();
+        public ApiDetection(CanAnomaly anomaly, RuntimeAlertEvent alert)
+        {
+            Anomaly = anomaly;
+            Alert = alert;
+        }
+
+        public CanAnomaly Anomaly { get; }
+        public RuntimeAlertEvent Alert { get; }
+    }
+
+    // Maps /analyze detections to anomalies and alert-history events.
+    // context.timestamp is the raw CSV time of the flagged frame, the same value the
+    // importer stores as RelativeTimestampSeconds, so each alert takes the wall-clock
+    // time of its own frame and lands on the right spot of the replay timeline.
+    internal static List<ApiDetection> ConvertApiAnomalies(PythonAnalyzeResponse? response, IReadOnlyList<PlaybackPacket> packets)
+    {
+        var output = new List<ApiDetection>();
         if (response?.Anomalies is null)
         {
             return output;
         }
+
+        var frameTimes = packets
+            .Select(p => (Relative: p.Frame.RelativeTimestampSeconds, Utc: p.Frame.TimestampUtc))
+            .OrderBy(t => t.Relative)
+            .ToArray();
+        var relativeTimes = frameTimes.Select(t => t.Relative).ToArray();
 
         foreach (var item in response.Anomalies)
         {
@@ -598,26 +623,78 @@ public sealed class HomeViewModel : SectionViewModel
             var canId = ReadHexOrInt(context, "can_id");
             var score = ReadDouble(context, "anomaly_score", ReadDouble(explanation, "anomaly_score", 0));
             var severityScore = Math.Max(0, Math.Min(100, Math.Abs(score) * 100.0));
-            var severity = severityScore >= 80 ? "CRITICAL" : (severityScore >= 40 ? "WARNING" : "INFO");
-            var issue = ReadString(explanation, "issue", ReadString(context, "type", "ANOMALY"));
-            var reason = ReadString(explanation, "reason", ReadString(explanation, "summary", "Detected by FastAPI analysis"));
+            // Same bands the screens label: CRITICAL >= 0.80, WARNING >= 0.55.
+            var severity = severityScore >= 80 ? "CRITICAL" : (severityScore >= 55 ? "WARNING" : "INFO");
+            var relativeSeconds = ReadDouble(context, "timestamp", 0);
 
-            output.Add(
-                new CanAnomaly
-                {
-                    Code = ReadString(context, "code", "API-ANOMALY"),
-                    Title = issue.ToUpperInvariant(),
-                    Description = reason,
-                    Severity = severity,
-                    SeverityScore = severityScore,
-                    AnomalyScore = score,
-                    RelatedCanId = canId,
-                    TimestampUtc = DateTime.UtcNow,
-                    Source = "fastapi",
-                });
+            var layers = context.TryGetValue("detection_layers", StringComparison.OrdinalIgnoreCase, out var layerToken)
+                         && layerToken is Newtonsoft.Json.Linq.JArray layerArray
+                ? layerArray.Select(t => t.ToString().ToUpperInvariant()).Where(t => t.Length > 0).ToList()
+                : new List<string>();
+            var layerText = layers.Count > 0 ? string.Join(" + ", layers) : "ML";
+            var knownAttack = ReadString(explanation, "kb_match_label", string.Empty);
+            var attackType = !string.IsNullOrWhiteSpace(knownAttack)
+                ? knownAttack.ToUpperInvariant()
+                : ReadString(context, "type", layers.Count > 0 ? layers[0] : "ANOMALY").ToUpperInvariant();
+            var topFeature = ReadString(context, "top_feature", string.Empty);
+            var description = string.IsNullOrWhiteSpace(topFeature)
+                ? $"Layers: {layerText}"
+                : $"Layers: {layerText} · top feature {topFeature}";
+
+            // Per-layer scores in the key=value form the Anomaly Intel layer breakdown reads.
+            var payloadScore = ReadBool(context, "plausibility_checked") && !ReadBool(context, "plausibility_passed", true) ? 1.0 : 0.0;
+            var layerScores = string.Format(
+                CultureInfo.InvariantCulture,
+                "timing={0:F3}, payload={1:F3}, ml={2:F3}, persistence={3:F3}",
+                ReadDouble(context, "timing_score", 0),
+                payloadScore,
+                Math.Abs(score),
+                ReadDouble(context, "temporal_score", 0));
+
+            var timestampUtc = NearestFrameUtc(frameTimes, relativeTimes, relativeSeconds);
+            var anomaly = new CanAnomaly
+            {
+                Code = ReadString(context, "code", "API-ANOMALY"),
+                Title = attackType,
+                Description = description,
+                Severity = severity,
+                SeverityScore = severityScore,
+                AnomalyScore = score,
+                RelatedCanId = canId,
+                TimestampUtc = timestampUtc,
+                Source = "fastapi",
+            };
+            var alert = new RuntimeAlertEvent
+            {
+                TimestampUtc = timestampUtc,
+                RelativeSeconds = relativeSeconds,
+                CanId = $"0x{canId:X3}",
+                Severity = severity,
+                Score = Math.Abs(score),
+                AttackType = attackType,
+                Reason = $"{description}, {layerScores}",
+            };
+            output.Add(new ApiDetection(anomaly, alert));
         }
 
         return output;
+    }
+
+    // Wall-clock time of the imported frame closest to a raw CSV timestamp.
+    private static DateTime NearestFrameUtc((double Relative, DateTime Utc)[] frameTimes, double[] relativeTimes, double relativeSeconds)
+    {
+        if (frameTimes.Length == 0)
+            return DateTime.UtcNow;
+        var index = Array.BinarySearch(relativeTimes, relativeSeconds);
+        if (index < 0)
+        {
+            index = ~index;
+            if (index >= relativeTimes.Length)
+                index = relativeTimes.Length - 1;
+            else if (index > 0 && relativeSeconds - relativeTimes[index - 1] < relativeTimes[index] - relativeSeconds)
+                index--;
+        }
+        return frameTimes[index].Utc;
     }
 
     private static string ResolveAttackType(PythonAnalyzeResponse? response, IReadOnlyList<CanAnomaly> anomalies, string fallback)
@@ -702,6 +779,17 @@ public sealed class HomeViewModel : SectionViewModel
                 System.Globalization.NumberStyles.Float,
                 System.Globalization.CultureInfo.InvariantCulture,
                 out var value))
+        {
+            return value;
+        }
+
+        return fallback;
+    }
+
+    private static bool ReadBool(Newtonsoft.Json.Linq.JObject source, string key, bool fallback = false)
+    {
+        if (source.TryGetValue(key, StringComparison.OrdinalIgnoreCase, out var token) &&
+            bool.TryParse(token.ToString(), out var value))
         {
             return value;
         }
