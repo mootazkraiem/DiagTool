@@ -137,12 +137,19 @@ def summarize_anomaly(
     base = freq_baseline.get(can_id_hex, 0.0)
 
     if temporal_pattern == "dos_burst":
-        ratio = round(current_freq / base, 1) if base > 0 else "?"
-        detail = (
-            f"Message frequency is {ratio}× above baseline "
-            f"({current_freq:.0f} msg/s vs {base:.0f} msg/s normal) — "
-            f"consistent with a DoS flood attack on {can_id_hex}."
-        )
+        if base >= 0.5:
+            detail = (
+                f"Message frequency is {round(current_freq / base, 1)}× above baseline "
+                f"({current_freq:.0f} msg/s vs {base:.0f} msg/s normal) — "
+                f"consistent with a DoS flood attack on {can_id_hex}."
+            )
+        else:
+            # Silent (or almost silent) in the baseline: a ratio is meaningless here
+            # (dividing by ~0 msg/s printed values like 2.57e+17x).
+            detail = (
+                f"{can_id_hex} sent {current_freq:.0f} msg/s but was essentially silent in the "
+                f"baseline (under 0.5 msg/s) — consistent with a DoS flood or an injected ID."
+            )
     elif temporal_pattern == "rate_spike":
         detail = (
             f"Sudden burst of {can_id_hex} frames detected (burstiness score {temporal_score:.2f}) "

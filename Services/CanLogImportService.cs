@@ -376,7 +376,10 @@ public sealed class CanLogImportService
             return DateTimeOffset.FromUnixTimeMilliseconds((long)Math.Round(seconds * 1000.0)).UtcDateTime;
         }
 
-        var baseTime = DateTime.UtcNow.Date;
+        // Local midnight, so every screen (they all show local time) reads the offset
+        // itself: 00:00:13 is 13 s into the capture. UTC midnight showed it as 01:00:13
+        // on a UTC+1 machine.
+        var baseTime = DateTime.Today.ToUniversalTime();
         return baseTime.AddSeconds(seconds);
     }
 

@@ -294,7 +294,12 @@ def _retrain_callback() -> None:
         logger.error("[RETRAIN] Failed: %s", exc)
 
 
-_store = _get_store(retrain_callback=_retrain_callback)
+# Automatic retraining is opt-in (CANVISION_AUTO_RETRAIN=1). It fits the general
+# model on whatever frames the model itself scored as normal, including frames of
+# imported attack logs, and overwrites the saved model: importing the same attack
+# log twice gave 476 alerts, then 90, because the model had learned the attack.
+_AUTO_RETRAIN = os.environ.get("CANVISION_AUTO_RETRAIN", "").strip() == "1"
+_store = _get_store(retrain_callback=_retrain_callback if _AUTO_RETRAIN else None)
 replay_status: dict[str, Any] = {"state": "idle", "input_path": "", "started_at": None}
 replay_monitor_thread: Optional[threading.Thread] = None
 replay_stdout: str = ""
@@ -1572,11 +1577,15 @@ def api_explain_alert(alert_index: int) -> dict[str, Any]:
         explanation = llm_explain_alert(alert_for_llm)
         _explain_cache[cache_key] = explanation
 
-        # Find recommended response from incidents if available
+        # Recommended response of the incident this alert belongs to: same CAN ID and
+        # inside that incident's time span. Taking the first incident with the same
+        # CAN ID put an earlier DoS burst's "CRITICAL - ISOLATE" on unrelated alerts.
         recommended_response = ""
+        alert_ts = float(replay_ctx.get("timestamp", 0.0))
         with _incidents_lock:
             for inc in _last_incidents:
-                if inc.get("can_id") == can_id_str:
+                if (inc.get("can_id") == can_id_str
+                        and float(inc.get("first_seen", 0.0)) <= alert_ts <= float(inc.get("last_seen", 0.0))):
                     recommended_response = inc.get("recommended_response", "")
                     break
 

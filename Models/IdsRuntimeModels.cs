@@ -190,4 +190,6 @@ public sealed class RuntimeAlertEvent
     public double Score { get; set; }
     public string AttackType { get; set; } = "UNKNOWN";
     public string Reason { get; set; } = string.Empty;
+    // Position in the backend's last /analyze result (what /api/explain/{index} reads); -1 when not from /analyze.
+    public int BackendIndex { get; set; } = -1;
 }

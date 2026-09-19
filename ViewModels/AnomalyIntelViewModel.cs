@@ -265,7 +265,9 @@ public sealed class AnomalyIntelViewModel : SectionViewModel
 
         var item = new AlertDetailItem
         {
-            Index         = index,
+            // /api/explain/{index} reads the backend's analyze order, not this list's
+            // newest-first order; asking by list position explained a different alert.
+            Index         = evt.BackendIndex >= 0 ? evt.BackendIndex : index,
             Time          = evt.TimestampUtc.ToLocalTime().ToString("HH:mm:ss.fff"),
             CanId         = evt.CanId,
             Severity      = evt.Severity,

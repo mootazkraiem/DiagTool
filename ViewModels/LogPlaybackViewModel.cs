@@ -33,7 +33,7 @@ public sealed class LogPlaybackViewModel : SectionViewModel
     private const double TimelineTrackHeight = 24;
     private double _fileStart = 0.0;
     private double _fileEnd   = 0.0;
-    private readonly HashSet<double> _placedAlertSeconds = new HashSet<double>();
+    private readonly HashSet<string> _placedAlertKeys = new HashSet<string>();
     // Detection threshold as a fraction of the plot height, measured from the top.
     // Normal traffic tops out at density*0.62, so 0.28 from the top (score 0.72)
     // sits above it: only real ML detections cross the line.
@@ -726,7 +726,7 @@ public sealed class LogPlaybackViewModel : SectionViewModel
             _lastInjectedAlertChecksum = checksum;
 
             // Final result: rebuild sorted alert list then do a full rebuild
-            _placedAlertSeconds.Clear();
+            _placedAlertKeys.Clear();
             _allAlertsByFrame.Clear();
             _lastRevealedFrame = -1;
             InjectAllReplayAlerts(history);
@@ -787,12 +787,71 @@ public sealed class LogPlaybackViewModel : SectionViewModel
 
         foreach (var alert in alerts)
         {
-            var idx = FindNearestPacketIndex(alert.RelativeSeconds);
+            var idx = FindAlertPacketIndex(alert);
             if (idx < 0) continue;
-            if (playbackData[idx].Anomalies.Count > 0 && playbackData[idx].Anomalies[0].Source != "replay") continue;
             playbackData[idx].Anomalies = new[] { MakeReplayAnomaly(alert) };
         }
     }
+
+    // Identity of one alert: several CAN IDs are often flagged at the same instant.
+    private static string AlertKey(RuntimeAlertEvent alert) =>
+        alert.RelativeSeconds.ToString("R", System.Globalization.CultureInfo.InvariantCulture) + "|" + alert.CanId;
+
+    // The frame an alert belongs on: the frame of the alert's own CAN ID at (or
+    // nearest to) its timestamp that has no alert yet. Placing every alert on the
+    // first frame at its timestamp made alerts flagged at the same instant collide,
+    // and all but one were dropped.
+    private int FindAlertPacketIndex(RuntimeAlertEvent alert)
+    {
+        var idx = FindNearestPacketIndex(alert.RelativeSeconds);
+        if (idx < 0) return -1;
+
+        const double Window = 0.05;   // seconds either side of the alert's timestamp
+        var target = _alertTsA * alert.RelativeSeconds + _alertTsB;
+        var canId = TryParseCanIdHex(alert.CanId);
+        var bestSameId = -1;
+        var bestAny = -1;
+        var bestSameIdDistance = double.MaxValue;
+        var bestAnyDistance = double.MaxValue;
+
+        for (var step = 0; ; step++)
+        {
+            var inRange = false;
+            foreach (var i in step == 0 ? new[] { idx } : new[] { idx - step, idx + step })
+            {
+                if (i < 0 || i >= playbackData.Count) continue;
+                var distance = Math.Abs(playbackData[i].Frame.RelativeTimestampSeconds - target);
+                if (distance > Window) continue;
+                inRange = true;
+                if (!IsFreeForReplayAlert(playbackData[i])) continue;
+                if (canId >= 0 && playbackData[i].Frame.CanId == canId && distance < bestSameIdDistance)
+                {
+                    bestSameId = i;
+                    bestSameIdDistance = distance;
+                }
+                if (distance < bestAnyDistance)
+                {
+                    bestAny = i;
+                    bestAnyDistance = distance;
+                }
+            }
+            if (!inRange && step > 0) break;
+        }
+
+        if (bestSameId >= 0) return bestSameId;
+        if (bestAny >= 0) return bestAny;
+        return IsFreeForReplayAlert(playbackData[idx]) ? idx : -1;
+    }
+
+    // A frame takes at most one alert. InjectAllReplayAlerts clears the previous
+    // replay alerts first, so an occupied frame is already an alert of this set.
+    private static bool IsFreeForReplayAlert(PlaybackPacket packet) => packet.Anomalies.Count == 0;
+
+    private static int TryParseCanIdHex(string canId) =>
+        canId.StartsWith("0x", StringComparison.OrdinalIgnoreCase) &&
+        int.TryParse(canId.Substring(2), System.Globalization.NumberStyles.HexNumber, null, out var value)
+            ? value
+            : -1;
 
     private void CalibrateAlertTimestamps(IReadOnlyList<RuntimeAlertEvent> alerts)
     {
@@ -821,14 +880,14 @@ public sealed class LogPlaybackViewModel : SectionViewModel
         var anyNew = false;
         foreach (var alert in alerts)
         {
-            if (_placedAlertSeconds.Contains(alert.RelativeSeconds)) continue;
+            var key = AlertKey(alert);
+            if (_placedAlertKeys.Contains(key)) continue;
 
-            var idx = FindNearestPacketIndex(alert.RelativeSeconds);
+            var idx = FindAlertPacketIndex(alert);
             if (idx < 0) continue;
-            if (playbackData[idx].Anomalies.Count > 0 && playbackData[idx].Anomalies[0].Source != "replay") continue;
 
             playbackData[idx].Anomalies = new[] { MakeReplayAnomaly(alert) };
-            _placedAlertSeconds.Add(alert.RelativeSeconds);
+            _placedAlertKeys.Add(key);
 
             // Register sorted by frame index for cursor-progressive reveal
             var insertAt = _allAlertsByFrame.Count;
@@ -1067,7 +1126,7 @@ public sealed class LogPlaybackViewModel : SectionViewModel
 
     private void RebuildTimeline()
     {
-        _placedAlertSeconds.Clear();
+        _placedAlertKeys.Clear();
         _lastRevealedFrame = -1;
         TimelineMarkers.Clear();
         TimelineWindows.Clear();

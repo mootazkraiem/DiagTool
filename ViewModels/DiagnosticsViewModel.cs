@@ -236,6 +236,11 @@ public sealed class DiagnosticsViewModel : SectionViewModel
     {
         if (anomalies.Count == 0) return;
 
+        // Once the alert history has entries it is the complete event log. Log Playback
+        // re-publishes each alert's frame as it plays; adding those again counted every
+        // replayed alert twice.
+        if (VehicleDataService.AlertHistory.Count > 0) return;
+
         // When a new analysis starts, AlertHistory is cleared by BeginReplayAnalysis.
         // Use that as the signal to wipe stale events from the previous session.
         if (VehicleDataService.AlertHistory.Count == 0 && IdsEvents.Count > 0)

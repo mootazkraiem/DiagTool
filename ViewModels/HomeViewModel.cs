@@ -542,9 +542,13 @@ public sealed class HomeViewModel : SectionViewModel
 
             if (packets.Count > 0)
             {
-                var latencyMs = (analysisResponse?.Summary?.ElapsedMs ?? 0) > 0
+                // Processing time per frame. ElapsedMs is the whole /analyze request
+                // (about a minute for a 50k-frame log), which read as a 57,969 ms
+                // adapter latency on Diagnostics and the Dashboard.
+                var requestMs = (analysisResponse?.Summary?.ElapsedMs ?? 0) > 0
                     ? analysisResponse!.Summary!.ElapsedMs
                     : (metrics?.AvgAnalyzeLatencyMs ?? stopwatch.Elapsed.TotalMilliseconds);
+                var latencyMs = requestMs / packets.Count;
                 var finalFps = stopwatch.Elapsed.TotalSeconds <= 0 ? 0 : packets.Count / stopwatch.Elapsed.TotalSeconds;
                 var finalPacket = packets[packets.Count - 1];
                 VehicleDataService.UpdateReplayRuntime(
@@ -616,8 +620,9 @@ public sealed class HomeViewModel : SectionViewModel
             .ToArray();
         var relativeTimes = frameTimes.Select(t => t.Relative).ToArray();
 
-        foreach (var item in response.Anomalies)
+        for (var backendIndex = 0; backendIndex < response.Anomalies.Count; backendIndex++)
         {
+            var item = response.Anomalies[backendIndex];
             var context = item.Context ?? new Newtonsoft.Json.Linq.JObject();
             var explanation = item.Explanation ?? new Newtonsoft.Json.Linq.JObject();
             var canId = ReadHexOrInt(context, "can_id");
@@ -673,6 +678,7 @@ public sealed class HomeViewModel : SectionViewModel
                 Score = Math.Abs(score),
                 AttackType = attackType,
                 Reason = $"{description}, {layerScores}",
+                BackendIndex = backendIndex,
             };
             output.Add(new ApiDetection(anomaly, alert));
         }
