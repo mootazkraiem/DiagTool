@@ -18,6 +18,7 @@ public sealed class NavigationService : ObservableObject
     public NavigationService(
         AppLogger logger,
         HomeViewModel home,
+        HardwareSetupViewModel hardwareSetup,
         DashboardViewModel dashboard,
         TelemetryViewModel telemetry,
         DiagnosticsViewModel diagnostics,
@@ -31,7 +32,7 @@ public sealed class NavigationService : ObservableObject
         this.vehicleDataService = vehicleDataService;
         homeSection = home;
         Preview = preview;
-        Tabs = new ObservableCollection<NavigationItemViewModel>(BuildTabs(dashboard, telemetry, diagnostics, playback, settings, anomalyIntel));
+        Tabs = new ObservableCollection<NavigationItemViewModel>(BuildTabs(hardwareSetup, dashboard, telemetry, diagnostics, playback, settings, anomalyIntel));
 
         PreviewSectionCommand = new RelayCommand<NavigationItemViewModel?>(PreviewSection);
         NavigateCommand = new RelayCommand<NavigationItemViewModel?>(Navigate);
@@ -58,8 +59,12 @@ public sealed class NavigationService : ObservableObject
         bool unlocked = state == AppState.AnalysisComplete || state == AppState.LiveSession;
         foreach (var tab in Tabs)
         {
-            // Settings is always accessible; live session and completed analysis unlock all screens.
-            tab.IsUnlocked = unlocked || tab.Section.Key == SectionKey.Settings;
+            // Settings and Hardware Setup are always accessible — you need to be able to
+            // configure an adapter before a live session exists, not only after one starts.
+            // Live session and completed analysis unlock every other screen.
+            tab.IsUnlocked = unlocked
+                || tab.Section.Key == SectionKey.Settings
+                || tab.Section.Key == SectionKey.HardwareSetup;
         }
         OnPropertyChanged(nameof(IsAnalysisComplete));
     }
@@ -121,6 +126,7 @@ public sealed class NavigationService : ObservableObject
     }
 
     private static IEnumerable<NavigationItemViewModel> BuildTabs(
+        HardwareSetupViewModel hardwareSetup,
         DashboardViewModel dashboard,
         TelemetryViewModel telemetry,
         DiagnosticsViewModel diagnostics,
@@ -130,6 +136,7 @@ public sealed class NavigationService : ObservableObject
     {
         var sections = new SectionViewModel[]
         {
+            hardwareSetup,
             dashboard,
             telemetry,
             diagnostics,

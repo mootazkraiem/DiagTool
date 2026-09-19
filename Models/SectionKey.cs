@@ -3,6 +3,7 @@
 public enum SectionKey
 {
     Home,
+    HardwareSetup,
     Dashboard,
     Telemetry,
     Diagnostics,

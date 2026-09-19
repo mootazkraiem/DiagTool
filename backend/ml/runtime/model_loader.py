@@ -95,6 +95,31 @@ class StateModelBundle:
         normalized = 0.5 + (th - raw_score) / (2.0 * span)
         return float(max(0.0, min(1.0, normalized)))
 
+    def score_many(self, states: list[str], feature_vecs: list[dict[str, float]]) -> list[float | None]:
+        """Batch form of :meth:`score` - identical model, features, threshold and
+        normalization, evaluated one call per state group instead of one per frame.
+
+        Scoring a single sample at a time costs ~79 ms in sklearn's IsolationForest
+        (tree traversal plus joblib overhead), which makes a whole-file analysis take
+        minutes; batching the same rows takes milliseconds.
+        """
+        scores: list[float | None] = [None] * len(feature_vecs)
+        groups: dict[str, list[int]] = {}
+        for i, state in enumerate(states):
+            key = state if state in self._models else ("parking" if "parking" in self._models else "")
+            if key:
+                groups.setdefault(key, []).append(i)
+
+        for key, idxs in groups.items():
+            m = self._models[key]
+            x = np.array([[feature_vecs[i].get(f, 0.0) for f in m.features] for i in idxs], dtype=np.float32)
+            raw = m.model.decision_function(m.scaler.transform(x))
+            th = m.threshold
+            span = max(abs(th), 0.01)
+            for j, i in enumerate(idxs):
+                scores[i] = float(max(0.0, min(1.0, 0.5 + (th - float(raw[j])) / (2.0 * span))))
+        return scores
+
     @property
     def available_states(self) -> list[str]:
         return list(self._models.keys())
@@ -145,9 +170,63 @@ class RuntimeModelStore:
             return None
         return bundle.score(state, feature_vec)
 
+    def classify_states(self, feature_vecs: list[dict[str, float]]) -> list[str]:
+        """Batch form of :meth:`classify_state`."""
+        if self._kmeans is None or self._state_scaler is None or not feature_vecs:
+            return ["parking"] * len(feature_vecs)
+        x = np.array([[fv.get(f, 0.0) for f in self._state_feats] for fv in feature_vecs], dtype=np.float32)
+        try:
+            labels = self._kmeans.predict(self._state_scaler.transform(x))
+        except Exception:
+            return ["parking"] * len(feature_vecs)
+        return [self._state_mapping.get(int(l), "parking") for l in labels]
+
+    def score_many(self, states: list[str], feature_vecs: list[dict[str, float]], vehicle: str = "general") -> list[float | None]:
+        """Batch form of :meth:`score`; same vehicle-then-general bundle choice."""
+        vkey = vehicle.strip().lower().replace(" ", "_")
+        bundle = self._vehicles.get(vkey) or self._general
+        if bundle is None:
+            return [None] * len(feature_vecs)
+        return bundle.score_many(states, feature_vecs)
+
     @property
     def is_loaded(self) -> bool:
         return self._general is not None or bool(self._vehicles)
+
+
+# Directories under assets/models that are never vehicle bundles.
+_NON_VEHICLE_DIRS = {"general", "score_distributions"}
+
+
+def _default_assets_root() -> Path:
+    # backend/ml/runtime/model_loader.py -> <repo>/assets
+    return Path(__file__).resolve().parents[3] / "assets"
+
+
+def _trained_states(model_dir: Path) -> list[str]:
+    """Vehicle states in ``model_dir`` that have a complete trained model.
+
+    The single definition of "trained": a threshold, a feature set, and both the
+    model and scaler files for the state. Loading (``_try_load_bundle``) and
+    listing (``list_available_models``) both use it, so a model the UI offers is
+    always one the runtime can load.
+    """
+    th_path = model_dir / "thresholds.json"
+    fs_path = model_dir / "feature_sets.json"
+    if not (th_path.exists() and fs_path.exists()):
+        return []
+    try:
+        thresholds: dict[str, float] = json.loads(th_path.read_text(encoding="utf-8"))
+        feature_sets: dict[str, list[str]] = json.loads(fs_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        logger.warning("[MODEL_LOADER] Unreadable model metadata in %s: %s", model_dir, exc)
+        return []
+    return [
+        state for state in thresholds
+        if state in feature_sets
+        and (model_dir / f"model_{state}.joblib").exists()
+        and (model_dir / f"scaler_{state}.joblib").exists()
+    ]
 
 
 def _try_load_bundle(model_dir: Path) -> StateModelBundle | None:
@@ -155,37 +234,50 @@ def _try_load_bundle(model_dir: Path) -> StateModelBundle | None:
     try:
         import joblib
 
-        th_path = model_dir / "thresholds.json"
-        fs_path = model_dir / "feature_sets.json"
-        if not (th_path.exists() and fs_path.exists()):
+        states = _trained_states(model_dir)
+        if not states:
             return None
 
-        thresholds: dict[str, float] = json.loads(th_path.read_text(encoding="utf-8"))
-        feature_sets: dict[str, list[str]] = json.loads(fs_path.read_text(encoding="utf-8"))
+        thresholds: dict[str, float] = json.loads((model_dir / "thresholds.json").read_text(encoding="utf-8"))
+        feature_sets: dict[str, list[str]] = json.loads((model_dir / "feature_sets.json").read_text(encoding="utf-8"))
 
         state_models: dict[str, _StateModel] = {}
-        for state, th in thresholds.items():
-            mp = model_dir / f"model_{state}.joblib"
-            sp = model_dir / f"scaler_{state}.joblib"
-            if not (mp.exists() and sp.exists() and state in feature_sets):
-                continue
-            m = joblib.load(mp)
-            s = joblib.load(sp)
-            state_models[state] = _StateModel(model=m, scaler=s, features=feature_sets[state], threshold=th)
+        for state in states:
+            m = joblib.load(model_dir / f"model_{state}.joblib")
+            s = joblib.load(model_dir / f"scaler_{state}.joblib")
+            state_models[state] = _StateModel(model=m, scaler=s, features=feature_sets[state], threshold=thresholds[state])
 
-        if not state_models:
-            return None
         return StateModelBundle(state_models)
     except Exception as exc:
         logger.warning("[MODEL_LOADER] Failed to load bundle from %s: %s", model_dir, exc)
         return None
 
 
+def list_available_models(assets_root: Path | None = None) -> list[dict]:
+    """The trained model bundles on disk, without loading them.
+
+    Returns ``[{"id": ..., "states": [...]}]`` with "general" first, then every
+    vehicle bundle in name order - exactly the set ``load_models`` would load.
+    """
+    model_root = (assets_root or _default_assets_root()) / "models"
+    if not model_root.exists():
+        return []
+    models: list[dict] = []
+    general_states = _trained_states(model_root / "general")
+    if general_states:
+        models.append({"id": "general", "states": general_states})
+    for candidate in sorted(model_root.iterdir(), key=lambda p: p.name):
+        if candidate.is_dir() and candidate.name not in _NON_VEHICLE_DIRS:
+            states = _trained_states(candidate)
+            if states:
+                models.append({"id": candidate.name, "states": states})
+    return models
+
+
 def load_models(assets_root: Path | None = None) -> RuntimeModelStore:
     """Load all trained models. Safe to call even if no models exist — returns empty store."""
     if assets_root is None:
-        # Infer from this file's location: backend/ml/runtime/model_loader.py → assets/
-        assets_root = Path(__file__).resolve().parents[3] / "assets"
+        assets_root = _default_assets_root()
 
     model_root = assets_root / "models"
     if not model_root.exists():
@@ -222,7 +314,7 @@ def load_models(assets_root: Path | None = None) -> RuntimeModelStore:
         # Vehicle-specific models
         vehicles: dict[str, StateModelBundle] = {}
         for candidate in model_root.iterdir():
-            if candidate.is_dir() and candidate.name not in {"general", "score_distributions"}:
+            if candidate.is_dir() and candidate.name not in _NON_VEHICLE_DIRS:
                 bundle = _try_load_bundle(candidate)
                 if bundle:
                     vehicles[candidate.name] = bundle

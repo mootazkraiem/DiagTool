@@ -19,6 +19,16 @@ public sealed class VehicleSnapshot
     [JsonProperty("updated_at")]
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+    // The backend already distinguishes real hardware frames from the
+    // software demo simulator ("hardware" vs "simulator") — previously this
+    // field was never read on the C# side, so the UI had no way to tell
+    // which one it was actually looking at.
+    [JsonProperty("live_mode")]
+    public string LiveMode { get; set; } = "";
+
+    public bool IsLiveHardware => LiveMode == "hardware";
+    public bool IsLiveSimulator => LiveMode == "simulator";
+
     // Detailed Telemetry
     [JsonProperty("SOC")]
     public double SOC { get; set; }

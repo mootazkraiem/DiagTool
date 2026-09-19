@@ -24,7 +24,7 @@ except ImportError:
 
 import pandas as pd
 import uvicorn
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
 
@@ -49,6 +49,8 @@ from backend.api.mock_signals import MockSignals
 from backend.ml.runtime.realtime_engine import RealtimeEngine, CanFrame
 from backend.ml.runtime.ids_statistics import IDSStatistics
 from backend.ml.runtime.runtime_config import VALIDATION_CONFIG
+from backend.ml.runtime.model_loader import list_available_models
+from backend.ml.runtime.vehicle_scoring import score_frames as score_frames_with_model
 from backend.live.can_decoder import decode as can_decode
 from backend.ml.explainer.llm import explain_alert as llm_explain_alert
 from backend.live.simulator import LiveSimulator
@@ -58,6 +60,7 @@ from backend.decoding.vehicle_profiles import list_all as list_vehicle_profiles
 from backend.decoding.dbc_manager import get_manager as get_dbc_manager
 from backend.offline import session_analyzer as offline_analyzer
 from backend.data_processing.mf4_to_csv_converter import convert_mf4_to_csv
+from backend.data_processing.csv_frames import parse_csv_frames
 
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(name)s | %(message)s")
@@ -132,6 +135,9 @@ class AnalyzeSummary(BaseModel):
     parse_lines_parsed: int
     parse_lines_skipped: int
     elapsed_ms: float
+    # Which trained model scored this analysis: "general" or a vehicle model id.
+    model_id: str = "general"
+    model_kind: str = "general"
 
 
 class AnalyzeResult(BaseModel):
@@ -689,7 +695,10 @@ def _run_post_ml_pipeline(
     responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
 
 )
-async def analyze(files: List[UploadFile] = File(...))  -> AnalyzeResponse:
+async def analyze(
+    files: List[UploadFile] = File(...),
+    model_id: str = Form(""),
+) -> AnalyzeResponse:
     started = time.perf_counter()
     metrics["analyze_requests_total"] += 1
     if not files:
@@ -745,7 +754,21 @@ async def analyze(files: List[UploadFile] = File(...))  -> AnalyzeResponse:
     unified = pd.concat(frames, ignore_index=True)
     _loop = asyncio.get_event_loop()
     featured  = await _loop.run_in_executor(None, FeatureEngineer.build, unified)
-    predicted = await _loop.run_in_executor(None, engine.predict, featured)
+    # Vehicle / AI model selection. No selection or "general" keeps the general
+    # engine exactly as before. A trained vehicle model scores the same frames
+    # through the realtime engine with that model; its anomaly / anomaly_score /
+    # cluster columns then feed the unchanged post-ML pipeline and context builder.
+    requested_model = (model_id or "").strip()
+    trained_model_ids = {m["id"] for m in list_available_models()}
+    if requested_model and requested_model != "general" and requested_model in trained_model_ids:
+        model_used, model_kind = requested_model, "vehicle"
+        predicted = await _loop.run_in_executor(None, score_frames_with_model, featured, requested_model)
+    else:
+        if requested_model and requested_model != "general":
+            logger.info("[ANALYZE] No trained model for '%s' - scoring with the general model.", requested_model)
+        model_used, model_kind = "general", "general"
+        predicted = await _loop.run_in_executor(None, engine.predict, featured)
+    logger.info("[ANALYZE] model=%s (%s) rows=%d", model_used, model_kind, len(featured))
     predicted, timing_baseline, freq_baseline, _sid = await _loop.run_in_executor(
         None, _run_post_ml_pipeline, predicted
     )
@@ -923,6 +946,8 @@ async def analyze(files: List[UploadFile] = File(...))  -> AnalyzeResponse:
     metrics["anomalies_total"] += int((predicted["anomaly"] == -1).sum())
 
     summary = AnalyzeSummary(
+        model_id=model_used,
+        model_kind=model_kind,
         files_received=len(files),
         rows_parsed=int(len(unified)),
         anomaly_count=int((predicted["anomaly"] == -1).sum()),
@@ -1099,58 +1124,18 @@ def infer_frame(req: InferRequest) -> InferResponse:
 
 
 def _try_parse_as_csv(raw: bytes, source_name: str = "") -> pd.DataFrame:
-    """Fallback CSV parser for column-format replay files (timestamp,can_id,b0..b7).
+    """Fallback CSV parser for column-format files (used by /analyze when
+    CanLogParser finds no ID#DATA frames).
 
-    Used by /analyze when CanLogParser finds no frames — handles files produced by
-    the C# log-import pipeline and stress-test replay exports.
+    Delegates to backend.data_processing.csv_frames.parse_csv_frames, which maps
+    columns by header name. The previous positional renaming read an asammdf MF4
+    export's BusChannel as the CAN ID and unrelated columns as payload bytes.
     """
     try:
-        text = raw.decode("utf-8", errors="ignore")
-        first_field = text.split("\n")[0].split(",")[0].strip()
-        try:
-            float(first_field)
-            is_headerless = True
-        except ValueError:
-            is_headerless = False
-
-        col_names = ["timestamp", "can_id", "b0", "b1", "b2", "b3", "b4", "b5", "b6", "b7"]
-        buf = io.StringIO(text)
-        if is_headerless:
-            df = pd.read_csv(buf, header=None, names=col_names, low_memory=False)
-        else:
-            df = pd.read_csv(buf, low_memory=False)
-            df.columns = [c.strip().lower() for c in df.columns]
-            for i, name in enumerate(col_names):
-                if name not in df.columns and i < len(df.columns):
-                    df.rename(columns={df.columns[i]: name}, inplace=True)
-
-        required = set(col_names)
-        if not required.issubset(set(df.columns)):
-            return pd.DataFrame()
-
-        def _hex_or_int(val: object) -> int:
-            if val is None or (isinstance(val, float) and pd.isna(val)):
-                return 0
-            s = str(val).strip().lower()
-            try:
-                return int(s, 16)
-            except ValueError:
-                try:
-                    return int(float(s))
-                except (ValueError, TypeError):
-                    return 0
-
-        df["can_id"]    = df["can_id"].apply(_hex_or_int)
-        df["timestamp"] = pd.to_numeric(df["timestamp"], errors="coerce")
-        for b in [f"b{i}" for i in range(8)]:
-            df[b] = df[b].apply(_hex_or_int)
-        df = df.dropna(subset=["timestamp"])
-        df["source_file"] = source_name
-        return df[["timestamp", "can_id", "b0", "b1", "b2", "b3", "b4", "b5", "b6", "b7", "source_file"]]
+        return parse_csv_frames(raw, source_name)
     except Exception as exc:
         logger.warning("CSV fallback parse failed for %s: %s", source_name, exc)
         return pd.DataFrame()
-
 
 def _load_validation_csv(input_path: Path) -> pd.DataFrame:
     """Load a validation replay CSV.
@@ -1381,8 +1366,18 @@ def api_live_stop() -> dict[str, Any]:
     }
 
 
+def _hardware_gone_stale() -> bool:
+    """True when hardware was the active source but has stopped producing
+    frames without an explicit disconnect (e.g. the adapter was unplugged
+    and recv() just times out silently, raising nothing). In this state the
+    shared live buffers hold real frames that are no longer trustworthy."""
+    return hw_reader._link_up and not hw_reader.is_connected
+
+
 @app.get("/api/live/signals")
 def api_live_signals(limit: int = 200) -> dict[str, Any]:
+    if _hardware_gone_stale():
+        return {"status": "ok", "items": [], "stale": True}
     with runtime_lock:
         return {"status": "ok", "items": live_signals_buffer[-max(1, min(limit, 1000)):]}
 
@@ -1395,6 +1390,8 @@ def api_live_decoded_signals() -> dict[str, Any]:
     keeps only the most-recent value per signal name, and returns the aggregated
     list so the UI can populate the LIVE SIGNAL MONITOR without raw-byte parsing.
     """
+    if _hardware_gone_stale():
+        return {"status": "ok", "items": [], "stale": True}
     with runtime_lock:
         recent = list(live_signals_buffer[-200:])
 
@@ -1422,6 +1419,8 @@ def api_live_decoded_signals() -> dict[str, Any]:
 
 @app.get("/api/live/alerts")
 def api_live_alerts(limit: int = 200) -> dict[str, Any]:
+    if _hardware_gone_stale():
+        return {"status": "ok", "items": [], "stale": True}
     with runtime_lock:
         return {"status": "ok", "items": live_alerts_buffer[-max(1, min(limit, 1000)):]}
 
@@ -1957,6 +1956,41 @@ def api_simulator_attacks() -> dict[str, Any]:
 def api_validation_reports() -> dict[str, Any]:
     paths = sorted(glob.glob("backend/ml/outputs/validation_reports/*.json"), key=os.path.getmtime, reverse=True)
     return {"status": "ok", "reports": paths[:50]}
+
+
+@app.get("/api/models")
+def api_models() -> dict[str, Any]:
+    """Selectable vehicle / AI models for the UI's model selector.
+
+    Trained bundles come from the model loader itself (list_available_models),
+    so every entry is one the runtime can load. DBC vehicle profiles without a
+    bundle of their own are listed too, marked as scoring with the general
+    model - which is what the runtime does when given their id.
+    """
+    profiles = {p["id"]: p for p in list_vehicle_profiles()}
+    trained = list_available_models()
+    trained_ids = {m["id"] for m in trained}
+    general_states = next((m["states"] for m in trained if m["id"] == "general"), [])
+
+    models: list[dict[str, Any]] = []
+    for m in trained:
+        profile = profiles.get(m["id"])
+        if m["id"] == "general":
+            name, kind = "General Model", "general"
+        else:
+            name = profile["name"] if profile else m["id"].replace("_", " ").upper()
+            kind = "trained"
+        models.append({
+            "id": m["id"], "name": name, "kind": kind, "model_id": m["id"],
+            "states": m["states"], "has_dbc": profile is not None,
+        })
+    for pid, profile in profiles.items():
+        if pid not in trained_ids:
+            models.append({
+                "id": pid, "name": profile["name"], "kind": "profile", "model_id": "general",
+                "states": general_states, "has_dbc": True,
+            })
+    return {"status": "ok", "models": models}
 
 
 @app.get("/api/vehicles")

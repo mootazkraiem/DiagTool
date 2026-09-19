@@ -73,6 +73,13 @@ public sealed class PythonAnalyzeSummary
 
     [JsonProperty("elapsed_ms")]
     public double ElapsedMs { get; set; }
+
+    /// <summary>The trained model that scored the analysis ("general" or a vehicle model id).</summary>
+    [JsonProperty("model_id")]
+    public string ModelId { get; set; } = "general";
+
+    [JsonProperty("model_kind")]
+    public string ModelKind { get; set; } = "general";
 }
 
 public sealed class PythonAnalyzeItem

@@ -29,7 +29,8 @@ public partial class HomeView : UserControl
     private void OnVmPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName is not (nameof(HomeViewModel.IsLiveConnecting)
-            or nameof(HomeViewModel.IsOfflineImporting)))
+            or nameof(HomeViewModel.IsOfflineImporting)
+            or nameof(HomeViewModel.IsSelectingModel)))
             return;
 
         var vm = hookedVm;
@@ -37,6 +38,7 @@ public partial class HomeView : UserControl
 
         var state = vm.IsLiveConnecting  ? "LiveConnecting"
                   : vm.IsOfflineImporting ? "OfflineImporting"
+                  : vm.IsSelectingModel   ? "OfflineModelSelect"
                   : "ChooserMode";
 
         VisualStateManager.GoToElementState(RootGrid, state, useTransitions: true);

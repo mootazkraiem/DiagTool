@@ -56,7 +56,7 @@ public sealed class PythonApiClient
         return await GetJsonAsync<PythonMetricsResponse>("metrics", cancellationToken);
     }
 
-    public async Task<PythonAnalyzeResponse?> AnalyzeLogsAsync(IEnumerable<string> filePaths, CancellationToken cancellationToken)
+    public async Task<PythonAnalyzeResponse?> AnalyzeLogsAsync(IEnumerable<string> filePaths, CancellationToken cancellationToken, string? modelId = null)
     {
         var files = (filePaths ?? Enumerable.Empty<string>())
             .Where(path => !string.IsNullOrWhiteSpace(path) && File.Exists(path))
@@ -80,6 +80,10 @@ public sealed class PythonApiClient
                 multipart.Add(part, "files", Path.GetFileName(file));
             }
 
+            // The vehicle / AI model for this analysis; the backend uses the general model when empty.
+            if (!string.IsNullOrWhiteSpace(modelId))
+                multipart.Add(new StringContent(modelId!.Trim()), "model_id");
+
             using var response = await httpClient.PostAsync(BuildUrl("analyze"), multipart, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
@@ -89,6 +93,11 @@ public sealed class PythonApiClient
 
             var json = await response.Content.ReadAsStringAsync();
             var payload = JsonConvert.DeserializeObject<PythonAnalyzeResponse>(json);
+            logger.Info($"Analyze response: rows={payload?.Summary?.RowsParsed ?? 0} " +
+                        $"anomalyCount={payload?.Summary?.AnomalyCount ?? 0} " +
+                        $"items={payload?.Anomalies?.Count ?? 0}");
+            logger.Info($"Analyze model: requested={(string.IsNullOrWhiteSpace(modelId) ? "general" : modelId)} " +
+                        $"used={payload?.Summary?.ModelId ?? "?"} ({payload?.Summary?.ModelKind ?? "?"})");
             return payload;
         }
         catch (Exception exception)
@@ -433,6 +442,10 @@ public sealed class PythonApiClient
 
     public async Task<VehicleListResponse?> GetVehicleListAsync(CancellationToken cancellationToken)
         => await GetJsonAsync<VehicleListResponse>("api/vehicles", cancellationToken);
+
+    /// <summary>Selectable vehicle / AI models (general, trained vehicle models, DBC-only profiles).</summary>
+    public async Task<TrainedModelsResponse?> GetTrainedModelsAsync(CancellationToken cancellationToken)
+        => await GetJsonAsync<TrainedModelsResponse>("api/models", cancellationToken);
 
     // ── Offline session analysis ─────────────────────────────────────────────
 

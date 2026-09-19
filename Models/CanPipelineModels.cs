@@ -6,6 +6,12 @@ public sealed class CanFrame
     public double RelativeTimestampSeconds { get; set; }
     public int CanId { get; set; }
     public byte[] Data { get; set; } = new byte[8];
+
+    /// <summary>Bus / channel number when the source format records it, else null.</summary>
+    public int? Channel { get; set; }
+
+    /// <summary>29-bit (extended) identifier flag when the source format records it, else null.</summary>
+    public bool? IsExtended { get; set; }
 }
 
 public sealed class SignalDefinition

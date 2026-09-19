@@ -223,7 +223,7 @@ can_project/
 ├── Models/                       # C# data models + AppConfig
 ├── Services/                     # VehicleDataService, PythonApiClient, PDF builder
 ├── UI/                           # WPF XAML views
-├── ViewModels/                   # MVVM ViewModels (SectionViewModels.cs)
+├── ViewModels/                   # MVVM ViewModels (one file per section — HomeViewModel.cs, DashboardViewModel.cs, etc.)
 └── ROADMAP.md                    # Milestone tracker
 ```
 

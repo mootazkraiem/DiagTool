@@ -1,0 +1,799 @@
+<!--
+  ===========================================================================
+  CANvision IDS - SCREEN STYLE BRIDGE
+  ===========================================================================
+  The screens (Dashboard, Telemetry, Diagnostics, Log Playback, Anomaly Intel)
+  each used to carry a PRIVATE copy of Card / Lbl / Meta / Mono / ... inside
+  their own <UserControl.Resources>. That is why the screens drifted apart
+  visually. Those private copies have been deleted; this dictionary defines
+  the same key names ONCE, on top of DesignSystem.xaml.
+
+  So: screens keep referring to {StaticResource Card} etc. exactly as before
+  - no binding, command or layout was touched - but every screen now resolves
+  to the single shared design system.
+
+  Add new shared styles to DesignSystem.xaml; this file only maps the
+  screen-facing names onto it.
+  ===========================================================================
+-->
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:cv="clr-namespace:CANvision.Native.UI.Controls">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="DesignSystem.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <!-- ================= SURFACES ================= -->
+
+    <!-- Standard padded panel. -->
+    <Style x:Key="Card" TargetType="Border" BasedOn="{StaticResource CvPanel}">
+        <Setter Property="Padding" Value="12,10" />
+    </Style>
+
+    <!-- Same shell with no padding, for cards that supply their own
+         head/body sections (Log Playback). -->
+    <Style x:Key="CardFlush" TargetType="Border" BasedOn="{StaticResource CvPanel}">
+        <Setter Property="Padding" Value="0" />
+    </Style>
+
+    <Style x:Key="BottomCard" TargetType="Border" BasedOn="{StaticResource CardFlush}" />
+
+    <Style x:Key="CardActive" TargetType="Border" BasedOn="{StaticResource Card}">
+        <Setter Property="BorderBrush" Value="{DynamicResource CvBorderAccentBrush}" />
+    </Style>
+
+    <!-- Head / body bands inside a CardFlush. -->
+    <Style x:Key="CardHead" TargetType="Border">
+        <Setter Property="BorderBrush" Value="{DynamicResource CvBorderAccentBrush}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Setter Property="Padding" Value="14,9" />
+    </Style>
+
+    <Style x:Key="CardBody" TargetType="Border">
+        <Setter Property="Padding" Value="14,10" />
+    </Style>
+
+    <!-- Quiet nested blocks. -->
+    <Style x:Key="InnerCard" TargetType="Border" BasedOn="{StaticResource CvInset}">
+        <Setter Property="Padding" Value="10,8" />
+    </Style>
+
+    <Style x:Key="RailCard" TargetType="Border" BasedOn="{StaticResource InnerCard}">
+        <Setter Property="Margin" Value="0,8,0,0" />
+    </Style>
+
+    <Style x:Key="StatBox" TargetType="Border" BasedOn="{StaticResource CvInset}">
+        <Setter Property="Padding" Value="12,9" />
+    </Style>
+
+    <Style x:Key="MetricTile" TargetType="Border" BasedOn="{StaticResource CvInset}">
+        <Setter Property="Padding" Value="11,8" />
+    </Style>
+
+    <!-- Vertical-rule separated cell in a header / control strip. -->
+    <Style x:Key="HeaderPod" TargetType="Border">
+        <Setter Property="BorderBrush" Value="{DynamicResource CvSeparatorBrush}" />
+        <Setter Property="BorderThickness" Value="1,0,0,0" />
+        <Setter Property="Padding" Value="12,0" />
+    </Style>
+
+    <!-- Sparkline clip frame. -->
+    <Style x:Key="KpiTrendFrame" TargetType="Border">
+        <Setter Property="Height" Value="26" />
+        <Setter Property="Margin" Value="0,3,0,2" />
+        <Setter Property="ClipToBounds" Value="True" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="VerticalAlignment" Value="Bottom" />
+    </Style>
+
+    <Style x:Key="StatusDot" TargetType="Ellipse" BasedOn="{StaticResource CvStatusDot}" />
+
+    <!-- Short 2px rule that marks a section. -->
+    <Style x:Key="AccentBar" TargetType="Rectangle">
+        <Setter Property="Height" Value="2" />
+        <Setter Property="Width" Value="30" />
+        <Setter Property="Margin" Value="0,6,0,4" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="Fill" Value="{DynamicResource CvAccentBrush}" />
+        <Setter Property="Opacity" Value="0.8" />
+    </Style>
+
+    <!-- ================= TEXT ================= -->
+
+    <!-- The uppercase micro-label above a value. -->
+    <Style x:Key="Lbl" TargetType="TextBlock" BasedOn="{StaticResource CvLabelText}" />
+
+    <!-- Secondary caption. -->
+    <Style x:Key="Meta" TargetType="TextBlock" BasedOn="{StaticResource CvMetaText}" />
+
+    <!-- Every machine value: CAN IDs, hex payloads, timestamps. -->
+    <Style x:Key="Mono" TargetType="TextBlock" BasedOn="{StaticResource CvMonoText}" />
+
+    <Style x:Key="Title" TargetType="TextBlock" BasedOn="{StaticResource CvSectionText}" />
+
+    <Style x:Key="SecTitle" TargetType="TextBlock" BasedOn="{StaticResource CvSectionText}">
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style x:Key="Val" TargetType="TextBlock" BasedOn="{StaticResource CvValueLargeText}">
+        <Setter Property="Foreground" Value="{DynamicResource CvTextBrush}" />
+    </Style>
+
+    <Style x:Key="ValAccent" TargetType="TextBlock" BasedOn="{StaticResource CvValueLargeText}">
+        <Setter Property="Foreground" Value="{DynamicResource CvAccentBrush}" />
+        <Setter Property="Effect" Value="{DynamicResource CvAccentGlowSoft}" />
+    </Style>
+
+    <Style x:Key="KpiValue" TargetType="TextBlock" BasedOn="{StaticResource CvValueText}">
+        <Setter Property="FontSize" Value="22" />
+        <Setter Property="LineHeight" Value="24" />
+    </Style>
+
+    <Style x:Key="KpiState" TargetType="TextBlock" BasedOn="{StaticResource CvMetaText}">
+        <Setter Property="Margin" Value="0,1,0,0" />
+    </Style>
+
+    <Style x:Key="TrackLbl" TargetType="TextBlock" BasedOn="{StaticResource CvMonoText}">
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="Foreground" Value="{DynamicResource CvTextDimBrush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- Severity-driven value colour. Union of every spelling the
+         ViewModels emit, so one style serves Diagnostics and Anomaly Intel. -->
+    <Style x:Key="SeverityText" TargetType="TextBlock" BasedOn="{StaticResource CvMonoText}">
+        <Setter Property="Foreground" Value="{DynamicResource CvAccentBrush}" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Severity}" Value="INFO">
+                <Setter Property="Foreground" Value="{DynamicResource CvTextMutedBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Severity}" Value="Info">
+                <Setter Property="Foreground" Value="{DynamicResource CvTextMutedBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Severity}" Value="WARNING">
+                <Setter Property="Foreground" Value="{DynamicResource CvWarnBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Severity}" Value="Warning">
+                <Setter Property="Foreground" Value="{DynamicResource CvWarnBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Severity}" Value="WARN">
+                <Setter Property="Foreground" Value="{DynamicResource CvWarnBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Severity}" Value="HIGH">
+                <Setter Property="Foreground" Value="{DynamicResource CvWarnBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Severity}" Value="ERROR">
+                <Setter Property="Foreground" Value="{DynamicResource CvDangerBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Severity}" Value="Error">
+                <Setter Property="Foreground" Value="{DynamicResource CvDangerBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Severity}" Value="CRITICAL">
+                <Setter Property="Foreground" Value="{DynamicResource CvDangerBrush}" />
+                <Setter Property="Effect" Value="{DynamicResource CvDangerGlow}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Severity}" Value="Critical">
+                <Setter Property="Foreground" Value="{DynamicResource CvDangerBrush}" />
+                <Setter Property="Effect" Value="{DynamicResource CvDangerGlow}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- ================= BUTTONS ================= -->
+
+    <Style x:Key="TinyButton" TargetType="Button" BasedOn="{StaticResource CvButtonGhost}">
+        <Setter Property="MinHeight" Value="24" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="Padding" Value="9,2" />
+        <Setter Property="FontSize" Value="9.5" />
+    </Style>
+
+    <Style x:Key="GhostBtn" TargetType="Button" BasedOn="{StaticResource CvButtonGhost}">
+        <Setter Property="MinHeight" Value="24" />
+        <Setter Property="MinWidth" Value="80" />
+        <Setter Property="Padding" Value="10,2" />
+        <Setter Property="FontSize" Value="9.5" />
+    </Style>
+
+    <Style x:Key="SBtn" TargetType="Button" BasedOn="{StaticResource CvButtonGhost}">
+        <Setter Property="MinHeight" Value="22" />
+        <Setter Property="Height" Value="22" />
+        <Setter Property="MinWidth" Value="30" />
+        <Setter Property="Padding" Value="8,0" />
+        <Setter Property="FontSize" Value="9.5" />
+        <Setter Property="FontFamily" Value="{StaticResource CvMonoFont}" />
+    </Style>
+
+    <Style x:Key="TBtn" TargetType="Button" BasedOn="{StaticResource CvButtonTransport}">
+        <Setter Property="Width" Value="30" />
+        <Setter Property="Height" Value="26" />
+        <Setter Property="MinWidth" Value="30" />
+        <Setter Property="MinHeight" Value="26" />
+        <Setter Property="FontSize" Value="11" />
+    </Style>
+
+    <Style x:Key="TransportButton" TargetType="Button" BasedOn="{StaticResource CvButtonTransport}">
+        <Setter Property="Width" Value="34" />
+        <Setter Property="Height" Value="28" />
+        <Setter Property="MinWidth" Value="34" />
+        <Setter Property="MinHeight" Value="28" />
+        <Setter Property="FontSize" Value="13" />
+    </Style>
+
+    <Style x:Key="RailCommandButton" TargetType="Button" BasedOn="{StaticResource CvButtonGhost}">
+        <Setter Property="Height" Value="30" />
+        <Setter Property="MinHeight" Value="30" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="Padding" Value="10,3" />
+        <Setter Property="FontSize" Value="10" />
+    </Style>
+
+    <!-- Chromeless clickable row (nav rails, list rows). -->
+    <Style x:Key="NavBtn" TargetType="Button">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Hover" Background="Transparent" CornerRadius="2">
+                        <ContentPresenter Margin="{TemplateBinding Padding}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Hover" Property="Background" Value="{DynamicResource CvRowHoverBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Hover" Property="Opacity" Value="0.4" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ================= LEGACY BRIDGE =================
+         Home, Hardware Setup, Settings and Preview still call the older
+         Hud*/CanVision* keys. Re-pointing those names at the new system
+         retouches those screens without editing their markup. -->
+
+    <Style x:Key="HudActionButtonStyle" TargetType="Button" BasedOn="{StaticResource CvButtonGhost}">
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="30" />
+        <Setter Property="Padding" Value="14,5" />
+    </Style>
+
+    <Style x:Key="HudCommandButtonBaseStyle" TargetType="Button" BasedOn="{StaticResource HudActionButtonStyle}" />
+    <Style x:Key="HudNavButtonStyle" TargetType="Button" BasedOn="{StaticResource HudActionButtonStyle}" />
+    <Style x:Key="HudNavCapsuleButtonStyle" TargetType="Button" BasedOn="{StaticResource HudActionButtonStyle}" />
+    <Style x:Key="HudHeroButtonStyle" TargetType="Button" BasedOn="{StaticResource CvButtonPrimary}">
+        <Setter Property="MinHeight" Value="38" />
+        <Setter Property="Padding" Value="20,8" />
+    </Style>
+    <Style x:Key="HudHeroCapsuleButtonStyle" TargetType="Button" BasedOn="{StaticResource HudHeroButtonStyle}" />
+    <Style x:Key="HudLaunchTileButtonStyle" TargetType="Button" BasedOn="{StaticResource CvButtonGhost}">
+        <Setter Property="MinHeight" Value="120" />
+        <Setter Property="Padding" Value="18" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+    </Style>
+    <Style x:Key="HudTileButtonStyle" TargetType="Button" BasedOn="{StaticResource HudLaunchTileButtonStyle}" />
+    <Style x:Key="CanVisionDashboardButtonStyle" TargetType="Button" BasedOn="{StaticResource CvButtonGhost}">
+        <Setter Property="MinHeight" Value="26" />
+        <Setter Property="Padding" Value="11,4" />
+        <Setter Property="FontSize" Value="10" />
+    </Style>
+    <Style x:Key="ContextBackButtonStyle" TargetType="Button" BasedOn="{StaticResource CvButtonGhost}">
+        <Setter Property="MinHeight" Value="22" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="Padding" Value="8,2" />
+        <Setter Property="FontSize" Value="9.5" />
+    </Style>
+
+    <Style x:Key="HudLineTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource CvTextBox}" />
+    <Style x:Key="HudComboBoxStyle" TargetType="ComboBox" BasedOn="{StaticResource CvComboBox}" />
+    <Style x:Key="HudCheckBoxStyle" TargetType="CheckBox" BasedOn="{StaticResource CvCheckBox}" />
+
+    <!-- ================= IMPLICIT CONTROL STYLES =================
+         Keyless styles apply to every control of that type that does not set
+         an explicit Style, so no default WPF chrome (Aero buttons, blue
+         selection, system tooltips, chunky scrollbars) survives anywhere. -->
+
+    <Style TargetType="Button" BasedOn="{StaticResource CvButtonGhost}" />
+    <Style TargetType="TextBox" BasedOn="{StaticResource CvTextBox}" />
+    <Style TargetType="PasswordBox" BasedOn="{StaticResource CvPasswordBox}" />
+    <Style TargetType="ComboBox" BasedOn="{StaticResource CvComboBox}" />
+    <Style TargetType="ComboBoxItem" BasedOn="{StaticResource CvComboBoxItem}" />
+    <Style TargetType="CheckBox" BasedOn="{StaticResource CvCheckBox}" />
+    <Style TargetType="Slider" BasedOn="{StaticResource CvSlider}" />
+    <Style TargetType="ProgressBar" BasedOn="{StaticResource CvProgressBar}" />
+
+    <Style TargetType="ToolTip">
+        <Setter Property="Foreground" Value="{DynamicResource CvTextSoftBrush}" />
+        <Setter Property="FontFamily" Value="{StaticResource CvMonoFont}" />
+        <Setter Property="FontSize" Value="10.5" />
+        <Setter Property="HasDropShadow" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToolTip">
+                    <Border Background="{DynamicResource CvToolTipBrush}"
+                            BorderBrush="{DynamicResource CvBorderAccentBrush}"
+                            BorderThickness="1" CornerRadius="2"
+                            Padding="9,6" MaxWidth="380">
+                        <ContentPresenter />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="ScrollBar">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Width" Value="7" />
+        <Setter Property="MinWidth" Value="7" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ScrollBar">
+                    <Grid Background="Transparent">
+                        <Track x:Name="PART_Track" IsDirectionReversed="True">
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton Style="{StaticResource CvScrollHiddenButton}" Command="ScrollBar.PageUpCommand" />
+                            </Track.DecreaseRepeatButton>
+                            <Track.Thumb>
+                                <Thumb Style="{StaticResource CvScrollThumb}" />
+                            </Track.Thumb>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton Style="{StaticResource CvScrollHiddenButton}" Command="ScrollBar.PageDownCommand" />
+                            </Track.IncreaseRepeatButton>
+                        </Track>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="Orientation" Value="Horizontal">
+                <Setter Property="Height" Value="7" />
+                <Setter Property="MinHeight" Value="7" />
+                <Setter Property="Width" Value="Auto" />
+                <Setter Property="MinWidth" Value="0" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ScrollBar">
+                            <Grid Background="Transparent">
+                                <Track x:Name="PART_Track" IsDirectionReversed="False">
+                                    <Track.DecreaseRepeatButton>
+                                        <RepeatButton Style="{StaticResource CvScrollHiddenButton}" Command="ScrollBar.PageLeftCommand" />
+                                    </Track.DecreaseRepeatButton>
+                                    <Track.Thumb>
+                                        <Thumb Style="{StaticResource CvScrollThumb}" />
+                                    </Track.Thumb>
+                                    <Track.IncreaseRepeatButton>
+                                        <RepeatButton Style="{StaticResource CvScrollHiddenButton}" Command="ScrollBar.PageRightCommand" />
+                                    </Track.IncreaseRepeatButton>
+                                </Track>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- ================= SHELL CHROME =================
+         Top-bar module tab. Tag carries IsActive from the nav item. -->
+    <Style x:Key="CvNavTab" TargetType="Button">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Foreground" Value="{DynamicResource CvTextDimBrush}" />
+        <Setter Property="FontFamily" Value="{StaticResource CvUiFont}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Padding" Value="11,0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid Background="Transparent">
+                        <ContentPresenter x:Name="Txt" Margin="{TemplateBinding Padding}"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <!-- active underline -->
+                        <Rectangle x:Name="Rule" Height="2" VerticalAlignment="Bottom"
+                                   Margin="8,0" Fill="{DynamicResource CvAccentBrush}"
+                                   Visibility="Collapsed" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground" Value="{DynamicResource CvTextBrightBrush}" />
+                        </Trigger>
+                        <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="True">
+                            <Setter Property="Foreground" Value="{DynamicResource CvAccentBrush}" />
+                            <Setter TargetName="Rule" Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{DynamicResource CvTextFaintBrush}" />
+                            <Setter Property="Cursor" Value="Arrow" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Minimise / maximise / close. Segoe MDL2 glyphs, no native caption. -->
+    <Style x:Key="CvCaptionButton" TargetType="Button">
+        <Setter Property="Width" Value="42" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Foreground" Value="{DynamicResource CvTextDimBrush}" />
+        <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="Cursor" Value="Arrow" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bg" Background="{TemplateBinding Background}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="{DynamicResource CvRowHoverBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource CvTextBrightBrush}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="CvCaptionCloseButton" TargetType="Button" BasedOn="{StaticResource CvCaptionButton}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bg" Background="{TemplateBinding Background}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="#D8FF4D5E" />
+                            <Setter Property="Foreground" Value="#FFFFFF" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ================= CONSOLE COMPONENTS =================
+         Reusable building blocks of the CANvision screens (first used by the
+         Dashboard). Tracked uppercase text uses cv:CvTrackedText. -->
+
+    <!-- Tracked uppercase micro-label: the reference's default label voice. -->
+    <Style x:Key="CvCaps" TargetType="cv:CvTrackedText">
+        <Setter Property="FontFamily" Value="{StaticResource CvMonoFont}" />
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="Foreground" Value="{DynamicResource CvTextMutedBrush}" />
+        <Setter Property="TextWrapping" Value="NoWrap" />
+    </Style>
+
+    <!-- Panel title: bold display face, tracked, bright. -->
+    <Style x:Key="CvPanelTitle" TargetType="cv:CvTrackedText">
+        <Setter Property="FontFamily" Value="{StaticResource CvDisplayFont}" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{DynamicResource CvTextBrightBrush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="TextWrapping" Value="NoWrap" />
+    </Style>
+
+    <!-- Status ribbon under the nav bar. -->
+    <Style x:Key="CvRibbon" TargetType="Border">
+        <Setter Property="Height" Value="36" />
+        <Setter Property="Padding" Value="14,0" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CvBorderAccentBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Background">
+            <Setter.Value>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                    <GradientStop Color="#142FF0D6" Offset="0" />
+                    <GradientStop Color="#032FF0D6" Offset="1" />
+                </LinearGradientBrush>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="CvRibbonKey" TargetType="cv:CvTrackedText">
+        <Setter Property="FontFamily" Value="{StaticResource CvMonoFont}" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="Foreground" Value="{DynamicResource CvTextMutedBrush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style x:Key="CvRibbonValue" TargetType="cv:CvTrackedText" BasedOn="{StaticResource CvRibbonKey}">
+        <Setter Property="Foreground" Value="{DynamicResource CvTextBrush}" />
+        <Setter Property="Margin" Value="8,0,0,0" />
+    </Style>
+
+    <!-- Left module rail. -->
+    <Style x:Key="CvRailActive" TargetType="Border">
+        <Setter Property="Padding" Value="14,13" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="BorderBrush" Value="#4D2FF0D6" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Background">
+            <Setter.Value>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#242FF0D6" Offset="0" />
+                    <GradientStop Color="#082FF0D6" Offset="1" />
+                </LinearGradientBrush>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="CvRailItem" TargetType="Border">
+        <Setter Property="Padding" Value="14,13" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="Background" Value="{DynamicResource CvOverlay05Brush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CvBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style x:Key="CvRailText" TargetType="cv:CvTrackedText">
+        <Setter Property="FontFamily" Value="{StaticResource CvDisplayFont}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource CvTextDimBrush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style x:Key="CvRailCard" TargetType="Border">
+        <Setter Property="Padding" Value="14,12" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="Background" Value="{DynamicResource CvPanelBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CvBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+
+    <!-- KPI tile shell (accent rule + content drawn by the template). -->
+    <Style x:Key="CvKpiTile" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource CvTileBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CvBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+    </Style>
+
+    <!-- Stat strip cell (hairline on its left edge). -->
+    <Style x:Key="CvStatCell" TargetType="Border">
+        <Setter Property="BorderBrush" Value="{DynamicResource CvSeparatorBrush}" />
+        <Setter Property="BorderThickness" Value="1,0,0,0" />
+        <Setter Property="Padding" Value="4,0" />
+    </Style>
+    <Style x:Key="CvStatKey" TargetType="cv:CvTrackedText">
+        <Setter Property="FontFamily" Value="{StaticResource CvMonoFont}" />
+        <Setter Property="FontSize" Value="8.5" />
+        <Setter Property="Foreground" Value="{DynamicResource CvTextDimBrush}" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+    </Style>
+    <Style x:Key="CvStatValue" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource CvMonoFont}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{DynamicResource CvTextBrush}" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="Margin" Value="0,6,0,0" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <!-- Dense technical table row + cell. -->
+    <Style x:Key="CvTableRow" TargetType="Border">
+        <Setter Property="Height" Value="27" />
+        <Setter Property="Padding" Value="16,0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CvOverlay08Brush}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{DynamicResource CvRowHoverBrush}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="CvCell" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource CvMonoFont}" />
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <!-- Key / value row. The background gradient draws a 1px bottom rule
+         (DockPanel has no border of its own). -->
+    <Style x:Key="CvKvRow" TargetType="DockPanel">
+        <Setter Property="Height" Value="29" />
+        <Setter Property="LastChildFill" Value="True" />
+        <Setter Property="Background">
+            <Setter.Value>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#00FFFFFF" Offset="0" />
+                    <GradientStop Color="#00FFFFFF" Offset="0.965" />
+                    <GradientStop Color="#0DFFFFFF" Offset="0.966" />
+                    <GradientStop Color="#0DFFFFFF" Offset="1" />
+                </LinearGradientBrush>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="CvKvRowTight" TargetType="DockPanel">
+        <Setter Property="Height" Value="22" />
+        <Setter Property="LastChildFill" Value="True" />
+    </Style>
+    <Style x:Key="CvKvKey" TargetType="cv:CvTrackedText">
+        <Setter Property="DockPanel.Dock" Value="Left" />
+        <Setter Property="FontFamily" Value="{StaticResource CvMonoFont}" />
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="Foreground" Value="{DynamicResource CvTextMutedBrush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style x:Key="CvKvValue" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource CvMonoFont}" />
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource CvTextBrush}" />
+        <Setter Property="HorizontalAlignment" Value="Right" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <!-- Nested block inside the Observability rail. -->
+    <Style x:Key="CvObsBlock" TargetType="Border">
+        <Setter Property="Padding" Value="14,11" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="Background" Value="{DynamicResource CvOverlay06Brush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CvBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+
+    <!-- ================= TELEMETRY COMPONENTS =================
+         Added for the Telemetry screen; additive only (no existing key
+         changed), reusable by later screens. -->
+
+    <!-- 2px accent rule across the top of a tile. Set Fill per channel. -->
+    <Style x:Key="CvTileRule" TargetType="Rectangle">
+        <Setter Property="Height" Value="2" />
+        <Setter Property="VerticalAlignment" Value="Top" />
+        <Setter Property="Opacity" Value="0.85" />
+        <Setter Property="OpacityMask">
+            <Setter.Value>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                    <GradientStop Color="#FF000000" Offset="0" />
+                    <GradientStop Color="#22000000" Offset="1" />
+                </LinearGradientBrush>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Sparkline docked to the bottom of a metric tile, behind the text. -->
+    <Style x:Key="CvTileSpark" TargetType="cv:CvSparkChart">
+        <Setter Property="Height" Value="24" />
+        <Setter Property="VerticalAlignment" Value="Bottom" />
+        <Setter Property="Margin" Value="1,0,1,1" />
+        <Setter Property="Opacity" Value="0.8" />
+        <Setter Property="LineThickness" Value="1.2" />
+        <Style.Triggers>
+            <!-- Tag = the channel's value text. A dash placeholder means the ViewModel reports
+                 no operational signal, so the history is placeholder zeros. -->
+            <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="--">
+                <Setter Property="Visibility" Value="Hidden" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Signal-channel lane trace; same no-signal rule as CvTileSpark. -->
+    <Style x:Key="CvLaneSpark" TargetType="cv:CvSparkChart">
+        <Setter Property="ShowArea" Value="False" />
+        <Setter Property="Margin" Value="0,5" />
+        <Setter Property="LineThickness" Value="1.4" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="--">
+                <Setter Property="Visibility" Value="Hidden" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="CvTileValue" TargetType="TextBlock">
+        <Setter Property="Margin" Value="0,7,0,0" />
+        <Setter Property="FontFamily" Value="{StaticResource CvDisplayFont}" />
+        <Setter Property="FontSize" Value="22" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{DynamicResource CvTextBrightBrush}" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Style.Triggers>
+            <!-- no signal yet: the value recedes instead of shouting a dash placeholder -->
+            <Trigger Property="Text" Value="--">
+                <Setter Property="Foreground" Value="{DynamicResource CvTextFaintBrush}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="CvTileMeta" TargetType="cv:CvTrackedText">
+        <Setter Property="Margin" Value="0,5,0,0" />
+        <Setter Property="FontFamily" Value="{StaticResource CvMonoFont}" />
+        <Setter Property="FontSize" Value="9" />
+        <Setter Property="Foreground" Value="{DynamicResource CvTextDimBrush}" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="TextWrapping" Value="NoWrap" />
+    </Style>
+
+    <!-- One signal-channel lane: label/value | trace | unit, hairline below. -->
+    <Style x:Key="CvChannelRow" TargetType="Grid">
+        <Setter Property="Height" Value="40" />
+        <Setter Property="Background">
+            <Setter.Value>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#00FFFFFF" Offset="0" />
+                    <GradientStop Color="#00FFFFFF" Offset="0.974" />
+                    <GradientStop Color="#0DFFFFFF" Offset="0.975" />
+                    <GradientStop Color="#0DFFFFFF" Offset="1" />
+                </LinearGradientBrush>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="CvChannelValue" TargetType="TextBlock">
+        <Setter Property="Margin" Value="0,4,0,0" />
+        <Setter Property="FontFamily" Value="{StaticResource CvMonoFont}" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Style.Triggers>
+            <Trigger Property="Text" Value="--">
+                <Setter Property="Foreground" Value="{DynamicResource CvTextFaintBrush}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Stream-health readout. -->
+    <Style x:Key="CvHealthValue" TargetType="TextBlock">
+        <Setter Property="Margin" Value="0,7,0,0" />
+        <Setter Property="FontFamily" Value="{StaticResource CvDisplayFont}" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{DynamicResource CvTextBrush}" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <!-- Empty state: a StackPanel that is visible only while its Tag (bound
+         to a collection Count) is 0. -->
+    <Style x:Key="CvEmptyWhenZero" TargetType="StackPanel">
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Visibility" Value="Collapsed" />
+        <Setter Property="IsHitTestVisible" Value="False" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="0">
+                <Setter Property="Visibility" Value="Visible" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="CvEmptyGlyph" TargetType="Border">
+        <Setter Property="Width" Value="30" />
+        <Setter Property="Height" Value="30" />
+        <Setter Property="CornerRadius" Value="15" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CvBorderAccentBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+
+    <Style x:Key="CvEmptyBody" TargetType="TextBlock">
+        <Setter Property="Margin" Value="0,6,0,0" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="TextAlignment" Value="Center" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="MaxWidth" Value="300" />
+        <Setter Property="FontFamily" Value="{StaticResource CvMonoFont}" />
+        <Setter Property="FontSize" Value="10.5" />
+        <Setter Property="Foreground" Value="{DynamicResource CvTextFaintBrush}" />
+    </Style>
+
+</ResourceDictionary>

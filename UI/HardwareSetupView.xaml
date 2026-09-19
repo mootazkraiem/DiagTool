@@ -1,0 +1,365 @@
+<!--
+  ===========================================================================
+  HARDWARE SETUP  -  CANvision IDS
+  ===========================================================================
+  Composition rebuilt against the CANvision reference, in the visual language
+  of the approved screens:
+
+    [ ADAPTER LINK: interface, channel, bitrate, connect ] [ TARGET VEHICLE ]
+    [ VEHICLE / AI MODEL - the shared selection, ACTIVE marked ............ ]
+
+  Presentation only: every control keeps its existing binding and command.
+  They live on SettingsViewModel (exposed here as Settings.*), so this screen
+  and Settings' quick Connect/Disconnect remain the same link.
+  The model selected here is the one the offline import on Home uses, and it
+  is sent on CONNECT as the vehicle id (live scoring model + DBC decode).
+  ===========================================================================
+-->
+<UserControl
+    x:Class="CANvision.Native.UI.HardwareSetupView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:cvmodels="clr-namespace:CANvision.Native.Models"
+    xmlns:cvctl="clr-namespace:CANvision.Native.UI.Controls"
+    Background="{DynamicResource CvGroundBrush}"
+    UseLayoutRounding="True">
+
+    <UserControl.Resources>
+        <Style x:Key="HwFieldLabel" TargetType="cvctl:CvTrackedText" BasedOn="{StaticResource CvCaps}">
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+
+        <!-- Channel chip: highlighted when it is the current channel. The highlight is
+             computed from HwChannel, so it stays right after SCAN rebuilds the list. -->
+        <Style x:Key="HwChannelChip" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="0,0,6,6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="ToolTip" Value="Use this channel"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Chip" Background="{DynamicResource CvTileBrush}" BorderBrush="{DynamicResource CvBorderBrush}"
+                                BorderThickness="1" CornerRadius="2" Padding="10,5">
+                            <TextBlock x:Name="ChipText" Text="{Binding}" FontFamily="{StaticResource CvMonoFont}" FontSize="10.5"
+                                       Foreground="{DynamicResource CvTextSoftBrush}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Chip" Property="BorderBrush" Value="{DynamicResource CvBorderAccentBrush}"/>
+                            </Trigger>
+                            <DataTrigger Value="True">
+                                <DataTrigger.Binding>
+                                    <MultiBinding Converter="{StaticResource EqualityConverter}">
+                                        <Binding/>
+                                        <Binding Path="DataContext.Settings.HwChannel" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                                    </MultiBinding>
+                                </DataTrigger.Binding>
+                                <Setter TargetName="Chip" Property="BorderBrush" Value="{DynamicResource CvAccentBrush}"/>
+                                <Setter TargetName="Chip" Property="Background" Value="#142FF0D6"/>
+                                <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource CvAccentBrush}"/>
+                            </DataTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Model card: the selected item is the ACTIVE model. -->
+        <Style x:Key="HwModelItem" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="0,0,8,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Card" Background="{DynamicResource CvTileBrush}" BorderBrush="{DynamicResource CvBorderBrush}"
+                                BorderThickness="1" CornerRadius="3" Padding="12,9">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource CvBorderAccentBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource CvAccentBrush}"/>
+                                <Setter TargetName="Card" Property="Background" Value="#142FF0D6"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Rectangle IsHitTestVisible="False">
+            <Rectangle.Fill>
+                <RadialGradientBrush Center="0.18,-0.05" GradientOrigin="0.18,-0.05" RadiusX="0.6" RadiusY="0.75">
+                    <GradientStop Color="#16145654" Offset="0"/>
+                    <GradientStop Color="#00000000" Offset="1"/>
+                </RadialGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <Grid Margin="16,12,16,14">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>   <!-- header -->
+                    <RowDefinition Height="Auto"/>   <!-- adapter + target vehicle -->
+                    <RowDefinition Height="Auto"/>   <!-- model grid -->
+                </Grid.RowDefinitions>
+
+                <!-- ═══ HEADER ════════════════════════════════════════════ -->
+                <Border Grid.Row="0" Style="{StaticResource CvRibbon}" Height="Auto" Padding="16,10">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Rectangle Style="{StaticResource CvSectionMarker}" Height="16"/>
+                            <cvctl:CvTrackedText Label="HARDWARE SETUP" FontFamily="{StaticResource CvDisplayFont}"
+                                                 FontSize="16" FontWeight="Bold" Tracking="1"
+                                                 Foreground="{DynamicResource CvTextBrightBrush}"/>
+                        </StackPanel>
+                        <Border DockPanel.Dock="Right" Style="{StaticResource CvBadge}" HorizontalAlignment="Right"
+                                VerticalAlignment="Center" Padding="11,5">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="6" Height="6" VerticalAlignment="Center">
+                                    <Ellipse.Style>
+                                        <Style TargetType="Ellipse" BasedOn="{StaticResource CvStatusDot}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Settings.PythonCanAvailable}" Value="False">
+                                                    <Setter Property="Fill" Value="{DynamicResource CvWarnBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Ellipse.Style>
+                                </Ellipse>
+                                <TextBlock Text="{Binding Settings.PythonCanWarning}" Margin="8,0,0,0"
+                                           FontFamily="{StaticResource CvMonoFont}" FontSize="10"
+                                           Foreground="{DynamicResource CvTextSoftBrush}"
+                                           MaxWidth="560" TextTrimming="CharacterEllipsis"
+                                           ToolTip="{Binding Settings.PythonCanWarning}"/>
+                            </StackPanel>
+                        </Border>
+                    </DockPanel>
+                </Border>
+
+                <!-- ═══ ADAPTER LINK + TARGET VEHICLE ═════════════════════ -->
+                <Grid Grid.Row="1" Margin="0,12,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="0.42*" MinWidth="320"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Style="{StaticResource CardFlush}" BorderBrush="{DynamicResource CvBorderAccentBrush}">
+                        <StackPanel Margin="20,16,20,18">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <Rectangle Style="{StaticResource CvSectionMarker}"/>
+                                <cvctl:CvTrackedText Label="ADAPTER LINK" Style="{StaticResource CvPanelTitle}"/>
+                            </StackPanel>
+                            <TextBlock Margin="0,0,0,14" TextWrapping="Wrap"
+                                       FontFamily="{StaticResource CvUiFont}" FontSize="11.5"
+                                       Foreground="{DynamicResource CvTextMutedBrush}"
+                                       Text="Connect a CAN adapter before starting a live session. Settings' quick Connect/Disconnect uses this same link."/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="16"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="14"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <StackPanel Grid.Row="0" Grid.Column="0">
+                                    <cvctl:CvTrackedText Label="INTERFACE TYPE" Style="{StaticResource HwFieldLabel}"/>
+                                    <ComboBox Style="{StaticResource CvComboBox}" Height="32"
+                                              IsSynchronizedWithCurrentItem="False"
+                                              ItemsSource="{Binding Settings.HardwareInterfaceItems}"
+                                              SelectedItem="{Binding Settings.SelectedHwInterface, Mode=TwoWay}"
+                                              ToolTip="python-can interface driver"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Row="0" Grid.Column="2">
+                                    <cvctl:CvTrackedText Label="BITRATE (BPS)" Style="{StaticResource HwFieldLabel}"/>
+                                    <TextBox Style="{StaticResource CvTextBox}" MinHeight="32"
+                                             Text="{Binding Settings.HwBitrate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             ToolTip="Standard CAN bitrates: 250000, 500000, 1000000"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Row="2" Grid.Column="0">
+                                    <cvctl:CvTrackedText Label="CHANNEL" Style="{StaticResource HwFieldLabel}"/>
+                                    <TextBox Style="{StaticResource CvTextBox}" MinHeight="32"
+                                             Text="{Binding Settings.HwChannel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             ToolTip="e.g. 0 for PCAN, can0 for SocketCAN, PCAN_USBBUS1 for PEAK, COM3 for ELM327"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Row="2" Grid.Column="2">
+                                    <DockPanel Margin="0,0,0,6">
+                                        <cvctl:CvTrackedText DockPanel.Dock="Left" Label="DETECTED CHANNELS" Style="{StaticResource CvCaps}"/>
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource CvButtonGhost}" HorizontalAlignment="Right"
+                                                Height="20" Padding="10,0" Command="{Binding Settings.RefreshPortsCommand}"
+                                                ToolTip="Scan for available serial / COM ports">
+                                            <cvctl:CvTrackedText Label="SCAN" FontFamily="{StaticResource CvDisplayFont}" FontSize="9" FontWeight="SemiBold"/>
+                                        </Button>
+                                    </DockPanel>
+                                    <ListBox ItemsSource="{Binding Settings.HardwareChannelItems}"
+                                             IsSynchronizedWithCurrentItem="False"
+                                             SelectedItem="{Binding Settings.HwChannel, Mode=TwoWay}"
+                                             ItemContainerStyle="{StaticResource HwChannelChip}"
+                                             Background="Transparent" BorderThickness="0" Padding="0"
+                                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                             ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                        <ListBox.ItemsPanel>
+                                            <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                        </ListBox.ItemsPanel>
+                                    </ListBox>
+                                </StackPanel>
+                            </Grid>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
+                                <Button Style="{StaticResource CvButtonPrimary}" Height="38" MinWidth="150" Padding="20,0"
+                                        Command="{Binding Settings.ConnectHardwareCommand}"
+                                        ToolTip="Connect with the settings above and the selected vehicle / AI model">
+                                    <cvctl:CvTrackedText Label="CONNECT" FontFamily="{StaticResource CvDisplayFont}" FontSize="12" FontWeight="SemiBold"/>
+                                </Button>
+                                <Button Style="{StaticResource CvButtonGhost}" Height="38" MinWidth="150" Padding="20,0" Margin="10,0,0,0"
+                                        Command="{Binding Settings.DisconnectHardwareCommand}"
+                                        ToolTip="Disconnect the adapter">
+                                    <cvctl:CvTrackedText Label="DISCONNECT" FontFamily="{StaticResource CvDisplayFont}" FontSize="12" FontWeight="SemiBold"/>
+                                </Button>
+                            </StackPanel>
+
+                            <Border Style="{StaticResource CvInset}" Margin="0,14,0,0" Padding="13,9">
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse Width="6" Height="6" VerticalAlignment="Center">
+                                        <Ellipse.Style>
+                                            <Style TargetType="Ellipse" BasedOn="{StaticResource CvStatusDot}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Settings.HwStatusText}" Value="DISCONNECTED">
+                                                        <Setter Property="Fill" Value="{DynamicResource CvTextDimBrush}"/>
+                                                        <Setter Property="Effect" Value="{x:Null}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Ellipse.Style>
+                                    </Ellipse>
+                                    <TextBlock Text="{Binding Settings.HwStatusText}" Margin="9,0,0,0" TextWrapping="Wrap"
+                                               FontFamily="{StaticResource CvMonoFont}" FontSize="10.5"
+                                               Foreground="{DynamicResource CvTextBrush}"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- TARGET VEHICLE: what CONNECT will use -->
+                    <Border Grid.Column="2" Style="{StaticResource CardFlush}">
+                        <StackPanel Margin="18,16,18,18">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                <Rectangle Style="{StaticResource CvSectionMarker}" Fill="{DynamicResource CvVioletBrush}"
+                                           Effect="{DynamicResource CvVioletGlow}"/>
+                                <cvctl:CvTrackedText Label="TARGET VEHICLE" Style="{StaticResource CvPanelTitle}"/>
+                            </StackPanel>
+
+                            <TextBlock Text="{Binding Settings.ModelSelection.SelectedModel.Name}"
+                                       FontFamily="{StaticResource CvDisplayFont}" FontSize="19" FontWeight="Bold"
+                                       Foreground="{DynamicResource CvTextBrightBrush}" TextWrapping="Wrap"
+                                       Effect="{DynamicResource CvAccentGlowSoft}"/>
+                            <cvctl:CvTrackedText Label="{Binding Settings.ModelSelection.SelectedModel.KindText}"
+                                                 Style="{StaticResource CvCaps}" Margin="0,6,0,12"/>
+
+                            <DockPanel Style="{StaticResource CvKvRow}">
+                                <cvctl:CvTrackedText Label="MODEL" Style="{StaticResource CvKvKey}"/>
+                                <TextBlock Text="{Binding Settings.ModelSelection.SelectedModel.ModelLabel}" Style="{StaticResource CvKvValue}"
+                                           Foreground="{DynamicResource CvAccentBrush}"/>
+                            </DockPanel>
+                            <DockPanel Style="{StaticResource CvKvRow}">
+                                <cvctl:CvTrackedText Label="STATES" Style="{StaticResource CvKvKey}"/>
+                                <TextBlock Text="{Binding Settings.ModelSelection.SelectedModel.StatesText}" Style="{StaticResource CvKvValue}"/>
+                            </DockPanel>
+                            <DockPanel Style="{StaticResource CvKvRow}">
+                                <cvctl:CvTrackedText Label="DECODE" Style="{StaticResource CvKvKey}"/>
+                                <TextBlock Text="{Binding Settings.ModelSelection.SelectedModel.DecodeText}" Style="{StaticResource CvKvValue}"/>
+                            </DockPanel>
+                            <DockPanel Style="{StaticResource CvKvRowTight}">
+                                <cvctl:CvTrackedText Label="STATUS" Style="{StaticResource CvKvKey}"/>
+                                <TextBlock Text="{Binding Settings.ModelSelection.SelectedModel.StatusText}" Style="{StaticResource CvKvValue}"
+                                           Foreground="{DynamicResource CvOkBrush}"/>
+                            </DockPanel>
+
+                            <TextBlock Margin="0,14,0,0" TextWrapping="Wrap"
+                                       FontFamily="{StaticResource CvUiFont}" FontSize="11"
+                                       Foreground="{DynamicResource CvTextMutedBrush}"
+                                       Text="Sent on CONNECT as the vehicle id: it selects the live scoring model and the DBC decode."/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- ═══ VEHICLE / AI MODEL (the shared selection) ═════════ -->
+                <Border Grid.Row="2" Style="{StaticResource CardFlush}" Margin="0,12,0,0">
+                    <StackPanel Margin="20,16,20,14">
+                        <DockPanel Margin="0,0,0,4">
+                            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                                <Rectangle Style="{StaticResource CvSectionMarker}"/>
+                                <cvctl:CvTrackedText Label="VEHICLE / AI MODEL" Style="{StaticResource CvPanelTitle}"/>
+                            </StackPanel>
+                            <TextBlock DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                       FontFamily="{StaticResource CvMonoFont}" FontSize="10" Foreground="{DynamicResource CvTextSoftBrush}">
+                                <Run Text="{Binding Settings.ModelSelection.TrainedModelCount, Mode=OneWay}"/><Run Text=" TRAINED VEHICLE MODELS · GENERAL = FALLBACK"/>
+                            </TextBlock>
+                        </DockPanel>
+                        <TextBlock Margin="0,0,0,12" FontFamily="{StaticResource CvUiFont}" FontSize="11.5" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource CvTextMutedBrush}"
+                                   Text="The selected model scores live sessions and offline imports. It is saved and shared with the offline import on Home."/>
+
+                        <ListBox ItemsSource="{Binding Settings.ModelSelection.Models}"
+                                 IsSynchronizedWithCurrentItem="False"
+                                 SelectedItem="{Binding Settings.ModelSelection.SelectedModel, Mode=TwoWay}"
+                                 ItemContainerStyle="{StaticResource HwModelItem}"
+                                 Background="Transparent" BorderThickness="0" Padding="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate><UniformGrid Columns="4"/></ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type cvmodels:TrainedModelInfo}">
+                                    <StackPanel>
+                                        <DockPanel>
+                                            <Border x:Name="Active" DockPanel.Dock="Right" Style="{StaticResource CvBadge}" Padding="7,1"
+                                                    VerticalAlignment="Top" Visibility="Collapsed">
+                                                <cvctl:CvTrackedText Label="ACTIVE" FontFamily="{StaticResource CvMonoFont}" FontSize="8.5"
+                                                                     Foreground="{DynamicResource CvAccentBrush}"/>
+                                            </Border>
+                                            <TextBlock Text="{Binding Name}" FontFamily="{StaticResource CvUiFont}" FontSize="12"
+                                                       FontWeight="SemiBold" Foreground="{DynamicResource CvTextBrightBrush}"
+                                                       TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/>
+                                        </DockPanel>
+                                        <cvctl:CvTrackedText Label="{Binding KindText}" Style="{StaticResource CvCaps}" FontSize="8.5" Margin="0,4,0,0"/>
+                                        <TextBlock Margin="0,5,0,0" FontFamily="{StaticResource CvMonoFont}" FontSize="9.5"
+                                                   Foreground="{DynamicResource CvTextSoftBrush}" TextTrimming="CharacterEllipsis">
+                                            <Run Text="MODEL "/><Run Text="{Binding ModelLabel, Mode=OneWay}" Foreground="{DynamicResource CvAccentBrush}"/>
+                                        </TextBlock>
+                                        <TextBlock FontFamily="{StaticResource CvMonoFont}" FontSize="9.5" Foreground="{DynamicResource CvTextSoftBrush}"
+                                                   TextTrimming="CharacterEllipsis">
+                                            <Run Text="{Binding StatesText, Mode=OneWay}"/><Run Text="  ·  "/><Run x:Name="Status" Text="{Binding StatusText, Mode=OneWay}" Foreground="{DynamicResource CvOkBrush}"/>
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                            <Setter TargetName="Active" Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding StatusText}" Value="FALLBACK">
+                                            <Setter TargetName="Status" Property="Foreground" Value="{DynamicResource CvWarnBrush}"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

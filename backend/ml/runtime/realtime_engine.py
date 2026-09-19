@@ -41,8 +41,12 @@ class CanFrame:
 
 
 class RealtimeEngine:
-    def __init__(self, cfg: RuntimeConfig = DEFAULT_CONFIG, vehicle_id: str = "") -> None:
+    def __init__(self, cfg: RuntimeConfig = DEFAULT_CONFIG, vehicle_id: str = "", score_ml: bool = True) -> None:
         self.cfg = cfg
+        # Offline batch callers set score_ml=False and score the collected feature
+        # vectors in one batch instead (see runtime.vehicle_scoring); per-frame
+        # IsolationForest calls dominate the cost of a whole-file analysis.
+        self._score_ml = score_ml
         # Which per-vehicle model bundle to score against (see RuntimeModelStore.score).
         # Empty/unknown vehicle_id falls back to "general" — same as prior behavior.
         self.vehicle_id = vehicle_id or "general"
@@ -80,6 +84,11 @@ class RealtimeEngine:
         print(f"[RUNTIME] Current persistence threshold: {cfg.persistence_threshold}")
         print(f"[RUNTIME] Current temporal decay: {cfg.temporal_decay}")
 
+    @property
+    def models(self):
+        """The loaded model store, so batch callers can reuse it instead of loading again."""
+        return self._models
+
     def process_frame(self, frame: CanFrame) -> dict[str, object]:
         st = self.state.get(frame.can_id)
         self._recent_can_ids.append(frame.can_id)
@@ -105,7 +114,7 @@ class RealtimeEngine:
         ml_norm: float
         vehicle_state: str
         st.ml_frame_count += 1
-        if self._models.is_loaded:
+        if self._models.is_loaded and self._score_ml:
             if st.ml_frame_count % _ML_STRIDE == 0:
                 features = compute_model_features(st, frame.timestamp, frame.payload, can_id_entropy)
                 vehicle_state = self._models.classify_state(features)

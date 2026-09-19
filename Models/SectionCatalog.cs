@@ -34,6 +34,12 @@ public static class SectionCatalog
     private static readonly IReadOnlyDictionary<SectionKey, SectionDescriptor> Descriptors =
         new Dictionary<SectionKey, SectionDescriptor>
         {
+            [SectionKey.HardwareSetup] = new(
+                SectionKey.HardwareSetup,
+                "05",
+                "Hardware Setup",
+                "Adapter type, channel, bitrate, and vehicle profile for live CAN capture.",
+                "Configure and connect a real CAN adapter before starting a live session."),
             [SectionKey.Dashboard] = new(
                 SectionKey.Dashboard,
                 "01",

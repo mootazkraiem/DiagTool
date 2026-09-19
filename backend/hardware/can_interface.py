@@ -37,6 +37,12 @@ _INTERFACE_MAP: dict[str, str] = {
 
 _BUFFER_MAX = 2000
 
+# A healthy CAN bus produces frames far more often than this — if none arrive
+# for this long while the link is otherwise "up", treat it as disconnected.
+# A silently unplugged adapter never raises an exception (recv() just times
+# out and returns None forever), so exception-based detection alone misses it.
+_STALE_AFTER_SECONDS = 5.0
+
 
 _FUSION_LAYER_KEYS = {"timing", "payload", "ml", "persistence"}
 
@@ -89,7 +95,8 @@ class CanHardwareReader:
         self._stop_event = threading.Event()
         self._thread: Optional[threading.Thread] = None
 
-        self.is_connected = False
+        self._link_up = False          # raw "did the read loop crash" flag
+        self.last_frame_at: Optional[float] = None  # last time a real frame arrived
         self.interface_type = ""
         self.channel = ""
         self.bitrate = 500_000
@@ -98,6 +105,22 @@ class CanHardwareReader:
         self.current_score = 0.0
         self.error: str = ""
         self.connected_at: Optional[float] = None
+
+    @property
+    def is_connected(self) -> bool:
+        """True only while the link is up AND frames are still actually arriving.
+
+        A dead/unplugged adapter that never raises (recv() just times out
+        forever) would otherwise report "connected" indefinitely — this is
+        what let stale/simulator data keep displaying for hours after the
+        real hardware was physically disconnected.
+        """
+        if not self._link_up:
+            return False
+        reference = self.last_frame_at if self.last_frame_at is not None else self.connected_at
+        if reference is None:
+            return False
+        return (time.time() - reference) < _STALE_AFTER_SECONDS
 
     # ── Public API ─────────────────────────────────────────────────────────────
 
@@ -117,7 +140,7 @@ class CanHardwareReader:
             bitrate:   CAN bus speed in bps (default 500 000).
             vehicle_id: Optional vehicle profile for DBC decode in future use.
         """
-        if self.is_connected:
+        if self._link_up:
             raise RuntimeError("Already connected — call disconnect() first")
 
         import can
@@ -162,7 +185,8 @@ class CanHardwareReader:
         self.alert_count = 0
         self.current_score = 0.0
         self.connected_at = time.time()
-        self.is_connected = True
+        self.last_frame_at = None
+        self._link_up = True
 
         self._thread = threading.Thread(
             target=self._read_loop, daemon=True, name="can-hw-reader"
@@ -187,7 +211,15 @@ class CanHardwareReader:
                 pass
             self._bus = None
 
-        self.is_connected = False
+        self._link_up = False
+        self.last_frame_at = None
+        # Clear the shared buffers so stale hardware frames can never be
+        # served again after this point — previously these buffers were left
+        # untouched on disconnect, so /api/live/signals and /api/live/alerts
+        # kept returning hours-old data with nothing to say it was stale.
+        with self._lock:
+            self._signals.clear()
+            self._alerts.clear()
         # Reset the shared engine back to "general" so the synthetic /vehicle
         # endpoint (resumed after disconnect) doesn't keep scoring generic demo
         # data against this hardware session's vehicle-specific model.
@@ -198,8 +230,15 @@ class CanHardwareReader:
         )
 
     def status(self) -> dict[str, Any]:
+        seconds_since_last_frame = (
+            round(time.time() - self.last_frame_at, 1)
+            if self.last_frame_at is not None else None
+        )
         return {
             "is_connected":   self.is_connected,
+            "link_up":        self._link_up,  # raw link state, before the staleness check
+            "stale":          self._link_up and not self.is_connected,
+            "seconds_since_last_frame": seconds_since_last_frame,
             "interface_type": self.interface_type,
             "channel":        self.channel,
             "bitrate":        self.bitrate,
@@ -224,10 +263,17 @@ class CanHardwareReader:
         while not self._stop_event.is_set():
             try:
                 msg = self._bus.recv(timeout=0.5)
+            except ValueError as exc:
+                # A single malformed line from the adapter (e.g. transient
+                # serial noise glued two frames together) — this is not a
+                # dead connection, just one bad frame. Skip it and keep
+                # reading instead of tearing down the whole session over it.
+                logger.warning("[HW] Skipped malformed frame: %s", exc)
+                continue
             except Exception as exc:
                 logger.error("[HW] recv error: %s", exc)
                 self.error = str(exc)
-                self.is_connected = False
+                self._link_up = False
                 if self._bus is not None:
                     try:
                         self._bus.shutdown()
@@ -264,6 +310,7 @@ class CanHardwareReader:
                 CanFrame(timestamp=ts, can_id=can_id, payload=payload)
             )
 
+        self.last_frame_at = time.time()  # wall-clock arrival time, for staleness checks
         self._stats.on_frame()
         score = float(out["score"]["fusion_score"])
         self._stats.on_score(score)

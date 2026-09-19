@@ -6,8 +6,15 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+                <!-- Order matters. Later dictionaries win on duplicate keys, so
+                     ScreenStyles.xaml comes last and re-points the legacy
+                     Hud*/CanVision* style keys onto the new design system. -->
+                <!-- Palette first: ThemeService swaps it for Palette.Light.xaml. -->
+                <ResourceDictionary Source="UI/Theme/Palette.Dark.xaml" />
+                <ResourceDictionary Source="UI/Theme/DesignSystem.xaml" />
                 <ResourceDictionary Source="UI/Theme/ThemeResources.xaml" />
                 <ResourceDictionary Source="UI/Theme/ButtonStyles.xaml" />
+                <ResourceDictionary Source="UI/Theme/ScreenStyles.xaml" />
                 <ResourceDictionary Source="UI/Theme/ViewTemplates.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
@@ -16,6 +23,9 @@
             <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
             <converters:HexColorToBrushConverter x:Key="HexColorToBrushConverter" />
             <converters:ProgressToArcDashConverter x:Key="ProgressToArcDashConverter" />
+            <converters:UtcToLocalTimeConverter x:Key="UtcToLocalTimeConverter" />
+            <converters:PercentToOffsetConverter x:Key="PercentToOffsetConverter" />
+            <converters:EqualityConverter x:Key="EqualityConverter" />
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         </ResourceDictionary>
     </Application.Resources>

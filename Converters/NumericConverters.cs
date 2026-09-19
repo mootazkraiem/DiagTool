@@ -75,9 +75,20 @@ namespace CANvision.Native.Converters
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
+            // WPF measures StrokeDashArray in multiples of the stroke thickness, so a ring
+            // must pass its circumference in those units as the ConverterParameter
+            // (circumference / thickness). Without one the legacy constant is used.
+            var total = Circumference;
+            if (parameter is not null &&
+                double.TryParse(parameter.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var given) &&
+                given > 0)
+            {
+                total = given;
+            }
+
             var pct = value is double d ? d : 0;
-            var filled = Math.Max(0, Math.Min(100, pct)) / 100.0 * Circumference;
-            return new DoubleCollection { filled, Circumference };
+            var filled = Math.Max(0, Math.Min(100, pct)) / 100.0 * total;
+            return new DoubleCollection { filled, Math.Max(0.0001, total - filled) };
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

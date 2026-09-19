@@ -6,6 +6,9 @@
     <DataTemplate DataType="{x:Type vm:HomeViewModel}">
         <ui:HomeView />
     </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:HardwareSetupViewModel}">
+        <ui:HardwareSetupView />
+    </DataTemplate>
     <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
         <ui:DashboardView />
     </DataTemplate>

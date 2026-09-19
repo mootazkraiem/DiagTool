@@ -46,6 +46,13 @@ assets/data.zip
 assets/road.zip
 assets/9) Car-Hacking Dataset.zip
 
+# Thesis backup archives — the .tex source under thesis/ is the real source
+# of truth; these were redundant compressed copies bloating repo history.
+thesis.zip
+thesis (2).zip
+thesis (3).zip
+thesis.rar
+
 # Runtime data (not source — grows during operation)
 backend/db/canvision.db
 backend/db/canvision.db-shm

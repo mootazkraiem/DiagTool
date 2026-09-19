@@ -219,9 +219,9 @@ Table~\ref{tab:before-after} summarizes every measurement taken on the same 97{,
 \hline
 Total alerts               & 15{,}945 (16.3\%) & 11{,}971 (12.25\%) \\
 \hline
-Replay duration            & 685 s              & 341.2 s \\
+Replay duration            & 685 s              & 502.2 s \\
 \hline
-Throughput                 & $\sim$143 fps       & $\sim$286 fps \\
+Throughput                 & $\sim$143 fps       & $\sim$194.6 fps \\
 \hline
 vehicle\_state distribution & 99.93\% parking & 99.93\% driving \\
 \hline
@@ -339,9 +339,9 @@ This section states explicitly why the frozen repository state reached at the en
     \item \textbf{All identified defects are fixed and re-verified.} Every defect found during the root-cause analysis and the end-to-end re-validation (Table~\ref{tab:fixes-summary}) was fixed and confirmed with direct evidence, not left as a known workaround.
     \item \textbf{Detection behaviour is now consistent across all three input modes.} Since Fix 1 and Fix 4, replay, live simulation, and live hardware capture all go through the same vehicle-aware scoring path and the same canonical parser, instead of behaving differently depending on how a frame reached the engine.
     \item \textbf{The full pipeline was re-validated end to end}, not only at the level of individual functions: import, replay, detection, AI explanation, and export were all exercised together on the real Kia EV6 recording after every fix, and again as a final full run before freezing the repository.
-    \item \textbf{Performance is adequate for the target use case.} A one-hour, 97{,}741-frame recording now replays in about 341 seconds ($\sim$286 fps), well within the ``a few minutes, not hours'' target of NFR1.
+    \item \textbf{Performance is adequate for the target use case.} A one-hour, 97{,}741-frame recording now replays in about 502 seconds ($\sim$194.6 fps), well within the ``a few minutes, not hours'' target of NFR1.
     \item \textbf{Failure of an external dependency degrades gracefully rather than breaking the application.} If the \gls{llm} provider chain is entirely unreachable, the rule-based fallback still produces a complete explanation (NFR6); if a vehicle has no trained model bundle, the engine falls back to a generic bundle and then to a lightweight heuristic rather than failing to score a frame at all.
-    \item \textbf{What ``ready'' does not cover.} Readiness here is a software-level judgment, not a certification. The live hardware capture path is code-complete but has not been exercised against a physical vehicle (see Limitations below), and the CSV formatting defect described in Chapter~\ref{chap:impl}'s Export section remains open as a known, low-severity issue.
+    \item \textbf{What ``ready'' does not cover.} Readiness here is a software-level judgment, not a certification. The live hardware capture path is code-complete but has not been exercised against a physical vehicle (see Limitations below), and the CSV formatting defect described in Chapter~\ref{chap:impl}'s Export section remains open as a known, low-severity issue. Live-mode connection health also has a known gap: a silently dropped adapter (as opposed to one that raises an error) was not reliably detected before the reader was hardened with an explicit staleness check, so any earlier hardware session run before that fix cannot be assumed to have surfaced a disconnect promptly.
 \end{itemize}
 
 Taken together, these points are the basis for treating the frozen repository as production-ready from a software engineering standpoint: every known defect in the software itself has been fixed and verified, even though one input mode (physical hardware) still needs a real-vehicle test before it can be called validated in the same sense as replay and simulation.

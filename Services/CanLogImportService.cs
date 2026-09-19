@@ -48,6 +48,14 @@ public sealed class CanLogImportService
         try { fileSize = new FileInfo(filePath).Length; } catch { }
         var lastProgressTicks = DateTime.UtcNow.Ticks;
 
+        // Headered CSV exports are mapped by column name (see CsvCanLayout). Null for
+        // candump / ASC / headerless CSV, which keep the per-line parsers below.
+        var csvLayout = CsvCanLayout.Detect(filePath);
+        if (csvLayout is not null)
+        {
+            logger.Info($"CAN import CSV layout: {csvLayout.Describe()}");
+        }
+
         using var reader = new StreamReader(filePath, System.Text.Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 4096);
         string? rawLine;
         while ((rawLine = reader.ReadLine()) != null)
@@ -66,7 +74,7 @@ public sealed class CanLogImportService
             }
 
             var line = rawLine;
-            if (!TryParseFrame(line, out var frameRecord))
+            if (!TryParseFrame(line, csvLayout, out var frameRecord))
             {
                 skipped++;
                 continue;
@@ -79,6 +87,8 @@ public sealed class CanLogImportService
                 RelativeTimestampSeconds = frameRecord.Timestamp,
                 CanId = frameRecord.CanId,
                 Data = frameRecord.Bytes,
+                Channel = frameRecord.Channel,
+                IsExtended = frameRecord.IsExtended,
             };
             frames.Add(frame);
 
@@ -439,7 +449,7 @@ public sealed class CanLogImportService
         return PredefinedCanSchema.TranslationMap.TryGetValue(canId, out var name) ? name : $"CAN_{canId:X3}";
     }
 
-    private static bool TryParseFrame(string rawLine, out CanFrameRecord frame)
+    private static bool TryParseFrame(string rawLine, CsvCanLayout? csvLayout, out CanFrameRecord frame)
     {
         frame = default;
         if (string.IsNullOrWhiteSpace(rawLine))
@@ -451,6 +461,29 @@ public sealed class CanLogImportService
         if (line.StartsWith("#") || line.StartsWith("//") || line.StartsWith(";"))
         {
             return false;
+        }
+
+        // A file with a CSV header is read entirely through its column map: the
+        // positional fallbacks below would misread exports that put other fields
+        // (e.g. BusChannel) before the identifier.
+        if (csvLayout is not null)
+        {
+            if (!csvLayout.TryParse(line, out var csvFrame))
+            {
+                return false;
+            }
+
+            var data = new byte[8];
+            var stored = Math.Min(8, csvFrame.Payload.Length);
+            Array.Copy(csvFrame.Payload, data, stored);
+            frame = new CanFrameRecord(
+                csvFrame.Timestamp,
+                csvFrame.CanId,
+                data,
+                BitConverter.ToString(csvFrame.Payload, 0, stored).Replace("-", string.Empty),
+                csvFrame.Channel,
+                csvFrame.IsExtended);
+            return true;
         }
 
         if (TryParseCandump(line, out frame))
@@ -587,18 +620,22 @@ public sealed class CanLogImportService
 
     private readonly struct CanFrameRecord
     {
-        public CanFrameRecord(double timestamp, int canId, byte[] bytes, string dataHex)
+        public CanFrameRecord(double timestamp, int canId, byte[] bytes, string dataHex, int? channel = null, bool? isExtended = null)
         {
             Timestamp = timestamp;
             CanId = canId;
             Bytes = bytes;
             DataHex = dataHex;
+            Channel = channel;
+            IsExtended = isExtended;
         }
 
         public double Timestamp { get; }
         public int CanId { get; }
         public byte[] Bytes { get; }
         public string DataHex { get; }
+        public int? Channel { get; }
+        public bool? IsExtended { get; }
     }
 }
 

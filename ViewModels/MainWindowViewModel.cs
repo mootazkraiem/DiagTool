@@ -74,7 +74,8 @@ public sealed class MainWindowViewModel : ViewModelBase
                                    || VehicleDataService.AppState == Models.AppState.LiveSession;
 
     public bool ShowEmptyState =>
-        !IsAnalysisComplete
+        !Models.DevOptions.SkipDataGate
+        && !IsAnalysisComplete
         && CurrentSectionKey != SectionKey.Home
         && CurrentSectionKey != SectionKey.Settings;
 

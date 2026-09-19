@@ -21,6 +21,20 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        // Development-only launch switches. Absent any argument this is a
+        // no-op and startup is unchanged. See Models/DevOptions.cs.
+        foreach (var arg in e.Args)
+        {
+            // "--dashboard", "--telemetry", ... : any SectionKey name.
+            if (arg.StartsWith("--", System.StringComparison.Ordinal)
+                && System.Enum.TryParse<SectionKey>(arg.Substring(2), ignoreCase: true, out var devSection)
+                && devSection != SectionKey.Home)
+            {
+                DevOptions.StartupSection = devSection;
+                DevOptions.SkipDataGate = true;
+            }
+        }
+
         logger = new AppLogger();
         
         // Add global exception handlers
@@ -35,26 +49,34 @@ public partial class App : Application
         logger.Info("Application startup sequence initiated.");
 
         var appConfig = AppConfig.Load();
+        // Palette before any window is built, so it paints in the saved theme.
+        ThemeService.Apply(appConfig.Theme);
         if (!string.IsNullOrWhiteSpace(appConfig.GoogleApiKey))
             Environment.SetEnvironmentVariable("GOOGLE_API_KEY", appConfig.GoogleApiKey);
 
         var pythonApiClient = new PythonApiClient(logger);
         vehicleDataService = new VehicleDataService(pythonApiClient, logger);
+        // One vehicle / AI model selection for the whole app (offline import, Log Playback,
+        // Settings, Hardware Setup), persisted in AppConfig.
+        var modelSelection = new ModelSelectionService(pythonApiClient, logger);
         var canLogImportService = new CanLogImportService(logger, pythonApiClient);
 
-        var settings = new SettingsViewModel(vehicleDataService, pythonApiClient);
+        var settings = new SettingsViewModel(vehicleDataService, pythonApiClient, modelSelection);
+        var hardwareSetup = new HardwareSetupViewModel(vehicleDataService, settings);
         var preview = new PreviewViewModel(null);
 
-        var home = new HomeViewModel(vehicleDataService, canLogImportService, pythonApiClient);
+        var home = new HomeViewModel(vehicleDataService, canLogImportService, pythonApiClient, modelSelection);
         var dashboard = new DashboardViewModel(vehicleDataService);
         var telemetry = new TelemetryViewModel(vehicleDataService, canLogImportService);
         var diagnostics = new DiagnosticsViewModel(vehicleDataService);
-        var playback = new LogPlaybackViewModel(vehicleDataService, canLogImportService, logger);
+        var playback = new LogPlaybackViewModel(vehicleDataService, canLogImportService, logger, modelSelection);
+        _ = modelSelection.LoadAsync();
         var anomalyIntel = new AnomalyIntelViewModel(vehicleDataService, pythonApiClient);
 
         var navigationService = new NavigationService(
             logger,
             home,
+            hardwareSetup,
             dashboard,
             telemetry,
             diagnostics,
@@ -78,13 +100,17 @@ public partial class App : Application
             }));
         };
 
-        // Online Diagnosis card clicked → unlock all tabs + go to Dashboard
+        // "START LIVE SESSION" clicked → unlock all tabs, then land on Hardware
+        // Setup (not Dashboard) so the user configures/connects an adapter first.
+        // EnterLiveMode() still does the actual unlocking; the extra navigate
+        // right after it just redirects the initial landing screen.
         home.OnlineDiagnosisRequested += () =>
         {
             Dispatcher.BeginInvoke((System.Action)(() =>
             {
                 vehicleDataService.Start();
                 navigationService.EnterLiveMode();
+                navigationService.NavigateToSectionCommand.Execute(SectionKey.HardwareSetup);
             }));
         };
 
@@ -96,6 +122,22 @@ public partial class App : Application
         logger.Info("Initializing MainWindow...");
         var window = new MainWindow(mainWindowViewModel, logger);
         window.Show();
+
+        // Dev switch: jump past the Home screen straight to the section being
+        // worked on. HOME in the top bar still navigates back to import a log.
+        if (DevOptions.StartupSection is { } startupSection)
+        {
+            // Tabs stay locked until an analysis completes; Navigate() refuses a
+            // locked tab. Unlock only the target so the dev jump lands. Any later
+            // AppState change re-applies the normal lock rules.
+            var startupTab = navigationService.Tabs.FirstOrDefault(t => t.Section.Key == startupSection);
+            if (startupTab is not null)
+            {
+                startupTab.IsUnlocked = true;
+            }
+
+            navigationService.NavigateToSectionCommand.Execute(startupSection);
+        }
         window.Activate();
         window.Focus();
         MainWindow = window;
