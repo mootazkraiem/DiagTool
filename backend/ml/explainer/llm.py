@@ -73,18 +73,67 @@ def _candidate_text(candidate: dict[str, Any]) -> str:
     parts = (candidate.get("content") or {}).get("parts") or []
     return "".join(p.get("text", "") for p in parts if not p.get("thought")).strip()
 _OLLAMA_URL = "http://localhost:11434/api/generate"
-_OLLAMA_MODELS = ["llama3", "gemma", "mistral", "phi3"]
+_OLLAMA_TAGS_URL = "http://localhost:11434/api/tags"
+# Preferred local chat models, best fit first. llama3.2:3b runs fully on a 4 GB
+# GPU; OLLAMA_MODEL overrides the choice. Only models that are actually
+# installed are used (see _ollama_model).
+_OLLAMA_PREFERRED = ["llama3.2:3b", "llama3.2", "qwen2.5:3b", "phi3:mini", "gemma2:2b", "llama3", "mistral", "phi3", "gemma"]
+# Embedding-only models can be installed alongside (all-minilm is, for RAG)
+# but cannot write text.
+_OLLAMA_EMBEDDING_HINTS = ("minilm", "embed", "bge", "nomic")
+_OLLAMA_CHECK_TTL_S = 60.0
+_ollama_checked_at = -1e9
+_ollama_model_cache: str | None = None
 
 
-def _check_ollama_available() -> bool:
+def _ollama_model() -> str | None:
+    """The installed local chat model to use, or None when Ollama is not
+    running or has none. Re-checked every minute, so starting Ollama (or
+    pulling a model) after the backend started still takes effect."""
+    global _ollama_checked_at, _ollama_model_cache
+    now = time.monotonic()
+    if now - _ollama_checked_at < _OLLAMA_CHECK_TTL_S:
+        return _ollama_model_cache
+    _ollama_checked_at = now
     try:
-        urllib.request.urlopen("http://localhost:11434/api/tags", timeout=1)
-        return True
+        with urllib.request.urlopen(_OLLAMA_TAGS_URL, timeout=1.5) as resp:
+            installed = [m.get("name", "") for m in json.loads(resp.read().decode("utf-8")).get("models", [])]
     except Exception:
-        return False
+        _ollama_model_cache = None
+        return None
+    chat_models = [n for n in installed if not any(h in n.lower() for h in _OLLAMA_EMBEDDING_HINTS)]
+    wanted = [os.environ.get("OLLAMA_MODEL", "").strip()] + _OLLAMA_PREFERRED
+    choice = None
+    for name in [w for w in wanted if w]:
+        for installed_name in chat_models:
+            if installed_name == name or installed_name == f"{name}:latest" or installed_name.split(":")[0] == name:
+                choice = installed_name
+                break
+        if choice:
+            break
+    if choice is None and chat_models:
+        choice = chat_models[0]
+    if choice != _ollama_model_cache:
+        logger.info("[analyst] Local LLM: %s", choice or "none installed")
+    _ollama_model_cache = choice
+    return choice
 
 
-_OLLAMA_AVAILABLE: bool = _check_ollama_available()
+def _ollama_generate(prompt: str, *, json_mode: bool, temperature: float, max_tokens: int, timeout: int) -> tuple[str, str] | None:
+    """One Ollama completion: (model, text), or None."""
+    model = _ollama_model()
+    if model is None:
+        return None
+    body: dict[str, Any] = {
+        "model": model,
+        "prompt": prompt,
+        "stream": False,
+        "options": {"temperature": temperature, "num_predict": max_tokens},
+    }
+    if json_mode:
+        body["format"] = "json"
+    raw = _http_post(_OLLAMA_URL, body, timeout=timeout)
+    return model, json.loads(raw).get("response", "").strip()
 
 # ── Web research (Wikipedia + NIST NVD — no API key required) ─────────────────
 
@@ -601,42 +650,38 @@ def _try_gemini_chat(
 def _try_ollama(
     alert: dict[str, Any], ctx: dict[str, Any], sig_ctx: str
 ) -> dict[str, str] | None:
-    if not _OLLAMA_AVAILABLE:
-        return None
     prompt = _build_analyst_prompt(alert, ctx, sig_ctx)
-    for model in _OLLAMA_MODELS:
-        try:
-            body = {"model": model, "prompt": prompt, "stream": False}
-            raw = _http_post(_OLLAMA_URL, body, timeout=35)
-            resp = json.loads(raw)
-            text = resp.get("response", "")
-            result = _parse_json_response(text)
-            if result:
-                result["kb_match_label"] = ctx["kb"]["attack_type"] if ctx.get("kb") else ""
-                logger.info("[analyst] Ollama/%s provider succeeded.", model)
-                return result
-        except Exception as exc:
-            logger.debug("[analyst] Ollama/%s failed: %s", model, exc)
+    try:
+        # First call after a while loads the model into memory, hence the timeout.
+        generated = _ollama_generate(prompt, json_mode=True, temperature=0.3, max_tokens=700, timeout=90)
+        if generated is None:
+            return None
+        model, text = generated
+        result = _parse_json_response(text)
+        if result:
+            result["kb_match_label"] = ctx["kb"]["attack_type"] if ctx.get("kb") else ""
+            logger.info("[analyst] Ollama/%s provider succeeded.", model)
+            return result
+        logger.warning("[analyst] Ollama/%s returned no usable JSON.", model)
+    except Exception as exc:
+        logger.warning("[analyst] Ollama failed: %s", exc)
     return None
 
 
 def _try_ollama_chat(
     alert: dict[str, Any], ctx: dict[str, Any], sig_ctx: str, message: str
 ) -> str | None:
-    if not _OLLAMA_AVAILABLE:
-        return None
     prompt = _build_analyst_chat_prompt(alert, ctx, sig_ctx, message)
-    for model in _OLLAMA_MODELS:
-        try:
-            body = {"model": model, "prompt": prompt, "stream": False}
-            raw = _http_post(_OLLAMA_URL, body, timeout=25)
-            resp = json.loads(raw)
-            text = resp.get("response", "").strip()
-            if text:
-                logger.info("[analyst] Ollama/%s chat succeeded.", model)
-                return text
-        except Exception as exc:
-            logger.debug("[analyst] Ollama/%s chat failed: %s", model, exc)
+    try:
+        generated = _ollama_generate(prompt, json_mode=False, temperature=0.5, max_tokens=600, timeout=90)
+        if generated is None:
+            return None
+        model, text = generated
+        if text:
+            logger.info("[analyst] Ollama/%s chat succeeded.", model)
+            return text
+    except Exception as exc:
+        logger.warning("[analyst] Ollama chat failed: %s", exc)
     return None
 
 
