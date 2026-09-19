@@ -327,7 +327,7 @@ public sealed class TelemetryViewModel : SectionViewModel
 
         var result = await canLogImportService.ParseFileAsync(effectiveFilePath, skipMlScoring: true);
         var packets = result.Packets.ToList();
-        VehicleDataService.LoadReplayPackets(Path.GetFileName(dialog.FileName), packets);
+        VehicleDataService.LoadReplayPackets(Path.GetFileName(dialog.FileName), packets, dialog.FileName);
         var firstPacket = packets.FirstOrDefault();
         if (firstPacket is not null)
         {

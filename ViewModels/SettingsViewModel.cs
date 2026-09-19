@@ -37,7 +37,12 @@ public sealed class SettingsViewModel : SectionViewModel
         this.pythonApiClient = pythonApiClient;
         appConfig = CANvision.Native.Models.AppConfig.Load();
         ModelSelection = modelSelection;
-        modelSelection.SelectionChanged += _ => OnPropertyChanged(nameof(SelectedHwVehicleId));
+        modelSelection.SelectionChanged += _ =>
+        {
+            OnPropertyChanged(nameof(SelectedHwVehicleId));
+            OnPropertyChanged(nameof(TrainingDateText));
+        };
+        modelSelection.Models.CollectionChanged += (_, _) => OnPropertyChanged(nameof(TrainingDateText));
 
         SettingsCategories = new ObservableCollection<string>
         {
@@ -187,9 +192,10 @@ public sealed class SettingsViewModel : SectionViewModel
     public string ModelStatusText    { get => modelStatusText;    private set => SetProperty(ref modelStatusText,    value); }
     public string SaveStatusText     { get => saveStatusText;     private set => SetProperty(ref saveStatusText,     value); }
 
-    // The backend health endpoint does not report a model training timestamp, so there is no
-    // real data to bind to here — expose a placeholder rather than leaving the XAML binding dangling.
-    public string TrainingDateText => "N/A";
+    // Training date of the selected model, from /api/models.
+    public string TrainingDateText => string.IsNullOrWhiteSpace(ModelSelection.SelectedModel?.TrainedAt)
+        ? "N/A"
+        : ModelSelection.SelectedModel!.TrainedAt;
 
     // ── Commands ───────────────────────────────────────────────────────────────
 

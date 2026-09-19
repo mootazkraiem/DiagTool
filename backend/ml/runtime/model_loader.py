@@ -253,6 +253,21 @@ def _try_load_bundle(model_dir: Path) -> StateModelBundle | None:
         return None
 
 
+def _trained_at(model_dir: Path, states: list[str]) -> str:
+    """Date the state models were written (YYYY-MM-DD), or "" when unknown.
+
+    The runtime never rewrites model_<state>.joblib (only the separate
+    engine_bundle cache), so their modification time is the training date.
+    """
+    import datetime as _dt
+    stamps = [
+        (model_dir / f"model_{state}.joblib").stat().st_mtime
+        for state in states
+        if (model_dir / f"model_{state}.joblib").exists()
+    ]
+    return _dt.datetime.fromtimestamp(max(stamps)).strftime("%Y-%m-%d") if stamps else ""
+
+
 def list_available_models(assets_root: Path | None = None) -> list[dict]:
     """The trained model bundles on disk, without loading them.
 
@@ -265,12 +280,14 @@ def list_available_models(assets_root: Path | None = None) -> list[dict]:
     models: list[dict] = []
     general_states = _trained_states(model_root / "general")
     if general_states:
-        models.append({"id": "general", "states": general_states})
+        models.append({"id": "general", "states": general_states,
+                       "trained_at": _trained_at(model_root / "general", general_states)})
     for candidate in sorted(model_root.iterdir(), key=lambda p: p.name):
         if candidate.is_dir() and candidate.name not in _NON_VEHICLE_DIRS:
             states = _trained_states(candidate)
             if states:
-                models.append({"id": candidate.name, "states": states})
+                models.append({"id": candidate.name, "states": states,
+                               "trained_at": _trained_at(candidate, states)})
     return models
 
 

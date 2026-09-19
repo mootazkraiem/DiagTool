@@ -478,7 +478,7 @@ public sealed class HomeViewModel : SectionViewModel
             if (packets.Count > 0)
                 VehicleDataService.SetAppState(CANvision.Native.Models.AppState.DatasetLoaded);
 
-            VehicleDataService.LoadReplayPackets(replayName, packets);
+            VehicleDataService.LoadReplayPackets(replayName, packets, filePath);
             VehicleDataService.BeginReplayAnalysis();
 
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();

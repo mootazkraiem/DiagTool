@@ -1987,6 +1987,7 @@ def api_models() -> dict[str, Any]:
     trained = list_available_models()
     trained_ids = {m["id"] for m in trained}
     general_states = next((m["states"] for m in trained if m["id"] == "general"), [])
+    general_trained_at = next((m.get("trained_at", "") for m in trained if m["id"] == "general"), "")
 
     models: list[dict[str, Any]] = []
     for m in trained:
@@ -1999,12 +2000,14 @@ def api_models() -> dict[str, Any]:
         models.append({
             "id": m["id"], "name": name, "kind": kind, "model_id": m["id"],
             "states": m["states"], "has_dbc": profile is not None,
+            "trained_at": m.get("trained_at", ""),
         })
     for pid, profile in profiles.items():
         if pid not in trained_ids:
             models.append({
                 "id": pid, "name": profile["name"], "kind": "profile", "model_id": "general",
                 "states": general_states, "has_dbc": True,
+                "trained_at": general_trained_at,
             })
     return {"status": "ok", "models": models}
 

@@ -31,6 +31,9 @@ public sealed class LogPlaybackViewModel : SectionViewModel
     private string notesText = "Add investigation notes...";
     private const double TimelineCanvasWidth = 920;
     private const double TimelineTrackHeight = 24;
+    // Labelled attack spans from the log's _gt.csv (empty when it has none).
+    private List<GroundTruthSpan> _groundTruth = new List<GroundTruthSpan>();
+    private string? _groundTruthSource;
     private double _fileStart = 0.0;
     private double _fileEnd   = 0.0;
     private readonly HashSet<string> _placedAlertKeys = new HashSet<string>();
@@ -537,7 +540,7 @@ public sealed class LogPlaybackViewModel : SectionViewModel
 
             var result = await canLogImportService.ParseFileAsync(effectiveFilePath, skipMlScoring: true);
             var packets = result.Packets.ToList();
-            VehicleDataService.LoadReplayPackets(originalFileName, packets);
+            VehicleDataService.LoadReplayPackets(originalFileName, packets, dialog.FileName);
             LoadReplayData(originalFileName, packets, result.Events.ToList());
             PlaybackMode = playbackData.Count == 0
                 ? $"NO PARSABLE FRAMES ({result.ParsedLines}/{result.TotalLines})"
@@ -622,6 +625,7 @@ public sealed class LogPlaybackViewModel : SectionViewModel
     private void LoadReplayFromService()
     {
         var packets = VehicleDataService.LoadedReplayPackets?.ToList() ?? new List<PlaybackPacket>();
+        LoadGroundTruth(VehicleDataService.ReplaySourcePath);
 
         var replayName = string.IsNullOrWhiteSpace(VehicleDataService.ReplayName)
             ? "REPLAY"
@@ -895,9 +899,6 @@ public sealed class LogPlaybackViewModel : SectionViewModel
                 if (_allAlertsByFrame[i].Idx > idx) { insertAt = i; break; }
             _allAlertsByFrame.Insert(insertAt, (idx, alert));
 
-            // Add Ground Truth marker immediately (known attack location)
-            var x = BuildTimelineX(idx);
-            TimelineMarkers.Add(new ForensicTimelineMarker("Ground Truth", x, 100, "GT", "#B46CFF"));
             anyNew = true;
         }
 
@@ -1130,19 +1131,28 @@ public sealed class LogPlaybackViewModel : SectionViewModel
         _lastRevealedFrame = -1;
         TimelineMarkers.Clear();
         TimelineWindows.Clear();
+        OnPropertyChanged(nameof(GroundTruthNoteText));
         if (playbackData.Count == 0) return;
 
         TimelineMarkers.Add(new ForensicTimelineMarker("Playback", PlaybackCursorLeft, 16, "CURSOR", "#00C8C8"));
 
-        // Ground Truth and Attack Windows: PRE-SHOWN (we know where attacks exist in the file)
+        // Ground Truth: the labelled attack spans of the log's _gt.csv. It used to draw
+        // the detector's own detections under this name, so the lane compared the
+        // detector with itself.
+        foreach (var span in _groundTruth)
+        {
+            var left = ReplayTimeline.ToX(span.Start, _fileStart, _fileEnd, TimelineCanvasWidth);
+            var right = ReplayTimeline.ToX(span.End, _fileStart, _fileEnd, TimelineCanvasWidth);
+            TimelineWindows.Add(new ForensicTimelineWindow("Ground Truth", left, Math.Max(3, right - left), 84, "#B46CFF"));
+        }
+
+        // Attack windows: contiguous runs of detected frames.
         var windowStart = -1;
         for (var i = 0; i < playbackData.Count; i++)
         {
             var score = ResolvePacketScore(playbackData[i]);
             if (score > 0)
             {
-                var x = BuildTimelineX(i);
-                TimelineMarkers.Add(new ForensicTimelineMarker("Ground Truth", x, 91, "GT", "#B46CFF"));
                 if (windowStart < 0) windowStart = i;
             }
             else if (windowStart >= 0)
@@ -1188,6 +1198,28 @@ public sealed class LogPlaybackViewModel : SectionViewModel
         var right = BuildTimelineX(endIndex);
         TimelineWindows.Add(new ForensicTimelineWindow("Attack Windows", left, Math.Max(4, right - left), 117, "#AAFF5050"));
     }
+
+    private void LoadGroundTruth(string? logPath)
+    {
+        var gtPath = GroundTruthLabels.FindFor(logPath);
+        if (gtPath == _groundTruthSource && gtPath is not null) return;
+        _groundTruthSource = gtPath;
+        try
+        {
+            _groundTruth = gtPath is null ? new List<GroundTruthSpan>() : GroundTruthLabels.ReadSpans(gtPath);
+        }
+        catch (Exception ex)
+        {
+            logger.Error($"Ground-truth labels could not be read: {gtPath}", ex);
+            _groundTruth = new List<GroundTruthSpan>();
+        }
+        OnPropertyChanged(nameof(GroundTruthNoteText));
+    }
+
+    // Shown in the Ground Truth lane when the log has no label file.
+    public string GroundTruthNoteText => playbackData.Count == 0 || _groundTruthSource is not null
+        ? string.Empty
+        : "no label file for this log";
 
     // Places a frame by its capture timestamp - the same basis as the cursor and the axis.
     private double BuildTimelineX(int index)

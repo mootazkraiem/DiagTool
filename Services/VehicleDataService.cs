@@ -25,6 +25,7 @@ public sealed class VehicleDataService : ObservableObject
 
     // Replay runtime state
     private string replayName = "NO REPLAY";
+    private string? replaySourcePath;
     private IReadOnlyList<PlaybackPacket>? loadedReplayPackets;
     private double runtimeLatencyMs;
     private double runtimeFps;
@@ -111,6 +112,9 @@ public sealed class VehicleDataService : ObservableObject
         get { lock (sync) { return replayName; } }
         private set { lock (sync) { replayName = value; } }
     }
+
+    // Full path of the loaded log (null when unknown); used to find its ground-truth labels.
+    public string? ReplaySourcePath { get { lock (sync) { return replaySourcePath; } } }
 
     public IReadOnlyList<PlaybackPacket>? LoadedReplayPackets
     {
@@ -262,11 +266,12 @@ public sealed class VehicleDataService : ObservableObject
 
     // ── Replay management ─────────────────────────────────────────────────────
 
-    public void LoadReplayPackets(string name, IReadOnlyList<PlaybackPacket> packets)
+    public void LoadReplayPackets(string name, IReadOnlyList<PlaybackPacket> packets, string? sourcePath = null)
     {
         lock (sync)
         {
             replayName          = name;
+            replaySourcePath    = sourcePath;
             loadedReplayPackets = packets;
             totalReplayFrames   = packets.Count;
             processedReplayFrames = 0;

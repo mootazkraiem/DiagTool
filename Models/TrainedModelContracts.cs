@@ -30,6 +30,10 @@ public sealed class TrainedModelInfo
     [JsonProperty("has_dbc")]
     public bool HasDbc { get; set; }
 
+    // Date the model's state models were trained (YYYY-MM-DD); empty when unknown.
+    [JsonProperty("trained_at")]
+    public string TrainedAt { get; set; } = string.Empty;
+
     public bool IsGeneral => Kind == "general";
     public string ModelLabel => ModelId.ToUpperInvariant();
     public string StatesText => States.Count == 0 ? "--" : string.Join(" · ", States).ToUpperInvariant();

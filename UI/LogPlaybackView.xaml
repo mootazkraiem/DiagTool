@@ -231,7 +231,7 @@
                     <Grid Grid.Column="1" x:Name="TimelineGrid" Height="134" ClipToBounds="True"
                           SizeChanged="TimelineGrid_SizeChanged">
                         <Grid.Background>
-                            <SolidColorBrush Color="#08FFFFFF"/>
+                            <DynamicResource ResourceKey="CvOverlay08Brush"/>
                         </Grid.Background>
 
                         <Canvas Width="920" Height="134" HorizontalAlignment="Left" VerticalAlignment="Top">
@@ -244,6 +244,11 @@
                             <Line X1="0" Y1="52"  X2="920" Y2="52"  Stroke="{DynamicResource CvSeparatorBrush}" StrokeThickness="1"/>
                             <Line X1="0" Y1="78"  X2="920" Y2="78"  Stroke="{DynamicResource CvSeparatorBrush}" StrokeThickness="1"/>
                             <Line X1="0" Y1="104" X2="920" Y2="104" Stroke="{DynamicResource CvSeparatorBrush}" StrokeThickness="1"/>
+
+                            <!-- ground-truth lane note when the log has no _gt.csv -->
+                            <TextBlock Canvas.Left="8" Canvas.Top="84" Text="{Binding GroundTruthNoteText}"
+                                       FontFamily="{StaticResource CvMonoFont}" FontSize="10"
+                                       Foreground="{DynamicResource CvTextFaintBrush}"/>
 
                             <!-- attack / ground-truth windows -->
                             <ItemsControl ItemsSource="{Binding TimelineWindows}" Canvas.Left="0" Canvas.Top="0">

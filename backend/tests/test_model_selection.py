@@ -118,3 +118,11 @@ def test_selected_model_changes_the_ml_scores() -> None:
     vehicle = ml_scores("nissan_leaf_2019")
     differing = sum(1 for a, b in zip(general, vehicle) if abs(a - b) > 1e-9)
     assert differing > 0, "vehicle model produced identical ML scores to the general model"
+
+
+def test_models_report_their_training_date():
+    """LAST TRAINING in Settings: the date the state models were written."""
+    import re
+    models = {m["id"]: m for m in list_available_models()}
+    assert re.fullmatch(r"\d{4}-\d{2}-\d{2}", models["general"]["trained_at"])
+    assert all(re.fullmatch(r"\d{4}-\d{2}-\d{2}", m["trained_at"]) for m in models.values())
