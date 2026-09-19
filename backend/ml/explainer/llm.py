@@ -43,6 +43,7 @@ _GEMINI_MAX_OUTPUT_TOKENS = 2048   # newer models spend part of this on thinking
 # full failed round-trip on every alert of a large log.
 _GEMINI_RETRY_AFTER_S = 300.0      # model missing, bad key, bad request
 _GEMINI_RATE_LIMIT_RETRY_S = 60.0  # quota / rate limit (HTTP 429)
+_GEMINI_NETWORK_RETRY_S = 30.0     # no route to the API (offline)
 _gemini_paused_until = 0.0
 
 
@@ -59,13 +60,24 @@ def _gemini_available() -> bool:
 
 
 def _pause_gemini_after(exc: Exception) -> None:
-    """Skip Gemini for a while after a client error; network blips are retried next call."""
+    """Skip Gemini for a while after a failure, so the next alerts go straight to
+    the local model instead of paying the same failed cloud call again.
+
+    Client errors (missing model, bad key, quota) are the long pause. Network
+    errors get a short one: offline, every explanation would otherwise wait for
+    the connection to fail before reaching Ollama, and the pause must expire
+    quickly once the network returns."""
     global _gemini_paused_until
-    if not isinstance(exc, urllib.error.HTTPError) or not 400 <= exc.code < 500:
+    if isinstance(exc, urllib.error.HTTPError):
+        if not 400 <= exc.code < 500:
+            return
+        delay = _GEMINI_RATE_LIMIT_RETRY_S if exc.code == 429 else _GEMINI_RETRY_AFTER_S
+        _gemini_paused_until = time.monotonic() + delay
+        logger.warning("[analyst] Gemini HTTP %s - skipping Gemini for %.0f s.", exc.code, delay)
         return
-    delay = _GEMINI_RATE_LIMIT_RETRY_S if exc.code == 429 else _GEMINI_RETRY_AFTER_S
-    _gemini_paused_until = time.monotonic() + delay
-    logger.warning("[analyst] Gemini HTTP %s - skipping Gemini for %.0f s.", exc.code, delay)
+    if isinstance(exc, (urllib.error.URLError, TimeoutError, OSError)):
+        _gemini_paused_until = time.monotonic() + _GEMINI_NETWORK_RETRY_S
+        logger.warning("[analyst] Gemini unreachable (%s) - skipping Gemini for %.0f s.", exc, _GEMINI_NETWORK_RETRY_S)
 
 
 def _candidate_text(candidate: dict[str, Any]) -> str:
@@ -309,15 +321,19 @@ def explain_alert(alert: dict[str, Any]) -> dict[str, str]:
     sig_ctx = _signal_context(str(alert.get("can_id", "")))
     web_ctx = _web_search(_build_search_query(alert, ctx))
 
+    prompt = _build_analyst_prompt(alert, ctx, sig_ctx)
+
     result = _try_gemini(alert, ctx, sig_ctx, web_ctx)
     if result:
         result["mode"] = "gemini"
+        _flag_unsupported_figures(result, prompt + web_ctx)
         _persist(alert, result)
         return result
 
     result = _try_ollama(alert, ctx, sig_ctx)
     if result:
         result["mode"] = "ollama"
+        _flag_unsupported_figures(result, prompt)
         _persist(alert, result)
         return result
 
@@ -385,22 +401,29 @@ def _build_analyst_prompt(alert: dict[str, Any], ctx: dict[str, Any], sig_ctx: s
     ent_range = sn.get("entropy_range", ["?", "?"])
     td_range = sn.get("time_diff_range", ["?", "?"])
 
-    # Block 1 — current anomaly
+    # Block 1 — current anomaly. Values the detector did not report are stated
+    # as missing rather than as "unknown", which a model reads as a value it may
+    # fill in itself.
     anomaly_block = (
         f"CAN-ID:          {a['can_id']}\n"
         f"Vehicle state:   {a['state']}\n"
-        f"Frequency:       {dev.get('frequency', str(a['frequency']) + ' msg/s')}\n"
-        f"Entropy:         {dev.get('entropy', str(a['entropy']))}\n"
-        f"Inter-arrival:   {dev.get('time_diff', str(a['time_diff']) + 's')}\n"
+        f"Frequency:       {_measured(dev.get('frequency', a['frequency']), 'msg/s')}\n"
+        f"Entropy:         {_measured(dev.get('entropy', a['entropy']))}\n"
+        f"Inter-arrival:   {_measured(dev.get('time_diff', a['time_diff']), 's')}\n"
         f"Anomaly score:   {a['score']}\n"
         f"Severity:        {a['severity']}\n"
         f"Detection layer: {a['layer']}\n"
         f"Raw reason:      {a['reason']}"
     )
 
-    # Block 2 — normal baseline
+    # Block 2 — normal baseline. When the detector could not identify the vehicle
+    # state, context_builder falls back to the driving profile; say so, so the
+    # model does not present it as this alert's own baseline.
     baseline_block = (
-        f"State: {sn.get('label', a['state'])}\n"
+        f"State: {sn.get('label', a['state'])}"
+        + ("  (reference profile only — the vehicle state of this alert was not identified,\n"
+           "         so these ranges may not apply to it)" if str(a["state"]).lower() in _UNKNOWN_VALUES else "")
+        + "\n"
         f"  Normal frequency:    {freq_range[0]}–{freq_range[1]} msg/s\n"
         f"  Normal entropy:      {ent_range[0]}–{ent_range[1]}\n"
         f"  Normal inter-arrival:{td_range[0]}–{td_range[1]} s\n"
@@ -450,6 +473,9 @@ def _build_analyst_prompt(alert: dict[str, Any], ctx: dict[str, Any], sig_ctx: s
         f"{sig_block}\n\n"
         "Analyze this anomaly. Compare observed behavior with the normal baseline. "
         "Identify the most likely attack pattern. "
+        "Use only the figures given above: never invent or estimate a number, and where a "
+        "value reads \"not measured for this alert\" say that it was not measured instead of "
+        "supplying one. "
         "Respond in JSON with exactly three keys: "
         "\"summary\" (one sentence finding), "
         "\"detail\" (3–4 sentences: observed vs normal, attack vector, real-world impact, forensic indicators), "
@@ -526,6 +552,60 @@ def _http_post(
         return resp.read().decode("utf-8")
 
 
+_UNKNOWN_VALUES = {"", "unknown", "none", "null", "?", "n/a", "nan"}
+# Small integers are prose ("3 tests", "one or two"), not claimed measurements.
+_FIGURE_MIN = 10.0
+_NUMBER_RE = re.compile(r"\d+(?:[.,]\d+)?")
+
+
+def _measured(value: Any, unit: str = "") -> str:
+    """A measured value for the prompt, or a plain statement that it is missing."""
+    text = "" if value is None else str(value).strip()
+    if text.lower() in _UNKNOWN_VALUES:
+        return "not measured for this alert"
+    return f"{text} {unit}".strip() if unit and not text.endswith(unit) else text
+
+
+def _unsupported_figures(text: str, prompt: str, limit: int = 5) -> list[str]:
+    """Numbers the answer states that were not in the prompt it was given.
+
+    Deterministic and advisory: it never rewrites or rejects an answer, it only
+    records that a figure has no source in the supplied data, which the smaller
+    local model does occasionally. Percentages of a supplied fraction (0.97 ->
+    97) count as supported, as do small integers used in prose."""
+    if not text:
+        return []
+    given = set(_NUMBER_RE.findall(prompt.replace(",", ".")))
+    given_values = set()
+    for token in given:
+        try:
+            given_values.add(round(float(token), 4))
+        except ValueError:
+            continue
+    unsupported: list[str] = []
+    for token in _NUMBER_RE.findall(text.replace(",", ".")):
+        if token in given:
+            continue
+        try:
+            value = float(token)
+        except ValueError:
+            continue
+        if value < _FIGURE_MIN:
+            continue
+        # A percentage of a supplied fraction is the same figure (0.97 -> 97%);
+        # scaling by 100 is only that, never "40" justifying "4000".
+        if any(abs(value - candidate) < 0.01
+               or (candidate <= 1 and abs(value - candidate * 100) < 0.01)
+               or (value <= 1 and abs(value * 100 - candidate) < 0.01)
+               for candidate in given_values):
+            continue
+        if token not in unsupported:
+            unsupported.append(token)
+        if len(unsupported) >= limit:
+            break
+    return unsupported
+
+
 def _parse_json_response(text: str) -> dict[str, str] | None:
     text = text.strip()
     if text.startswith("```"):
@@ -542,6 +622,24 @@ def _parse_json_response(text: str) -> dict[str, str] | None:
     except (json.JSONDecodeError, ValueError):
         pass
     return None
+
+
+def _flag_unsupported_figures(result: dict[str, Any], prompt: str) -> None:
+    """Record, on a model-written explanation, any figure it states that the
+    prompt did not contain. Advisory only — the text is left exactly as the
+    model wrote it (see _unsupported_figures)."""
+    try:
+        answer = " ".join(str(result.get(key, "")) for key in ("summary", "detail", "recommendation"))
+        figures = _unsupported_figures(answer, prompt)
+    except Exception as exc:  # never let a check break an explanation
+        logger.debug("[analyst] figure check failed: %s", exc)
+        return
+    result["unsupported_figures"] = figures
+    if figures:
+        logger.warning(
+            "[analyst] %s answer states figures absent from its input: %s",
+            result.get("mode", "?"), ", ".join(figures),
+        )
 
 
 def _persist(alert: dict[str, Any], result: dict[str, str]) -> None:

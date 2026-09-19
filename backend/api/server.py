@@ -142,7 +142,9 @@ class AnalyzeSummary(BaseModel):
 
 class AnalyzeResult(BaseModel):
     context: dict[str, object]
-    explanation: dict[str, str]
+    # Values are text apart from "unsupported_figures", the list of figures a
+    # model stated that its input did not contain (see llm._unsupported_figures).
+    explanation: dict[str, object]
 
 
 class AnalyzeResponse(BaseModel):
@@ -882,12 +884,8 @@ async def analyze(
             "reason":                    f"top_feature={top_f}, cluster={context.get('cluster', 0)}",
             "dominant_detection_layer":  layer_primary,
         }
-        if _explain_idx < _MAX_LLM_EXPLAIN_PER_ANALYZE and _llm_spent_s < _LLM_EXPLAIN_BUDGET_S:
-            _llm_started = time.perf_counter()
-            explanation = await _loop.run_in_executor(None, llm_explain_alert, alert_adapted)
-            _llm_spent_s += time.perf_counter() - _llm_started
-        else:
-            explanation = {
+        def _skipped_explanation() -> dict[str, Any]:
+            return {
                 "summary": f"{alert_adapted['severity']} on {alert_adapted['can_id']} — score {score:.3f}.",
                 "detail": (
                     f"Detection layer(s): {', '.join(layers)}. {alert_adapted['reason']}. "
@@ -898,6 +896,25 @@ async def analyze(
                 "kb_match_label": "",
                 "mode": "rule_based",
             }
+
+        if _explain_idx < _MAX_LLM_EXPLAIN_PER_ANALYZE and _llm_spent_s < _LLM_EXPLAIN_BUDGET_S:
+            _llm_started = time.perf_counter()
+            # Bound the single call by what is left of the budget: a cold local
+            # model answers in tens of seconds, and the app gives this request
+            # 90 s in total. On timeout this alert gets the rule-based text and
+            # the analysis carries on (the worker thread finishes unused).
+            _remaining = max(5.0, _LLM_EXPLAIN_BUDGET_S - _llm_spent_s)
+            try:
+                explanation = await asyncio.wait_for(
+                    _loop.run_in_executor(None, llm_explain_alert, alert_adapted), timeout=_remaining
+                )
+            except asyncio.TimeoutError:
+                logger.info("[ANALYZE] explanation for %s exceeded %.0f s - using rule-based text.",
+                            alert_adapted["can_id"], _remaining)
+                explanation = _skipped_explanation()
+            _llm_spent_s += time.perf_counter() - _llm_started
+        else:
+            explanation = _skipped_explanation()
         explained_results.append(AnalyzeResult(context=context, explanation=explanation))
 
     # Deduplicate burst alerts, then rebuild explained_results from the SAME
@@ -1599,6 +1616,9 @@ def api_explain_alert(alert_index: int) -> dict[str, Any]:
             "recommendation":          recommended_response or explanation.get("recommendation", ""),
             "kb_match_label":          explanation.get("kb_match_label", ""),
             "mode":                    explanation.get("mode", "rule_based"),
+            # Figures the model stated that its input did not contain (empty for
+            # rule-based text, which states only supplied values).
+            "unsupported_figures":     explanation.get("unsupported_figures", []),
             "layer_timing":            layers.get("timing", float(replay_ctx.get("timing_score", 0.0))),
             "layer_payload":           layers.get("payload", 0.0),
             "layer_ml":                layers.get("ml", float(replay_ctx.get("anomaly_score", 0.0))),
