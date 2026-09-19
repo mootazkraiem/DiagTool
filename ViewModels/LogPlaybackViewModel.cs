@@ -235,13 +235,19 @@ public sealed class LogPlaybackViewModel : SectionViewModel
     public string TruePositivesText => AttackWindowCount == 0 ? "--" : Math.Min(TotalDetections, AttackWindowCount).ToString("N0");
     public string FalsePositivesText => AttackWindowCount == 0 ? TotalDetections.ToString("N0") : Math.Max(0, TotalDetections - AttackWindowCount).ToString("N0");
     public string FalseNegativesText => AttackWindowCount == 0 ? "--" : Math.Max(0, AttackWindowCount - TotalDetections).ToString("N0");
-    public string DetectionRateText => TotalFrames == 0 ? "--" : $"{TotalDetections * 100.0 / TotalFrames:F1}%";
-    public string NormalFramesPercentText => TotalFrames == 0 ? "100.0%" : (Math.Max(0, TotalFrames - TotalDetections) * 100.0 / TotalFrames).ToString("F1", CultureInfo.InvariantCulture) + "%";
+    // Share of frames the model flagged. Uses the backend's flagged-frame count when an
+    // offline analysis ran: alerts merge bursts (DoS validation: 9,483 flagged frames,
+    // 298 alerts), so counting alert frames read 1.0% where the model flagged 31.6%.
+    private double DetectedPercent => VehicleDataService.FlaggedFraction is { } fraction
+        ? fraction * 100.0
+        : TotalFrames == 0 ? 0.0 : TotalDetections * 100.0 / TotalFrames;
+    public string DetectionRateText => TotalFrames == 0 ? "--" : DetectedPercent.ToString("F1", CultureInfo.InvariantCulture) + "%";
+    public string NormalFramesPercentText => TotalFrames == 0 ? "100.0%" : (100.0 - DetectedPercent).ToString("F1", CultureInfo.InvariantCulture) + "%";
     // Numeric form of NormalFramesPercentText, for driving the anomaly-distribution
     // ring's arc (StrokeDashArray needs a raw 0-100 double, not a formatted string).
     // Previously that ring was wired to ReplayProgressPercent by mistake, so it
     // visually showed replay progress instead of the actual normal/anomaly split.
-    public double NormalFramesPercent => TotalFrames == 0 ? 100.0 : Math.Max(0, TotalFrames - TotalDetections) * 100.0 / TotalFrames;
+    public double NormalFramesPercent => TotalFrames == 0 ? 100.0 : 100.0 - DetectedPercent;
     public int AttackWindowCount => TimelineWindows.Count(item => item.Track == "Attack Windows");
     public string AttackWindowCountText => AttackWindowCount.ToString("N0");
     public string AttackCoverageText => AttackWindowCount == 0 ? "--" : $"{Math.Min(100, TotalDetections * 100.0 / Math.Max(1, AttackWindowCount)):F1}%";

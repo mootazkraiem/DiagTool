@@ -138,7 +138,10 @@ public sealed class DashboardViewModel : SectionViewModel
     public string AffectedCanIdsText => string.IsNullOrWhiteSpace(VehicleDataService.TopSuspiciousCanId) ? "None" : VehicleDataService.TopSuspiciousCanId;
     public string AttackTypeText => VehicleDataService.TotalAlerts > 0 ? VehicleDataService.DetectedAttackType : "None";
     public string LiveAlertsCountText => $"{VehicleDataService.TotalAlerts:N0}";
-    public string DetectionRateText => VehicleDataService.ProcessedReplayFrames <= 0 ? "--" : $"{VehicleDataService.TotalAlerts * 100.0 / Math.Max(1, VehicleDataService.ProcessedReplayFrames):F1}%";
+    // Flagged share of the analysed frames when an offline analysis ran (alerts merge bursts).
+    public string DetectionRateText => VehicleDataService.FlaggedFraction is { } fraction
+        ? (fraction * 100.0).ToString("F1", System.Globalization.CultureInfo.InvariantCulture) + "%"
+        : VehicleDataService.ProcessedReplayFrames <= 0 ? "--" : $"{VehicleDataService.TotalAlerts * 100.0 / Math.Max(1, VehicleDataService.ProcessedReplayFrames):F1}%";
     public string ModelHealthText => VehicleDataService.DetectionConfidence > 0 ? "100%" : "Ready";
     public string PipelineHealthText => ConnectionStateText == "CONNECTED" ? "100%" : "Degraded";
     public string ReplayEngineHealthText => ReplayStatusText == "RUNNING" ? "READY" : "STANDBY";

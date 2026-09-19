@@ -26,6 +26,8 @@ public sealed class VehicleDataService : ObservableObject
     // Replay runtime state
     private string replayName = "NO REPLAY";
     private string? replaySourcePath;
+    private int analyzedRows;
+    private int flaggedFrames = -1;   // -1: no offline analysis summary
     private IReadOnlyList<PlaybackPacket>? loadedReplayPackets;
     private double runtimeLatencyMs;
     private double runtimeFps;
@@ -113,6 +115,26 @@ public sealed class VehicleDataService : ObservableObject
         private set { lock (sync) { replayName = value; } }
     }
 
+    // Frame counts of the last offline analysis: rows the backend scored and rows it
+    // flagged. Alerts are fewer (bursts are merged), so rates use these.
+    public int AnalyzedRows  { get { lock (sync) { return analyzedRows; } } }
+    public int FlaggedFrames { get { lock (sync) { return flaggedFrames; } } }
+
+    /// <summary>Share of analysed frames the model flagged, or null without an offline summary.</summary>
+    public double? FlaggedFraction
+    {
+        get { lock (sync) { return flaggedFrames >= 0 && analyzedRows > 0 ? flaggedFrames / (double)analyzedRows : (double?)null; } }
+    }
+
+    public void SetAnalysisFrameCounts(int rows, int flagged)
+    {
+        lock (sync)
+        {
+            analyzedRows  = Math.Max(0, rows);
+            flaggedFrames = rows > 0 ? Math.Max(0, Math.Min(flagged, rows)) : -1;
+        }
+    }
+
     // Full path of the loaded log (null when unknown); used to find its ground-truth labels.
     public string? ReplaySourcePath { get { lock (sync) { return replaySourcePath; } } }
 
@@ -155,7 +177,7 @@ public sealed class VehicleDataService : ObservableObject
     public void Start()
     {
         // A finished offline analysis must not block live alert polling (IDLE only).
-        lock (sync) { mlAnalysisState = "IDLE"; }
+        lock (sync) { mlAnalysisState = "IDLE"; analyzedRows = 0; flaggedFrames = -1; }
         SetAppState(AppState.LiveSession);
         if (!refreshTimer.IsEnabled)
         {
@@ -372,6 +394,8 @@ public sealed class VehicleDataService : ObservableObject
             topSuspiciousCanId  = "--";
             runtimeFps          = 0;
             runtimeLatencyMs    = 0;
+            analyzedRows        = 0;
+            flaggedFrames       = -1;
         }
     }
 

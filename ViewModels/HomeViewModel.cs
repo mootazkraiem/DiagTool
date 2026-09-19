@@ -559,6 +559,8 @@ public sealed class HomeViewModel : SectionViewModel
                     latencyMs);
             }
 
+            if (analysisResponse?.Summary is { } summary)
+                VehicleDataService.SetAnalysisFrameCounts(summary.RowsParsed, summary.AnomalyCount);
             VehicleDataService.CompleteReplayAnalysis(detectedAttack, confidence, apiDetections.Select(d => d.Alert).ToList());
             AnalysisStatusText = $"ANALYSIS COMPLETE — {detectedAttack} · {analysisModel.ModelLabel}";
             AnalysisProgressPercent = 100;
