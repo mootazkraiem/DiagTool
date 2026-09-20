@@ -27,8 +27,11 @@ public partial class HomeView : UserControl
         {
             // Returning to Home later: no entrance, the chooser is simply there.
             AmbientWash.Opacity = 1;
+            HomeHeader.Opacity = 1;
+            HomeHeaderShift.Y = 0;
             LiveCard.Opacity = 1;
             OfflineCard.Opacity = 1;
+            HomeFooter.Opacity = 1;
             return;
         }
         entrancePlayed = true;

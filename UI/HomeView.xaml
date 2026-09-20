@@ -4,7 +4,8 @@
     xmlns:cvctl="clr-namespace:CANvision.Native.UI.Controls"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:conv="clr-namespace:CANvision.Native.Converters">
+    xmlns:conv="clr-namespace:CANvision.Native.Converters"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
@@ -71,6 +72,30 @@
             <DoubleAnimation Storyboard.TargetName="BootLine3" Storyboard.TargetProperty="Opacity"
                              BeginTime="0:0:1.85" From="0" To="1" Duration="0:0:0.35"/>
 
+            <DoubleAnimation Storyboard.TargetName="LiveMeta" Storyboard.TargetProperty="Opacity"
+                             BeginTime="0:0:2.98" From="0" To="1" Duration="0:0:0.45">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="LiveStatus" Storyboard.TargetProperty="Opacity"
+                             BeginTime="0:0:3.05" From="0" To="1" Duration="0:0:0.45">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="LiveAction" Storyboard.TargetProperty="Opacity"
+                             BeginTime="0:0:3.12" From="0" To="1" Duration="0:0:0.45">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="OfflineMeta" Storyboard.TargetProperty="Opacity"
+                             BeginTime="0:0:3.18" From="0" To="1" Duration="0:0:0.45">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="OfflineStatus" Storyboard.TargetProperty="Opacity"
+                             BeginTime="0:0:3.25" From="0" To="1" Duration="0:0:0.45">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="OfflineAction" Storyboard.TargetProperty="Opacity"
+                             BeginTime="0:0:3.32" From="0" To="1" Duration="0:0:0.45">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
             <!-- Hand over to the chooser -->
             <DoubleAnimation Storyboard.TargetName="BootOverlay" Storyboard.TargetProperty="Opacity"
                              BeginTime="0:0:2.45" To="0" Duration="0:0:0.35"/>
@@ -85,30 +110,169 @@
                  wash lifts, then the cards resolve in place — left first,
                  right 0.2 s behind — each brightening while its top settles
                  last. No slide-in, no plain fade. -->
+            <DoubleAnimation Storyboard.TargetName="HomeHeader" Storyboard.TargetProperty="Opacity"
+                             BeginTime="0:0:2.50" From="0" To="1" Duration="0:0:0.55">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="HomeHeaderShift" Storyboard.TargetProperty="Y"
+                             BeginTime="0:0:2.50" From="14" To="0" Duration="0:0:0.65">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="HomeFooter" Storyboard.TargetProperty="Opacity"
+                             BeginTime="0:0:3.40" From="0" To="1" Duration="0:0:0.5"/>
             <DoubleAnimation Storyboard.TargetName="AmbientWash" Storyboard.TargetProperty="Opacity"
                              BeginTime="0:0:2.60" From="0" To="1" Duration="0:0:0.5">
                 <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
             </DoubleAnimation>
 
             <DoubleAnimation Storyboard.TargetName="LiveCard" Storyboard.TargetProperty="Opacity"
-                             BeginTime="0:0:2.65" From="0" To="1" Duration="0:0:0.72">
+                             BeginTime="0:0:2.80" From="0" To="1" Duration="0:0:0.72">
                 <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
             </DoubleAnimation>
             <DoubleAnimation Storyboard.TargetName="LiveCardShift" Storyboard.TargetProperty="Y"
-                             BeginTime="0:0:2.65" From="20" To="0" Duration="0:0:0.8">
+                             BeginTime="0:0:2.80" From="20" To="0" Duration="0:0:0.8">
                 <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
             </DoubleAnimation>
 
             <DoubleAnimation Storyboard.TargetName="OfflineCard" Storyboard.TargetProperty="Opacity"
-                             BeginTime="0:0:2.85" From="0" To="1" Duration="0:0:0.72">
+                             BeginTime="0:0:3.00" From="0" To="1" Duration="0:0:0.72">
                 <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
             </DoubleAnimation>
             <DoubleAnimation Storyboard.TargetName="OfflineCardShift" Storyboard.TargetProperty="Y"
-                             BeginTime="0:0:2.85" From="20" To="0" Duration="0:0:0.8">
+                             BeginTime="0:0:3.00" From="20" To="0" Duration="0:0:0.8">
                 <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
             </DoubleAnimation>
         </Storyboard>
 
+
+        <!-- ── Interaction (Home only) ────────────────────────────────────
+             The entrance video is static after the cards settle, so hover is
+             derived from the reference's visual language rather than copied:
+             the hairline border becomes the accent, the corner brackets
+             extend, the card lifts 3px, and that card's own micro-visual
+             starts moving. Live and Offline keep their own motifs. -->
+        <sys:Double x:Key="HoverLift">-3</sys:Double>
+
+        <Style x:Key="HomeAction" TargetType="Button" BasedOn="{StaticResource CvButtonGhost}">
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+            <Setter Property="Opacity" Value="0.92"/>
+            <Setter Property="RenderTransform">
+                <Setter.Value><ScaleTransform ScaleX="1" ScaleY="1"/></Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Trigger.EnterActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.16"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.EnterActions>
+                    <Trigger.ExitActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="Opacity" To="0.92" Duration="0:0:0.26"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.ExitActions>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Trigger.EnterActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                 To="0.985" Duration="0:0:0.09"/>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                 To="0.985" Duration="0:0:0.09"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.EnterActions>
+                    <Trigger.ExitActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                 To="1" Duration="0:0:0.18"/>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                 To="1" Duration="0:0:0.18"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.ExitActions>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.38"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- One card's hover / return. Targets are supplied per card. -->
+        <Storyboard x:Key="LiveHoverIn">
+            <DoubleAnimation Storyboard.TargetName="LiveHoverGlow" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.20">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="LiveHoverShift" Storyboard.TargetProperty="Y" To="-3" Duration="0:0:0.24">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="LiveBracketScaleTL" Storyboard.TargetProperty="ScaleX" To="1.35" Duration="0:0:0.28"/>
+            <DoubleAnimation Storyboard.TargetName="LiveBracketScaleTL" Storyboard.TargetProperty="ScaleY" To="1.35" Duration="0:0:0.28"/>
+            <DoubleAnimation Storyboard.TargetName="LiveBracketScaleBR" Storyboard.TargetProperty="ScaleX" To="1.35" Duration="0:0:0.28"/>
+            <DoubleAnimation Storyboard.TargetName="LiveBracketScaleBR" Storyboard.TargetProperty="ScaleY" To="1.35" Duration="0:0:0.28"/>
+            <DoubleAnimation Storyboard.TargetName="LiveTitleGlow" Storyboard.TargetProperty="Opacity" To="0.55" Duration="0:0:0.26"/>
+            <!-- the bus comes alive: one frame travelling, repeating -->
+            <DoubleAnimation Storyboard.TargetName="BusPulseShift" Storyboard.TargetProperty="X"
+                             From="0" To="426" Duration="0:0:2.6" RepeatBehavior="Forever"/>
+            <DoubleAnimation Storyboard.TargetName="BusPulse" Storyboard.TargetProperty="Opacity" To="0.9" Duration="0:0:0.2"/>
+        </Storyboard>
+
+        <Storyboard x:Key="LiveHoverOut">
+            <DoubleAnimation Storyboard.TargetName="LiveHoverGlow" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.34">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseInOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="LiveHoverShift" Storyboard.TargetProperty="Y" To="0" Duration="0:0:0.34">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseInOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="LiveBracketScaleTL" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.34"/>
+            <DoubleAnimation Storyboard.TargetName="LiveBracketScaleTL" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.34"/>
+            <DoubleAnimation Storyboard.TargetName="LiveBracketScaleBR" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.34"/>
+            <DoubleAnimation Storyboard.TargetName="LiveBracketScaleBR" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.34"/>
+            <DoubleAnimation Storyboard.TargetName="LiveTitleGlow" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.34"/>
+            <DoubleAnimation Storyboard.TargetName="BusPulse" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.3"/>
+        </Storyboard>
+
+        <Storyboard x:Key="OfflineHoverIn">
+            <DoubleAnimation Storyboard.TargetName="OfflineHoverGlow" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.20">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="OfflineHoverShift" Storyboard.TargetProperty="Y" To="-3" Duration="0:0:0.24">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="OfflineBracketScaleTL" Storyboard.TargetProperty="ScaleX" To="1.35" Duration="0:0:0.28"/>
+            <DoubleAnimation Storyboard.TargetName="OfflineBracketScaleTL" Storyboard.TargetProperty="ScaleY" To="1.35" Duration="0:0:0.28"/>
+            <DoubleAnimation Storyboard.TargetName="OfflineBracketScaleBR" Storyboard.TargetProperty="ScaleX" To="1.35" Duration="0:0:0.28"/>
+            <DoubleAnimation Storyboard.TargetName="OfflineBracketScaleBR" Storyboard.TargetProperty="ScaleY" To="1.35" Duration="0:0:0.28"/>
+            <DoubleAnimation Storyboard.TargetName="OfflineTitleGlow" Storyboard.TargetProperty="Opacity" To="0.55" Duration="0:0:0.26"/>
+            <!-- the archive is scanned: the window sweeps the traffic field -->
+            <DoubleAnimation Storyboard.TargetName="ArchiveWindowShift" Storyboard.TargetProperty="X"
+                             From="8" To="330" Duration="0:0:3.2" AutoReverse="True" RepeatBehavior="Forever">
+                <DoubleAnimation.EasingFunction><SineEase EasingMode="EaseInOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="ArchiveWindow" Storyboard.TargetProperty="Opacity" To="0.85" Duration="0:0:0.2"/>
+        </Storyboard>
+
+        <Storyboard x:Key="OfflineHoverOut">
+            <DoubleAnimation Storyboard.TargetName="OfflineHoverGlow" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.34">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseInOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="OfflineHoverShift" Storyboard.TargetProperty="Y" To="0" Duration="0:0:0.34">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseInOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="OfflineBracketScaleTL" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.34"/>
+            <DoubleAnimation Storyboard.TargetName="OfflineBracketScaleTL" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.34"/>
+            <DoubleAnimation Storyboard.TargetName="OfflineBracketScaleBR" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.34"/>
+            <DoubleAnimation Storyboard.TargetName="OfflineBracketScaleBR" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.34"/>
+            <DoubleAnimation Storyboard.TargetName="OfflineTitleGlow" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.34"/>
+            <DoubleAnimation Storyboard.TargetName="ArchiveWindowShift" Storyboard.TargetProperty="X" To="8" Duration="0:0:0.4"/>
+            <DoubleAnimation Storyboard.TargetName="ArchiveWindow" Storyboard.TargetProperty="Opacity" To="0.45" Duration="0:0:0.34"/>
+        </Storyboard>
     </UserControl.Resources>
 
     <Grid x:Name="RootGrid" Background="{DynamicResource CvGroundBrush}">
@@ -336,14 +500,35 @@
             </Rectangle.Fill>
         </Rectangle>
 
-        <!-- Two-card chooser -->
+        <!-- Two-card chooser, composed as in the reference entrance -->
         <Grid>
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Center" VerticalAlignment="Center">
+          <StackPanel HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,126,0,0">
+            <!-- ── Reference header ───────────────────────────────────────
+                 CANVISION / workstation line / section label, centred above
+                 the cards exactly as the entrance reference resolves them. -->
+            <StackPanel x:Name="HomeHeader" Opacity="0" HorizontalAlignment="Center">
+                <StackPanel.RenderTransform>
+                    <TranslateTransform x:Name="HomeHeaderShift" Y="14"/>
+                </StackPanel.RenderTransform>
+                <cvctl:CvTrackedText Label="CANVISION" HorizontalAlignment="Center"
+                                     FontFamily="{StaticResource CvDisplayFont}" FontSize="30" FontWeight="Medium"
+                                     Tracking="3" Foreground="{DynamicResource CvTextBrightBrush}"/>
+                <TextBlock HorizontalAlignment="Center" Margin="0,14,0,0"
+                           FontFamily="{StaticResource CvMonoFont}" FontSize="9.5"
+                           Foreground="{DynamicResource CvAccentDimBrush}">
+                    <Run Text="I N T R U S I O N   D E T E C T I O N   W O R K S T A T I O N   ·   "/><Run Text="{Binding AppVersionText, Mode=OneWay}"/>
+                </TextBlock>
+                <cvctl:CvTrackedText Label="SELECT SESSION MODE" HorizontalAlignment="Center" Margin="0,26,0,0"
+                                     FontFamily="{StaticResource CvMonoFont}" FontSize="9"
+                                     Tracking="2" Foreground="{DynamicResource CvTextDimBrush}"/>
+            </StackPanel>
+
+            <StackPanel x:Name="HomeCardRow" Orientation="Horizontal" Margin="0,30,0,0"
+                        HorizontalAlignment="Center">
 
                 <!-- ── LIVE SESSION card ─────────────────────────────────── -->
                 <Border x:Name="LiveCard" Opacity="0"
-                        Width="496" Height="480" Padding="44,40"
+                        Width="496" Height="394" Padding="32,26"
                         Background="{DynamicResource CvPanelBrush}" BorderBrush="{DynamicResource CvBorderAccentBrush}"
                         BorderThickness="1" CornerRadius="3" Margin="15,0"
                         RenderTransformOrigin="0.5,0.5">
@@ -351,28 +536,104 @@
                         <TransformGroup>
                             <ScaleTransform x:Name="LiveCardScale" ScaleX="1"/>
                             <TranslateTransform x:Name="LiveCardShift" Y="0"/>
+                            <TranslateTransform x:Name="LiveHoverShift" Y="0"/>
                         </TransformGroup>
                     </Border.RenderTransform>
+                    <Border.Triggers>
+                        <EventTrigger RoutedEvent="MouseEnter">
+                            <BeginStoryboard x:Name="LiveHoverInSb" Storyboard="{StaticResource LiveHoverIn}"/>
+                        </EventTrigger>
+                        <EventTrigger RoutedEvent="MouseLeave">
+                            <StopStoryboard BeginStoryboardName="LiveHoverInSb"/>
+                            <BeginStoryboard Storyboard="{StaticResource LiveHoverOut}"/>
+                        </EventTrigger>
+                    </Border.Triggers>
                     <Grid>
                         <!-- corner brackets -->
-                        <Path Data="M 0,28 L 0,0 L 28,0" Stroke="{DynamicResource CvAccentBrush}" Opacity="0.55" StrokeThickness="1"
-                              HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-44,-38,0,0" IsHitTestVisible="False"/>
-                        <Path Data="M 28,0 L 28,28 L 0,28" Stroke="{DynamicResource CvAccentBrush}" Opacity="0.55" StrokeThickness="1"
-                              HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-44,-38" IsHitTestVisible="False"/>
+                        <Border x:Name="LiveHoverGlow" Opacity="0" IsHitTestVisible="False"
+                                Margin="-32,-28" CornerRadius="3"
+                                BorderBrush="{DynamicResource CvAccentBrush}" BorderThickness="1"
+                                Background="{DynamicResource CvAccentWashBrush}"/>
+                        <Path Data="M 0,30 L 0,0 L 30,0" Stroke="{DynamicResource CvAccentBrush}" Opacity="0.75" StrokeThickness="1"
+                              HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-32,-28,0,0" IsHitTestVisible="False"
+                              RenderTransformOrigin="0,0">
+                            <Path.RenderTransform><ScaleTransform x:Name="LiveBracketScaleTL" ScaleX="1" ScaleY="1"/></Path.RenderTransform>
+                        </Path>
+                        <Path Data="M 30,0 L 30,30 L 0,30" Stroke="{DynamicResource CvAccentBrush}" Opacity="0.75" StrokeThickness="1"
+                              HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-32,-28" IsHitTestVisible="False"
+                              RenderTransformOrigin="1,1">
+                            <Path.RenderTransform><ScaleTransform x:Name="LiveBracketScaleBR" ScaleX="1" ScaleY="1"/></Path.RenderTransform>
+                        </Path>
 
                         <!-- Face A: choose live -->
                         <Grid x:Name="LiveNormal">
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>   <!-- mode label -->
+                                <RowDefinition Height="Auto"/>   <!-- title -->
+                                <RowDefinition Height="Auto"/>   <!-- divider -->
+                                <RowDefinition Height="Auto"/>   <!-- description -->
+                                <RowDefinition Height="*"/>      <!-- negative space -->
+                                <RowDefinition Height="Auto"/>   <!-- bus topology -->
+                                <RowDefinition Height="Auto"/>   <!-- metadata -->
+                                <RowDefinition Height="Auto"/>   <!-- status -->
+                                <RowDefinition Height="Auto"/>   <!-- action -->
                             </Grid.RowDefinitions>
-                            <cvctl:CvTrackedText Grid.Row="0" Label="MODE 01" Style="{StaticResource CvCaps}" Foreground="{DynamicResource CvAccentBrush}" Margin="0,0,0,16"/>
-                            <cvctl:CvTrackedText Grid.Row="1" Label="LIVE SESSION" FontFamily="{StaticResource CvDisplayFont}" FontSize="32" FontWeight="Bold" Tracking="1" Foreground="{DynamicResource CvTextBrightBrush}" Effect="{DynamicResource CvAccentGlowSoft}"/>
-                            <TextBlock Grid.Row="2" Text="Real-time CAN bus monitoring with live anomaly detection, signal decoding and AI-powered threat analysis." TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,16,0,0" FontFamily="{StaticResource CvUiFont}" FontSize="13" LineHeight="22" Foreground="{DynamicResource CvTextMutedBrush}"/>
-                            <Border Grid.Row="3" Margin="0,0,0,16">
+
+                            <StackPanel Grid.Row="0" Orientation="Horizontal">
+                                <Rectangle Width="2" Height="11" Fill="{DynamicResource CvAccentBrush}" VerticalAlignment="Center"/>
+                                <cvctl:CvTrackedText Label="MODE 01" Margin="8,0,0,0" FontFamily="{StaticResource CvMonoFont}"
+                                                     FontSize="9.5" Tracking="1" Foreground="{DynamicResource CvAccentBrush}"/>
+                            </StackPanel>
+
+                            <Grid Grid.Row="1" Margin="0,14,0,0">
+                                <cvctl:CvTrackedText x:Name="LiveTitleGlow" Opacity="0" Label="LIVE SESSION"
+                                                     FontFamily="{StaticResource CvDisplayFont}" FontSize="30" FontWeight="Bold"
+                                                     Tracking="1" Foreground="{DynamicResource CvAccentBrush}"
+                                                     Effect="{DynamicResource CvAccentGlow}" IsHitTestVisible="False"/>
+                                <cvctl:CvTrackedText Label="LIVE SESSION"
+                                                     FontFamily="{StaticResource CvDisplayFont}" FontSize="30" FontWeight="Bold"
+                                                     Tracking="1" Foreground="{DynamicResource CvTextBrightBrush}"
+                                                     Effect="{DynamicResource CvAccentGlowSoft}"/>
+                            </Grid>
+
+                            <Rectangle Grid.Row="2" Height="1" Margin="0,18,0,0" Fill="{DynamicResource CvSeparatorBrush}"/>
+
+                            <TextBlock Grid.Row="3" Margin="0,18,0,0"
+                                       Text="Real-time CAN bus monitoring with live anomaly detection, signal decoding and AI-assisted threat analysis."
+                                       TextWrapping="Wrap" FontFamily="{StaticResource CvUiFont}" FontSize="12.5" LineHeight="21"
+                                       Foreground="{DynamicResource CvTextMutedBrush}"/>
+
+                            <!-- Bus topology: schematic, no measurements claimed -->
+                            <Grid Grid.Row="5" Height="18" Margin="0,0,0,10">
+                                <Rectangle Height="1" VerticalAlignment="Center" Fill="{DynamicResource CvBorderAccentBrush}"/>
+                                <Canvas>
+                                    <Rectangle Canvas.Left="34" Canvas.Top="3" Width="12" Height="12"
+                                               Stroke="{DynamicResource CvAccentBrush}" StrokeThickness="1" Fill="{DynamicResource CvGroundBrush}"/>
+                                    <Rectangle Canvas.Left="146" Canvas.Top="3" Width="12" Height="12"
+                                               Stroke="{DynamicResource CvAccentBrush}" StrokeThickness="1" Fill="{DynamicResource CvGroundBrush}"/>
+                                    <Rectangle Canvas.Left="268" Canvas.Top="3" Width="12" Height="12"
+                                               Stroke="{DynamicResource CvAccentBrush}" StrokeThickness="1" Fill="{DynamicResource CvGroundBrush}"/>
+                                    <Rectangle Canvas.Left="372" Canvas.Top="3" Width="12" Height="12"
+                                               Stroke="{DynamicResource CvAccentBrush}" StrokeThickness="1" Fill="{DynamicResource CvGroundBrush}"/>
+                                    <Ellipse Canvas.Left="110" Canvas.Top="7" Width="4" Height="4" Fill="{DynamicResource CvAccentDimBrush}"/>
+                                    <Ellipse Canvas.Left="232" Canvas.Top="7" Width="4" Height="4" Fill="{DynamicResource CvAccentDimBrush}"/>
+                                    <Ellipse Canvas.Left="428" Canvas.Top="7" Width="4" Height="4" Fill="{DynamicResource CvAccentDimBrush}"/>
+                                    <!-- one frame travelling the bus, slowly -->
+                                    <Ellipse x:Name="BusPulse" Canvas.Top="6" Width="6" Height="6"
+                                             Fill="{DynamicResource CvAccentBrush}" Opacity="0">
+                                        <Ellipse.RenderTransform>
+                                            <TranslateTransform x:Name="BusPulseShift" X="0"/>
+                                        </Ellipse.RenderTransform>
+                                    </Ellipse>
+                                </Canvas>
+                            </Grid>
+
+                            <TextBlock x:Name="LiveMeta" Grid.Row="6" Margin="0,0,0,12" FontFamily="{StaticResource CvMonoFont}" FontSize="9"
+                                       Foreground="{DynamicResource CvTextDimBrush}">
+                                <Run Text="{Binding ModelSelection.Models.Count, Mode=OneWay}"/><Run Text=" MODELS · LIVE DECODE · "/><Run Text="{Binding HealthLlmText, Mode=OneWay}"/>
+                            </TextBlock>
+
+                            <Border x:Name="LiveStatus" Grid.Row="7" Margin="0,0,0,14">
                             <StackPanel Orientation="Horizontal">
                                 <Ellipse Width="6" Height="6" VerticalAlignment="Center">
                                     <Ellipse.Style>
@@ -403,13 +664,14 @@
                                 </TextBlock>
                             </StackPanel>
                             </Border>
-                            <Button Grid.Row="4" Style="{StaticResource CvButtonPrimary}" Height="40"
+
+                            <Button x:Name="LiveAction" Grid.Row="8" Style="{StaticResource HomeAction}" Height="38"
                                     IsEnabled="{Binding CanStartLive}"
                                     Command="{Binding LaunchOnlineDiagnosisCommand}"
                                     AutomationProperties.Name="START LIVE SESSION"
                                     ToolTip="Start monitoring the live CAN bus">
                                 <cvctl:CvTrackedText Label="START LIVE SESSION" FontFamily="{StaticResource CvDisplayFont}"
-                                                     FontSize="12" FontWeight="SemiBold"/>
+                                                     FontSize="11.5" FontWeight="SemiBold" Tracking="2"/>
                             </Button>
                         </Grid>
 
@@ -474,7 +736,7 @@
 
                 <!-- ── OFFLINE IMPORT card ──────────────────────────────── -->
                 <Border x:Name="OfflineCard" Opacity="0"
-                        Width="496" Height="480" Padding="44,40"
+                        Width="496" Height="394" Padding="32,26"
                         Background="{DynamicResource CvPanelBrush}" BorderBrush="{DynamicResource CvBorderAccentBrush}"
                         BorderThickness="1" CornerRadius="3" Margin="15,0"
                         RenderTransformOrigin="0.5,0.5">
@@ -482,28 +744,90 @@
                         <TransformGroup>
                             <ScaleTransform x:Name="OfflineCardScale" ScaleX="1"/>
                             <TranslateTransform x:Name="OfflineCardShift" Y="0"/>
+                            <TranslateTransform x:Name="OfflineHoverShift" Y="0"/>
                         </TransformGroup>
                     </Border.RenderTransform>
+                    <Border.Triggers>
+                        <EventTrigger RoutedEvent="MouseEnter">
+                            <BeginStoryboard x:Name="OfflineHoverInSb" Storyboard="{StaticResource OfflineHoverIn}"/>
+                        </EventTrigger>
+                        <EventTrigger RoutedEvent="MouseLeave">
+                            <StopStoryboard BeginStoryboardName="OfflineHoverInSb"/>
+                            <BeginStoryboard Storyboard="{StaticResource OfflineHoverOut}"/>
+                        </EventTrigger>
+                    </Border.Triggers>
                     <Grid>
                         <!-- corner brackets -->
-                        <Path Data="M 0,28 L 0,0 L 28,0" Stroke="{DynamicResource CvAccentBrush}" Opacity="0.55" StrokeThickness="1"
-                              HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-44,-38,0,0" IsHitTestVisible="False"/>
-                        <Path Data="M 28,0 L 28,28 L 0,28" Stroke="{DynamicResource CvAccentBrush}" Opacity="0.55" StrokeThickness="1"
-                              HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-44,-38" IsHitTestVisible="False"/>
+                        <Border x:Name="OfflineHoverGlow" Opacity="0" IsHitTestVisible="False"
+                                Margin="-32,-28" CornerRadius="3"
+                                BorderBrush="{DynamicResource CvAccentBrush}" BorderThickness="1"
+                                Background="{DynamicResource CvAccentWashBrush}"/>
+                        <Path Data="M 0,30 L 0,0 L 30,0" Stroke="{DynamicResource CvAccentBrush}" Opacity="0.75" StrokeThickness="1"
+                              HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-32,-28,0,0" IsHitTestVisible="False"
+                              RenderTransformOrigin="0,0">
+                            <Path.RenderTransform><ScaleTransform x:Name="OfflineBracketScaleTL" ScaleX="1" ScaleY="1"/></Path.RenderTransform>
+                        </Path>
+                        <Path Data="M 30,0 L 30,30 L 0,30" Stroke="{DynamicResource CvAccentBrush}" Opacity="0.75" StrokeThickness="1"
+                              HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-32,-28" IsHitTestVisible="False"
+                              RenderTransformOrigin="1,1">
+                            <Path.RenderTransform><ScaleTransform x:Name="OfflineBracketScaleBR" ScaleX="1" ScaleY="1"/></Path.RenderTransform>
+                        </Path>
 
                         <!-- Face A: choose offline -->
                         <Grid x:Name="OfflineNormal">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
-                            <cvctl:CvTrackedText Grid.Row="0" Label="MODE 02" Style="{StaticResource CvCaps}" Foreground="{DynamicResource CvAccentBrush}" Margin="0,0,0,16"/>
-                            <cvctl:CvTrackedText Grid.Row="1" Label="OFFLINE IMPORT" FontFamily="{StaticResource CvDisplayFont}" FontSize="32" FontWeight="Bold" Tracking="1" Foreground="{DynamicResource CvTextBrightBrush}" Effect="{DynamicResource CvAccentGlowSoft}"/>
-                            <TextBlock Grid.Row="2" Text="Import a recorded CAN log, pick the vehicle / AI model and run forensic ML analysis with AI-powered attack explanations." TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,16,0,0" FontFamily="{StaticResource CvUiFont}" FontSize="13" LineHeight="22" Foreground="{DynamicResource CvTextMutedBrush}"/>
-                            <Border Grid.Row="3" Margin="0,0,0,16">
+
+                            <StackPanel Grid.Row="0" Orientation="Horizontal">
+                                <Rectangle Width="2" Height="11" Fill="{DynamicResource CvAccentBrush}" VerticalAlignment="Center"/>
+                                <cvctl:CvTrackedText Label="MODE 02" Margin="8,0,0,0" FontFamily="{StaticResource CvMonoFont}"
+                                                     FontSize="9.5" Tracking="1" Foreground="{DynamicResource CvAccentBrush}"/>
+                            </StackPanel>
+
+                            <Grid Grid.Row="1" Margin="0,14,0,0">
+                                <cvctl:CvTrackedText x:Name="OfflineTitleGlow" Opacity="0" Label="OFFLINE IMPORT"
+                                                     FontFamily="{StaticResource CvDisplayFont}" FontSize="30" FontWeight="Bold"
+                                                     Tracking="1" Foreground="{DynamicResource CvAccentBrush}"
+                                                     Effect="{DynamicResource CvAccentGlow}" IsHitTestVisible="False"/>
+                                <cvctl:CvTrackedText Label="OFFLINE IMPORT"
+                                                     FontFamily="{StaticResource CvDisplayFont}" FontSize="30" FontWeight="Bold"
+                                                     Tracking="1" Foreground="{DynamicResource CvTextBrightBrush}"
+                                                     Effect="{DynamicResource CvAccentGlowSoft}"/>
+                            </Grid>
+
+                            <Rectangle Grid.Row="2" Height="1" Margin="0,18,0,0" Fill="{DynamicResource CvSeparatorBrush}"/>
+
+                            <TextBlock Grid.Row="3" Margin="0,18,0,0"
+                                       Text="Import a recorded CAN log, pick the vehicle / AI model and run forensic ML analysis with AI-assisted attack explanations."
+                                       TextWrapping="Wrap" FontFamily="{StaticResource CvUiFont}" FontSize="12.5" LineHeight="21"
+                                       Foreground="{DynamicResource CvTextMutedBrush}"/>
+
+                            <!-- Archive traffic field: schematic, no measurements claimed -->
+                            <Grid Grid.Row="5" Height="18" Margin="0,0,0,10" ClipToBounds="True">
+                                <Path Data="M 0,18 L 0,10 L 4,10 L 4,18 Z M 6,18 L 6,12 L 10,12 L 10,18 Z M 13,18 L 13,9 L 17,9 L 17,18 Z M 19,18 L 19,4 L 23,4 L 23,18 Z M 26,18 L 26,14 L 30,14 L 30,18 Z M 32,18 L 32,13 L 36,13 L 36,18 Z M 38,18 L 38,7 L 42,7 L 42,18 Z M 45,18 L 45,13 L 49,13 L 49,18 Z M 51,18 L 51,10 L 55,10 L 55,18 Z M 58,18 L 58,6 L 62,6 L 62,18 Z M 64,18 L 64,14 L 68,14 L 68,18 Z M 70,18 L 70,7 L 74,7 L 74,18 Z M 77,18 L 77,12 L 81,12 L 81,18 Z M 83,18 L 83,14 L 87,14 L 87,18 Z M 90,18 L 90,13 L 94,13 L 94,18 Z M 96,18 L 96,9 L 100,9 L 100,18 Z M 102,18 L 102,9 L 106,9 L 106,18 Z M 109,18 L 109,13 L 113,13 L 113,18 Z M 115,18 L 115,12 L 119,12 L 119,18 Z M 122,18 L 122,13 L 126,13 L 126,18 Z M 128,18 L 128,7 L 132,7 L 132,18 Z M 134,18 L 134,9 L 138,9 L 138,18 Z M 141,18 L 141,14 L 145,14 L 145,18 Z M 147,18 L 147,6 L 151,6 L 151,18 Z M 154,18 L 154,13 L 158,13 L 158,18 Z M 160,18 L 160,12 L 164,12 L 164,18 Z M 166,18 L 166,4 L 170,4 L 170,18 Z M 173,18 L 173,4 L 177,4 L 177,18 Z M 179,18 L 179,6 L 183,6 L 183,18 Z M 186,18 L 186,14 L 190,14 L 190,18 Z M 192,18 L 192,6 L 196,6 L 196,18 Z M 198,18 L 198,6 L 202,6 L 202,18 Z M 205,18 L 205,9 L 209,9 L 209,18 Z M 211,18 L 211,14 L 215,14 L 215,18 Z M 218,18 L 218,12 L 222,12 L 222,18 Z M 224,18 L 224,14 L 228,14 L 228,18 Z M 230,18 L 230,7 L 234,7 L 234,18 Z M 237,18 L 237,12 L 241,12 L 241,18 Z M 243,18 L 243,11 L 247,11 L 247,18 Z M 250,18 L 250,9 L 254,9 L 254,18 Z M 256,18 L 256,12 L 260,12 L 260,18 Z M 262,18 L 262,7 L 266,7 L 266,18 Z M 269,18 L 269,13 L 273,13 L 273,18 Z M 275,18 L 275,6 L 279,6 L 279,18 Z M 282,18 L 282,11 L 286,11 L 286,18 Z M 288,18 L 288,7 L 292,7 L 292,18 Z M 294,18 L 294,4 L 298,4 L 298,18 Z M 301,18 L 301,12 L 305,12 L 305,18 Z M 307,18 L 307,13 L 311,13 L 311,18 Z M 314,18 L 314,6 L 318,6 L 318,18 Z M 320,18 L 320,6 L 324,6 L 324,18 Z M 326,18 L 326,4 L 330,4 L 330,18 Z M 333,18 L 333,12 L 337,12 L 337,18 Z M 339,18 L 339,10 L 343,10 L 343,18 Z M 346,18 L 346,13 L 350,13 L 350,18 Z M 352,18 L 352,7 L 356,7 L 356,18 Z M 358,18 L 358,2 L 362,2 L 362,18 Z M 365,18 L 365,13 L 369,13 L 369,18 Z M 371,18 L 371,6 L 375,6 L 375,18 Z M 378,18 L 378,14 L 382,14 L 382,18 Z M 384,18 L 384,6 L 388,6 L 388,18 Z M 390,18 L 390,12 L 394,12 L 394,18 Z M 397,18 L 397,8 L 401,8 L 401,18 Z M 403,18 L 403,4 L 407,4 L 407,18 Z M 410,18 L 410,7 L 414,7 L 414,18 Z M 416,18 L 416,9 L 420,9 L 420,18 Z M 422,18 L 422,0 L 426,0 L 426,18 Z M 429,18 L 429,10 L 433,10 L 433,18 Z" Fill="{DynamicResource CvAccentDimBrush}" Opacity="0.5"
+                                      HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
+                                <Rectangle x:Name="ArchiveWindow" Width="96" Height="18" HorizontalAlignment="Left"
+                                           Stroke="{DynamicResource CvAccentBrush}" StrokeThickness="1" Opacity="0.45">
+                                    <Rectangle.RenderTransform>
+                                        <TranslateTransform x:Name="ArchiveWindowShift" X="8"/>
+                                    </Rectangle.RenderTransform>
+                                </Rectangle>
+                            </Grid>
+
+                            <cvctl:CvTrackedText x:Name="OfflineMeta" Grid.Row="6" Label="ARCHIVE · FORENSIC REPLAY" Margin="0,0,0,12"
+                                                 FontFamily="{StaticResource CvMonoFont}" FontSize="9" Tracking="1"
+                                                 Foreground="{DynamicResource CvTextDimBrush}"/>
+
+                            <Border x:Name="OfflineStatus" Grid.Row="7" Margin="0,0,0,14">
                             <StackPanel Orientation="Horizontal">
                                 <Ellipse Width="6" Height="6" VerticalAlignment="Center">
                                     <Ellipse.Style>
@@ -521,11 +845,9 @@
                                            FontFamily="{StaticResource CvMonoFont}" FontSize="10">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
-                                            
                                             <Setter Property="Foreground" Value="{DynamicResource CvTextMutedBrush}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding CanDiveIn}" Value="True">
-                                                    
                                                     <Setter Property="Foreground" Value="{DynamicResource CvOkBrush}"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
@@ -534,12 +856,13 @@
                                 </TextBlock>
                             </StackPanel>
                             </Border>
-                            <Button Grid.Row="4" Style="{StaticResource CvButtonPrimary}" Height="40"
+
+                            <Button x:Name="OfflineAction" Grid.Row="8" Style="{StaticResource HomeAction}" Height="38"
                                     Command="{Binding ImportReplayCommand}"
                                     AutomationProperties.Name="IMPORT LOG FILE"
                                     ToolTip="Choose a CAN log to analyse">
                                 <cvctl:CvTrackedText Label="IMPORT LOG FILE" FontFamily="{StaticResource CvDisplayFont}"
-                                                     FontSize="12" FontWeight="SemiBold"/>
+                                                     FontSize="11.5" FontWeight="SemiBold" Tracking="2"/>
                             </Button>
                         </Grid>
 
@@ -667,15 +990,36 @@
                 </Border>
 
             </StackPanel>
+          </StackPanel>
+
+        <!-- ── System strip ───────────────────────────────────────────────
+             Bottom-left the live system state, bottom-right the hardware
+             action, as the reference resolves them last. Every value is real:
+             backend link, loaded models, LLM provider and this build's version. -->
+        <Grid x:Name="HomeFooter" Opacity="0" VerticalAlignment="Bottom" Margin="40,0,40,44">
+            <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center"
+                       FontFamily="{StaticResource CvMonoFont}" FontSize="9"
+                       Foreground="{DynamicResource CvTextDimBrush}">
+                <Run Text="CANVISION IDS "/><Run Text="{Binding AppVersionText, Mode=OneWay}"/><Run Text="   ·   BACKEND "/><Run Text="{Binding BackendStatusText, Mode=OneWay}"/><Run Text="   ·   "/><Run Text="{Binding ModelSelection.Models.Count, Mode=OneWay}"/><Run Text=" MODELS   ·   LLM "/><Run Text="{Binding HealthLlmText, Mode=OneWay}"/>
+            </TextBlock>
+
+            <Button HorizontalAlignment="Right" VerticalAlignment="Center" Style="{StaticResource HomeAction}"
+                    Padding="14,6" Height="28"
+                    Command="{Binding DataContext.NavigationService.NavigateToSectionCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    CommandParameter="{x:Static cvmodels:SectionKey.HardwareSetup}"
+                    AutomationProperties.Name="CONNECT WITH HARDWARE"
+                    ToolTip="Open Hardware Setup to connect a CAN adapter">
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse Width="5" Height="5" VerticalAlignment="Center" Fill="{DynamicResource CvAccentBrush}"/>
+                    <cvctl:CvTrackedText Label="CONNECT WITH HARDWARE" Margin="8,0,0,0"
+                                         FontFamily="{StaticResource CvMonoFont}" FontSize="9" Tracking="1"
+                                         Foreground="{DynamicResource CvAccentBrush}"/>
+                </StackPanel>
+            </Button>
+        </Grid>
         </Grid>
 
-        <!-- Backend status: the one real value on this bar -->
-        <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="18,0,18,16" Orientation="Horizontal">
-            <cvctl:CvTrackedText Label="BACKEND" Style="{StaticResource CvCaps}" VerticalAlignment="Center"/>
-            <TextBlock Text="{Binding BackendStatusText}" Margin="8,0,0,0" VerticalAlignment="Center"
-                       FontFamily="{StaticResource CvMonoFont}" FontSize="11" FontWeight="SemiBold"
-                       Foreground="{DynamicResource CvTextBrush}"/>
-        </StackPanel>
+        <!-- (the backend link state now lives in the system strip below) -->
 
 
         <!-- ── Entrance sequence ──────────────────────────────────────────

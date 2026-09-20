@@ -349,6 +349,12 @@ public sealed class HomeViewModel : SectionViewModel
                 ? "CLEAN"
                 : "--";
 
+    /// <summary>This build's own version, shown in the header and the system strip.</summary>
+    public string AppVersionText { get; } =
+        System.Reflection.Assembly.GetExecutingAssembly().GetName().Version is { } v
+            ? $"v{v.Major}.{v.Minor}.{v.Build}"
+            : "v1.0.0";
+
     public string BackendStatusText =>
         backendOnline || string.Equals(Snapshot.Source, "python-api", StringComparison.OrdinalIgnoreCase)
             ? "CONNECTED"
