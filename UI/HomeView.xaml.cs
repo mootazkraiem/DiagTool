@@ -23,7 +23,14 @@ public partial class HomeView : UserControl
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        if (entrancePlayed) return;
+        if (entrancePlayed)
+        {
+            // Returning to Home later: no entrance, the chooser is simply there.
+            AmbientWash.Opacity = 1;
+            LiveCard.Opacity = 1;
+            OfflineCard.Opacity = 1;
+            return;
+        }
         entrancePlayed = true;
         if (TryFindResource("BootSequence") is Storyboard sequence)
         {

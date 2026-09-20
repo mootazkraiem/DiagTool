@@ -36,7 +36,7 @@
         <Storyboard x:Key="BootSequence">
             <ObjectAnimationUsingKeyFrames Storyboard.TargetName="BootOverlay" Storyboard.TargetProperty="Visibility">
                 <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Visible}"/>
-                <DiscreteObjectKeyFrame KeyTime="0:0:3.1" Value="{x:Static Visibility.Collapsed}"/>
+                <DiscreteObjectKeyFrame KeyTime="0:0:2.85" Value="{x:Static Visibility.Collapsed}"/>
             </ObjectAnimationUsingKeyFrames>
             <DoubleAnimation Storyboard.TargetName="BootOverlay" Storyboard.TargetProperty="Opacity"
                              To="1" Duration="0:0:0.25"/>
@@ -73,12 +73,42 @@
 
             <!-- Hand over to the chooser -->
             <DoubleAnimation Storyboard.TargetName="BootOverlay" Storyboard.TargetProperty="Opacity"
-                             BeginTime="0:0:2.45" To="0" Duration="0:0:0.6"/>
+                             BeginTime="0:0:2.45" To="0" Duration="0:0:0.35"/>
             <DoubleAnimation Storyboard.TargetName="BootScale" Storyboard.TargetProperty="ScaleX"
                              BeginTime="0:0:2.45" To="1.03" Duration="0:0:0.6"/>
             <DoubleAnimation Storyboard.TargetName="BootScale" Storyboard.TargetProperty="ScaleY"
                              BeginTime="0:0:2.45" To="1.03" Duration="0:0:0.6"/>
+
+            <!-- ── Card reveal ────────────────────────────────────────────
+                 Timed from the reference entrance video (see the Slice
+                 report): the initialisation content dips out, the ambient
+                 wash lifts, then the cards resolve in place — left first,
+                 right 0.2 s behind — each brightening while its top settles
+                 last. No slide-in, no plain fade. -->
+            <DoubleAnimation Storyboard.TargetName="AmbientWash" Storyboard.TargetProperty="Opacity"
+                             BeginTime="0:0:2.60" From="0" To="1" Duration="0:0:0.5">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+
+            <DoubleAnimation Storyboard.TargetName="LiveCard" Storyboard.TargetProperty="Opacity"
+                             BeginTime="0:0:2.65" From="0" To="1" Duration="0:0:0.72">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="LiveCardShift" Storyboard.TargetProperty="Y"
+                             BeginTime="0:0:2.65" From="20" To="0" Duration="0:0:0.8">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+
+            <DoubleAnimation Storyboard.TargetName="OfflineCard" Storyboard.TargetProperty="Opacity"
+                             BeginTime="0:0:2.85" From="0" To="1" Duration="0:0:0.72">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="OfflineCardShift" Storyboard.TargetProperty="Y"
+                             BeginTime="0:0:2.85" From="20" To="0" Duration="0:0:0.8">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
         </Storyboard>
+
     </UserControl.Resources>
 
     <Grid x:Name="RootGrid" Background="{DynamicResource CvGroundBrush}">
@@ -297,7 +327,7 @@
         </VisualStateManager.VisualStateGroups>
 
         <!-- Ambient wash, as on the other screens -->
-        <Rectangle IsHitTestVisible="False">
+        <Rectangle x:Name="AmbientWash" Opacity="0" IsHitTestVisible="False">
             <Rectangle.Fill>
                 <RadialGradientBrush Center="0.5,0.45" GradientOrigin="0.5,0.45" RadiusX="0.55" RadiusY="0.6">
                     <GradientStop Color="#1A145654" Offset="0"/>
@@ -312,13 +342,16 @@
                         HorizontalAlignment="Center" VerticalAlignment="Center">
 
                 <!-- ── LIVE SESSION card ─────────────────────────────────── -->
-                <Border x:Name="LiveCard"
-                        Width="460" Height="400" Padding="44,38"
+                <Border x:Name="LiveCard" Opacity="0"
+                        Width="496" Height="480" Padding="44,40"
                         Background="{DynamicResource CvPanelBrush}" BorderBrush="{DynamicResource CvBorderAccentBrush}"
-                        BorderThickness="1" CornerRadius="3" Margin="8,0"
+                        BorderThickness="1" CornerRadius="3" Margin="15,0"
                         RenderTransformOrigin="0.5,0.5">
                     <Border.RenderTransform>
-                        <ScaleTransform x:Name="LiveCardScale" ScaleX="1"/>
+                        <TransformGroup>
+                            <ScaleTransform x:Name="LiveCardScale" ScaleX="1"/>
+                            <TranslateTransform x:Name="LiveCardShift" Y="0"/>
+                        </TransformGroup>
                     </Border.RenderTransform>
                     <Grid>
                         <!-- corner brackets -->
@@ -440,13 +473,16 @@
                 </Border>
 
                 <!-- ── OFFLINE IMPORT card ──────────────────────────────── -->
-                <Border x:Name="OfflineCard"
-                        Width="460" Height="400" Padding="44,38"
+                <Border x:Name="OfflineCard" Opacity="0"
+                        Width="496" Height="480" Padding="44,40"
                         Background="{DynamicResource CvPanelBrush}" BorderBrush="{DynamicResource CvBorderAccentBrush}"
-                        BorderThickness="1" CornerRadius="3" Margin="8,0"
+                        BorderThickness="1" CornerRadius="3" Margin="15,0"
                         RenderTransformOrigin="0.5,0.5">
                     <Border.RenderTransform>
-                        <ScaleTransform x:Name="OfflineCardScale" ScaleX="1"/>
+                        <TransformGroup>
+                            <ScaleTransform x:Name="OfflineCardScale" ScaleX="1"/>
+                            <TranslateTransform x:Name="OfflineCardShift" Y="0"/>
+                        </TransformGroup>
                     </Border.RenderTransform>
                     <Grid>
                         <!-- corner brackets -->
