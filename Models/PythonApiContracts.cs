@@ -362,6 +362,10 @@ public sealed class VehicleProfileItem
 
     [JsonProperty("has_transmit_list")]
     public bool HasTransmitList { get; set; }
+
+    /// <summary>The vehicle's own name, so a binding without an explicit template
+    /// shows "Nissan Leaf (2019, 40/62 kWh)" rather than the type name.</summary>
+    public override string ToString() => string.IsNullOrWhiteSpace(Name) ? Id : Name;
 }
 
 public sealed class VehicleListResponse

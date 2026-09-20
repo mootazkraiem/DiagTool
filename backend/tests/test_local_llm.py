@@ -173,3 +173,44 @@ def test_a_borrowed_baseline_is_labelled_when_the_state_is_unknown():
     assert "not measured for this alert" in prompt
     assert "reference profile only" in prompt
     assert "never invent or estimate a number" in prompt
+
+
+# ── grounding: figures quoted for values that were never measured ───────────
+
+PROMPT_WITH_MISSING = (
+    "=== CURRENT ANOMALY ===\n"
+    "CAN-ID:          0x17FE007B\n"
+    "Frequency:       not measured for this alert\n"
+    "Entropy:         not measured for this alert\n"
+    "Anomaly score:   0.663\n"
+    "=== NORMAL BEHAVIOR BASELINE ===\n"
+    "  Normal frequency:    40–150 msg/s\n"
+)
+
+
+def test_turning_an_unmeasured_value_into_a_number_is_flagged():
+    # The exact failure seen in QA with the local 3B model.
+    answer = ("The observed frequency of 0 msg/s is significantly lower than the normal "
+              "range of 40-150 msg/s, indicating a potential DoS attack.")
+    claims = llm._unmeasured_claims(answer, PROMPT_WITH_MISSING)
+    assert len(claims) == 1 and "0 msg/s" in claims[0]
+
+
+def test_saying_a_value_was_not_measured_is_not_flagged():
+    answer = "The frequency was not measured for this alert, so no comparison is possible."
+    assert llm._unmeasured_claims(answer, PROMPT_WITH_MISSING) == []
+
+
+def test_measured_fields_are_not_flagged():
+    prompt = "Frequency:       120.0 msg/s\nAnomaly score:   0.663\n"
+    assert llm._unmeasured_claims("Frequency reached 120 msg/s.", prompt) == []
+
+
+def test_explanations_carry_the_unmeasured_claim_check(monkeypatch):
+    _no_side_effects(monkeypatch)
+    monkeypatch.setattr(llm, "_try_gemini", lambda *a, **k: None)
+    monkeypatch.setattr(llm, "_ollama_generate", lambda *a, **k: (
+        "llama3.2:3b",
+        '{"summary": "Entropy of 0.0 is far below normal.", "detail": "", "recommendation": ""}'))
+    result = llm.explain_alert(ALERT)
+    assert result["unmeasured_claims"]

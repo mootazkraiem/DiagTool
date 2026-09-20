@@ -475,7 +475,8 @@ def _build_analyst_prompt(alert: dict[str, Any], ctx: dict[str, Any], sig_ctx: s
         "Identify the most likely attack pattern. "
         "Use only the figures given above: never invent or estimate a number, and where a "
         "value reads \"not measured for this alert\" say that it was not measured instead of "
-        "supplying one. "
+        "supplying one. A value that was not measured is not zero: do not describe it as 0, and "
+        "do not compare it with the baseline. "
         "Respond in JSON with exactly three keys: "
         "\"summary\" (one sentence finding), "
         "\"detail\" (3–4 sentences: observed vs normal, attack vector, real-world impact, forensic indicators), "
@@ -624,6 +625,45 @@ def _parse_json_response(text: str) -> dict[str, str] | None:
     return None
 
 
+# Fields the prompt reports, and the words an answer uses for each.
+_MEASURED_FIELDS = (
+    ("Frequency", ("frequency", "msg/s", "message rate", "msg rate")),
+    ("Entropy", ("entropy",)),
+    ("Inter-arrival", ("inter-arrival", "interarrival", "time diff", "inter arrival")),
+)
+_NOT_MEASURED = "not measured for this alert"
+_SENTENCE_RE = re.compile(r"[^.!?]+[.!?]?")
+
+
+def _unmeasured_claims(text: str, prompt: str, limit: int = 3) -> list[str]:
+    """Sentences that quote a figure for a field the data did not measure.
+
+    The local model sometimes reads "not measured for this alert" as zero and
+    then compares that zero with the baseline. Deterministic and advisory: the
+    answer is recorded, never rewritten."""
+    if not text:
+        return []
+    missing = [
+        words for label, words in _MEASURED_FIELDS
+        if re.search(rf"^{label}:\s*{re.escape(_NOT_MEASURED)}", prompt, re.MULTILINE)
+    ]
+    if not missing:
+        return []
+    claims: list[str] = []
+    for sentence in _SENTENCE_RE.findall(text):
+        lowered = sentence.lower()
+        if not any(word in lowered for word in (w for words in missing for w in words)):
+            continue
+        if _NOT_MEASURED in lowered or "not measured" in lowered:
+            continue
+        if not _NUMBER_RE.search(lowered):
+            continue
+        claims.append(sentence.strip())
+        if len(claims) >= limit:
+            break
+    return claims
+
+
 def _flag_unsupported_figures(result: dict[str, Any], prompt: str) -> None:
     """Record, on a model-written explanation, any figure it states that the
     prompt did not contain. Advisory only — the text is left exactly as the
@@ -639,6 +679,17 @@ def _flag_unsupported_figures(result: dict[str, Any], prompt: str) -> None:
         logger.warning(
             "[analyst] %s answer states figures absent from its input: %s",
             result.get("mode", "?"), ", ".join(figures),
+        )
+    try:
+        claims = _unmeasured_claims(answer, prompt)
+    except Exception as exc:
+        logger.debug("[analyst] unmeasured-claim check failed: %s", exc)
+        return
+    result["unmeasured_claims"] = claims
+    if claims:
+        logger.warning(
+            "[analyst] %s answer quotes figures for values the data did not measure: %s",
+            result.get("mode", "?"), " | ".join(claims),
         )
 
 

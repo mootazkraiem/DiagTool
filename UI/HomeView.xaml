@@ -31,6 +31,54 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+
+        <!-- Entrance sequence, started once from code-behind. -->
+        <Storyboard x:Key="BootSequence">
+            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="BootOverlay" Storyboard.TargetProperty="Visibility">
+                <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Visible}"/>
+                <DiscreteObjectKeyFrame KeyTime="0:0:3.1" Value="{x:Static Visibility.Collapsed}"/>
+            </ObjectAnimationUsingKeyFrames>
+            <DoubleAnimation Storyboard.TargetName="BootOverlay" Storyboard.TargetProperty="Opacity"
+                             To="1" Duration="0:0:0.25"/>
+
+            <DoubleAnimation Storyboard.TargetName="BootMark" Storyboard.TargetProperty="Opacity"
+                             BeginTime="0:0:0.15" From="0" To="0.9" Duration="0:0:0.5"/>
+            <DoubleAnimation Storyboard.TargetName="BootMark"
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                             BeginTime="0:0:0.15" From="0" To="45" Duration="0:0:0.9">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+
+            <DoubleAnimation Storyboard.TargetName="BootWordmark" Storyboard.TargetProperty="Opacity"
+                             BeginTime="0:0:0.35" From="0" To="1" Duration="0:0:0.7"/>
+            <DoubleAnimation Storyboard.TargetName="BootWordmarkShift" Storyboard.TargetProperty="Y"
+                             BeginTime="0:0:0.35" From="10" To="0" Duration="0:0:0.8">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+
+            <DoubleAnimation Storyboard.TargetName="BootSubtitle" Storyboard.TargetProperty="Opacity"
+                             BeginTime="0:0:0.75" From="0" To="1" Duration="0:0:0.5"/>
+
+            <DoubleAnimation Storyboard.TargetName="BootRuleScale" Storyboard.TargetProperty="ScaleX"
+                             BeginTime="0:0:0.9" From="0" To="1" Duration="0:0:1.25">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseInOut"/></DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+
+            <DoubleAnimation Storyboard.TargetName="BootLine1" Storyboard.TargetProperty="Opacity"
+                             BeginTime="0:0:1.15" From="0" To="1" Duration="0:0:0.35"/>
+            <DoubleAnimation Storyboard.TargetName="BootLine2" Storyboard.TargetProperty="Opacity"
+                             BeginTime="0:0:1.5" From="0" To="1" Duration="0:0:0.35"/>
+            <DoubleAnimation Storyboard.TargetName="BootLine3" Storyboard.TargetProperty="Opacity"
+                             BeginTime="0:0:1.85" From="0" To="1" Duration="0:0:0.35"/>
+
+            <!-- Hand over to the chooser -->
+            <DoubleAnimation Storyboard.TargetName="BootOverlay" Storyboard.TargetProperty="Opacity"
+                             BeginTime="0:0:2.45" To="0" Duration="0:0:0.6"/>
+            <DoubleAnimation Storyboard.TargetName="BootScale" Storyboard.TargetProperty="ScaleX"
+                             BeginTime="0:0:2.45" To="1.03" Duration="0:0:0.6"/>
+            <DoubleAnimation Storyboard.TargetName="BootScale" Storyboard.TargetProperty="ScaleY"
+                             BeginTime="0:0:2.45" To="1.03" Duration="0:0:0.6"/>
+        </Storyboard>
     </UserControl.Resources>
 
     <Grid x:Name="RootGrid" Background="{DynamicResource CvGroundBrush}">
@@ -593,5 +641,99 @@
                        Foreground="{DynamicResource CvTextBrush}"/>
         </StackPanel>
 
+
+        <!-- ── Entrance sequence ──────────────────────────────────────────
+             Plays once per application run (see HomeView.xaml.cs), then fades
+             into the chooser below. Everything it reports is real: LINK is the
+             backend connection state, MODELS is how many detection models the
+             selection service actually loaded. Roughly 2.8 s end to end. -->
+        <Grid x:Name="BootOverlay" Background="{DynamicResource CvGroundBrush}" Panel.ZIndex="20"
+              Visibility="Collapsed" Opacity="0">
+            <Grid.RenderTransform>
+                <ScaleTransform x:Name="BootScale" ScaleX="1" ScaleY="1" CenterX="0.5" CenterY="0.5"/>
+            </Grid.RenderTransform>
+
+            <Rectangle IsHitTestVisible="False">
+                <Rectangle.Fill>
+                    <RadialGradientBrush Center="0.5,0.46" GradientOrigin="0.5,0.46" RadiusX="0.6" RadiusY="0.6">
+                        <GradientStop Color="#1A145654" Offset="0"/>
+                        <GradientStop Color="#00000000" Offset="1"/>
+                    </RadialGradientBrush>
+                </Rectangle.Fill>
+            </Rectangle>
+
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="540">
+
+                <!-- Mark -->
+                <Rectangle x:Name="BootMark" Width="13" Height="13" HorizontalAlignment="Center"
+                           Stroke="{DynamicResource CvAccentBrush}" StrokeThickness="1" Opacity="0"
+                           RenderTransformOrigin="0.5,0.5" Margin="0,0,0,26">
+                    <Rectangle.RenderTransform>
+                        <RotateTransform Angle="45"/>
+                    </Rectangle.RenderTransform>
+                </Rectangle>
+
+                <!-- Wordmark -->
+                <cvctl:CvTrackedText x:Name="BootWordmark" Label="CANVISION" Opacity="0"
+                                     HorizontalAlignment="Center"
+                                     FontFamily="{StaticResource CvDisplayFont}" FontSize="40" FontWeight="Light"
+                                     Tracking="2" Foreground="{DynamicResource CvTextBrightBrush}">
+                    <cvctl:CvTrackedText.RenderTransform>
+                        <TranslateTransform x:Name="BootWordmarkShift" Y="10"/>
+                    </cvctl:CvTrackedText.RenderTransform>
+                </cvctl:CvTrackedText>
+
+                <cvctl:CvTrackedText x:Name="BootSubtitle" Label="INTRUSION DETECTION WORKSTATION"
+                                     Opacity="0" HorizontalAlignment="Center" Margin="0,14,0,0"
+                                     FontFamily="{StaticResource CvMonoFont}" FontSize="10"
+                                     Tracking="1" Foreground="{DynamicResource CvTextMutedBrush}"/>
+
+                <!-- Initialisation rule -->
+                <Grid Margin="0,30,0,0" Height="1">
+                    <Rectangle Fill="{DynamicResource CvSeparatorBrush}"/>
+                    <Rectangle x:Name="BootRule" Fill="{DynamicResource CvAccentBrush}"
+                               HorizontalAlignment="Stretch" RenderTransformOrigin="0,0.5">
+                        <Rectangle.RenderTransform>
+                            <ScaleTransform x:Name="BootRuleScale" ScaleX="0"/>
+                        </Rectangle.RenderTransform>
+                    </Rectangle>
+                </Grid>
+
+                <!-- Real status lines -->
+                <Grid x:Name="BootLine1" Opacity="0" Margin="0,22,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <cvctl:CvTrackedText Label="DETECTION CORE" Style="{StaticResource CvCaps}" FontSize="9"/>
+                    <TextBlock Grid.Column="1" Text="{Binding BackendStatusText}"
+                               FontFamily="{StaticResource CvMonoFont}" FontSize="9.5"
+                               Foreground="{DynamicResource CvAccentBrush}"/>
+                </Grid>
+
+                <Grid x:Name="BootLine2" Opacity="0" Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <cvctl:CvTrackedText Label="DETECTION MODELS" Style="{StaticResource CvCaps}" FontSize="9"/>
+                    <TextBlock Grid.Column="1" FontFamily="{StaticResource CvMonoFont}" FontSize="9.5"
+                               Foreground="{DynamicResource CvAccentBrush}">
+                        <Run Text="{Binding ModelSelection.Models.Count, Mode=OneWay}"/><Run Text=" LOADED"/>
+                    </TextBlock>
+                </Grid>
+
+                <Grid x:Name="BootLine3" Opacity="0" Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <cvctl:CvTrackedText Label="WORKSTATION" Style="{StaticResource CvCaps}" FontSize="9"/>
+                    <cvctl:CvTrackedText Grid.Column="1" Label="READY" HorizontalAlignment="Right"
+                                         FontFamily="{StaticResource CvMonoFont}" FontSize="9.5"
+                                         Tracking="1" Foreground="{DynamicResource CvOkBrush}"/>
+                </Grid>
+            </StackPanel>
+        </Grid>
     </Grid>
 </UserControl>

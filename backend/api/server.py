@@ -1619,6 +1619,8 @@ def api_explain_alert(alert_index: int) -> dict[str, Any]:
             # Figures the model stated that its input did not contain (empty for
             # rule-based text, which states only supplied values).
             "unsupported_figures":     explanation.get("unsupported_figures", []),
+            # Sentences quoting a figure for a value the detector never measured.
+            "unmeasured_claims":       explanation.get("unmeasured_claims", []),
             "layer_timing":            layers.get("timing", float(replay_ctx.get("timing_score", 0.0))),
             "layer_payload":           layers.get("payload", 0.0),
             "layer_ml":                layers.get("ml", float(replay_ctx.get("anomaly_score", 0.0))),
