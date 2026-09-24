@@ -142,6 +142,8 @@ class AnalyzeSummary(BaseModel):
     # Frames a vehicle model could not route to a trained state model (see
     # vehicle_scoring.score_frames). They are neither anomalous nor normal.
     unresolved_count: int = 0
+    # Why those frames are unresolved, e.g. {"unseen_id": 120, "warmup": 33}.
+    unresolved_reasons: dict[str, int] = {}
 
 
 class AnalyzeResult(BaseModel):
@@ -1011,6 +1013,11 @@ async def analyze(
         anomaly_count=int((predicted["anomaly"] == -1).sum()),
         normal_count=int((predicted["anomaly"] == 1).sum()),
         unresolved_count=int((predicted["anomaly"] == 0).sum()) if model_kind == "vehicle" else 0,
+        unresolved_reasons=(
+            predicted.loc[predicted["anomaly"] == 0, "state_resolution"].astype(str)
+            .str.split(":").str[0].value_counts().astype(int).to_dict()
+            if model_kind == "vehicle" and "state_resolution" in predicted.columns else {}
+        ),
         cluster_count=int(predicted["cluster"].nunique()) if len(predicted) else 0,
         parse_lines_total=int(parse_total),
         parse_lines_parsed=int(parse_parsed),

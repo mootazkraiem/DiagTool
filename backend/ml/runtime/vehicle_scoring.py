@@ -40,9 +40,13 @@ from backend.ml.runtime.model_loader import RUNTIME_FEATURE_ORDER, _default_asse
 from backend.ml.features import canonical
 from backend.ml.runtime.model_manifest import (
     FAMILY_SCHEMA_VERSION,
+    ID_SCHEMA_VERSION,
+    SCORED,
     UNRESOLVED,
     FamilyModel,
+    IdModelFamily,
     load_family_model,
+    load_id_family,
     load_validated_bundle,
     manifest_schema,
 )
@@ -170,7 +174,10 @@ def score_frames(
         cluster           index of the state (sorted by name), -1 when unresolved
     """
     root = model_root if model_root is not None else _default_assets_root() / "models"
-    if manifest_schema(root, model_id) == FAMILY_SCHEMA_VERSION:
+    schema = manifest_schema(root, model_id)
+    if schema == ID_SCHEMA_VERSION:
+        return _score_id_models(frames, load_id_family(root, model_id))
+    if schema == FAMILY_SCHEMA_VERSION:
         return _score_single_model(frames, load_family_model(root, model_id))
     bundle = load_validated_bundle(root, model_id, runtime_feature_order=RUNTIME_FEATURE_ORDER)
     clf = bundle.classifier
@@ -201,6 +208,40 @@ def score_frames(
     result["cluster"] = [state_index.get(s, -1) for s in states]
     result["vehicle_state"] = states
     result["state_resolution"] = reasons
+    return result
+
+
+def _score_id_models(frames: pd.DataFrame, family: IdModelFamily) -> pd.DataFrame:
+    """Score with a per-CAN-ID family (schema 3) over canonical features.
+
+    Each frame is scored only by its own identifier's model. A frame is
+    unresolved - anomaly 0, no score, the reason in ``state_resolution`` - when
+    its identifier has not filled its window yet ("warmup"), was too rare in
+    training ("sparse_id"), never varied ("unmodelled_id") or never occurred
+    in training at all ("unseen_id").
+    """
+    ts = frames["timestamp"].to_numpy(dtype=float)
+    if len(ts) > 1 and (np.diff(ts) < 0).any():
+        raise ValueError("frames must be in chronological order for canonical features")
+    x, ready = canonical.compute_features_frame(frames)
+    ids = frames["can_id"].to_numpy(dtype=np.int64)
+
+    norm = np.full(len(frames), np.nan)
+    flagged = np.zeros(len(frames), dtype=bool)
+    reason = np.full(len(frames), f"warmup: fewer than {canonical.WINDOW + 1} frames of this identifier",
+                     dtype=object)
+    if ready.any():
+        n_r, f_r, s_r = family.score_rows(x[ready], ids[ready])
+        norm[ready], flagged[ready] = n_r, f_r
+        reason[ready] = np.where(s_r == SCORED, "", s_r)
+    scored = reason == ""
+
+    result = frames.copy()
+    result["anomaly_score"] = norm
+    result["anomaly"] = np.where(~scored, 0, np.where(flagged, -1, 1))
+    result["cluster"] = np.where(scored, 0, -1)
+    result["vehicle_state"] = np.where(scored, "can_id_model", UNRESOLVED)
+    result["state_resolution"] = reason
     return result
 
 

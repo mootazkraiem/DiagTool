@@ -327,12 +327,12 @@ def _trained_at(model_dir: Path, states: list[str]) -> str:
 
 
 def _single_model_entry(model_dir: Path) -> dict | None:
-    """Listing entry for a one-model family (manifest schema 2), without loading it.
+    """Listing entry for a clean family (manifest schema 2 or 3), without loading it.
 
     Being listed is not being valid: scoring loads it through
     model_manifest.load_family_model, which refuses anything inconsistent.
     """
-    from backend.ml.runtime.model_manifest import FAMILY_SCHEMA_VERSION, MANIFEST_NAME
+    from backend.ml.runtime.model_manifest import FAMILY_SCHEMA_VERSION, ID_SCHEMA_VERSION, MANIFEST_NAME
 
     path = model_dir / MANIFEST_NAME
     if not path.is_file():
@@ -341,9 +341,11 @@ def _single_model_entry(model_dir: Path) -> dict | None:
         manifest = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
-    if manifest.get("schema_version") != FAMILY_SCHEMA_VERSION:
+    schema = manifest.get("schema_version")
+    if schema not in (FAMILY_SCHEMA_VERSION, ID_SCHEMA_VERSION):
         return None
-    return {"id": model_dir.name, "states": ["vehicle"], "kind": "single",
+    return {"id": model_dir.name, "states": ["vehicle"],
+            "kind": "per_can_id" if schema == ID_SCHEMA_VERSION else "single",
             "trained_at": str(manifest.get("created_at", ""))[:10]}
 
 

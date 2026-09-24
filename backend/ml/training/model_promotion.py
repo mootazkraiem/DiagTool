@@ -6,10 +6,10 @@ staging → validate → promote.
 A staged version (``assets/models_staging/<version>/``) reaches production
 (``assets/models/``) only through ``promote``:
 
-1. every family in the staged version is validated (Step 9 schema-2 checks:
-   hashes, feature pipeline version, feature schema, scaler, threshold,
-   train/holdout disjointness). One failure stops everything; production is
-   not touched;
+1. every family in the staged version is validated (manifest schema 2 or 3:
+   hashes, feature pipeline version, feature schema, thresholds and their
+   calibration, train/holdout disjointness). One failure stops everything;
+   production is not touched;
 2. the families to promote are copied next to production and validated again
    there, so what is swapped in is exactly what was checked;
 3. each existing production family is moved to
@@ -30,7 +30,7 @@ import json
 import shutil
 from pathlib import Path
 
-from backend.ml.runtime.model_manifest import MANIFEST_NAME, FamilyModel, ManifestError, load_family_model
+from backend.ml.runtime.model_manifest import MANIFEST_NAME, ManifestError, load_any_family
 
 
 class PromotionError(RuntimeError):
@@ -41,7 +41,7 @@ def staged_families(version_dir: Path) -> list[str]:
     return sorted(p.name for p in Path(version_dir).iterdir() if (p / MANIFEST_NAME).is_file())
 
 
-def validate_staging(version_dir: Path) -> dict[str, FamilyModel]:
+def validate_staging(version_dir: Path) -> dict:
     """Every staged family, loaded and validated; raises PromotionError listing all failures."""
     version_dir = Path(version_dir)
     if not version_dir.is_dir():
@@ -49,11 +49,11 @@ def validate_staging(version_dir: Path) -> dict[str, FamilyModel]:
     families = staged_families(version_dir)
     if not families:
         raise PromotionError(f"{version_dir} contains no families")
-    loaded: dict[str, FamilyModel] = {}
+    loaded: dict = {}
     failures: list[str] = []
     for f in families:
         try:
-            loaded[f] = load_family_model(version_dir, f)
+            loaded[f] = load_any_family(version_dir, f)
         except ManifestError as exc:
             failures.append(str(exc))
     if failures:
@@ -82,7 +82,7 @@ def promote(version_dir: Path, production_root: Path, archive_root: Path,
     try:
         for f in selected:
             shutil.copytree(version_dir / f, incoming / f)
-            load_family_model(incoming, f)                   # validate the exact bytes to be swapped in
+            load_any_family(incoming, f)                     # validate the exact bytes to be swapped in
     except Exception:
         shutil.rmtree(incoming, ignore_errors=True)
         raise
@@ -98,7 +98,7 @@ def promote(version_dir: Path, production_root: Path, archive_root: Path,
             (incoming / f).rename(current)
             swapped.append((f, had))
         for f in selected:
-            load_family_model(production_root, f)
+            load_any_family(production_root, f)
     except Exception as exc:
         _roll_back(swapped, production_root, archive)
         shutil.rmtree(incoming, ignore_errors=True)

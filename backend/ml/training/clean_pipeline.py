@@ -1,9 +1,10 @@
 """
 clean_pipeline.py
 ─────────────────
-The clean model generator: one anomaly model per vehicle family, built from
-recordings whose timing can be established, over canonical features, written
-only to ``assets/models_staging/<version>/`` and never to ``assets/models``.
+The clean model generator: per vehicle family, one anomaly model per CAN
+identifier (manifest schema 3), built from recordings whose timing can be
+established, over canonical features, written only to
+``assets/models_staging/<version>/`` and never to ``assets/models``.
 
     python -m backend.ml.training.clean_pipeline plan  [--report PATH]
     python -m backend.ml.training.clean_pipeline train --version VERSION
@@ -16,7 +17,9 @@ version and swaps it into production (model_promotion.py).
 
 What it deliberately does not do, and why:
 
-* no state classifier - one RobustScaler + IsolationForest per family;
+* no state classifier, and no pooling of identifiers - each CAN ID with
+  enough training rows gets its own IsolationForest; the rest are reported
+  as sparse, unmodelled or unseen, never scored by another ID's model;
 * no per-CAN-ID normalisation against the capture being scored - the model
   learns the vehicle's normal feature space as it is;
 * no timestamp repair - a recording whose timing is implausible in its
@@ -52,7 +55,7 @@ from backend.ml.training import recordings as rec_mod
 from backend.ml.training.recordings import Recording
 
 PIPELINE_NAME = "backend.ml.training.clean_pipeline"
-PIPELINE_VERSION = "clean-1"
+PIPELINE_VERSION = "clean-2"
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 ASSETS_ROOT = PROJECT_ROOT / "assets"
@@ -74,6 +77,14 @@ ROAD_FRAME_CAP = 150_000                                     # contiguous prefix
 #: opening frames of 00000032/35/36/37/39-1/39-2.
 PROTECTED_EVALUATION_FILES = tuple(Path(f"Skoda Enyaq/file_{n}.csv") for n in range(12, 19))
 
+#: Families not trained at all, whatever their recordings. Their recordings stay
+#: in the plan, marked excluded with this reason.
+EXCLUDED_FAMILIES = {
+    "nissan_leaf": "mixes a 62 kWh SavvyCAN recording with ZE0 30 kWh BusMon recordings that share its "
+                   "CAN IDs (clean-1-001 holdout: 100% flagged); a BusMon-only family has no CAN ID with "
+                   "enough rows and a SavvyCAN-only family has no holdout",
+}
+
 EXCLUDED_BY_POLICY = {
     # Car-Hacking 'R' frames were captured while the attacks ran on the bus.
     **{(CAR_HACKING_ROOT / n).as_posix(): "attack-session capture; normal-flagged frames recorded during an attack "
@@ -83,13 +94,19 @@ EXCLUDED_BY_POLICY = {
         "labelled as containing a benign anomaly; not a clean normal baseline",
 }
 
-# ── model definition (unchanged from the previous generation; not tuned) ─────
-MIN_TRAIN_ROWS = 2000
-MIN_FEATURES = 3
-NEAR_CONSTANT_IQR = 1e-6
+# ── model definition ─────────────────────────────────────────────────────────
+# clean-2: one IsolationForest per CAN identifier (manifest schema 3). The
+# forest parameters are those of clean-1; the scaler is gone (IsolationForest
+# splits are invariant to per-feature linear rescaling) and the threshold is
+# calibrated per identifier (model_manifest.calibrate_threshold).
+MIN_TRAIN_ROWS = 2000              # a family needs at least this many ready rows
+MIN_ID_ROWS = 1000                 # an identifier needs this many for its own model:
+                                   # k = floor(0.02 x 1000) = 20 training rows lie below its threshold
+TARGET_CONTAMINATION = 0.02
 RANDOM_SEED = 42
-IFOREST_PARAMS = {"n_estimators": 200, "contamination": 0.02, "random_state": RANDOM_SEED, "n_jobs": 1}
-ROBUST_K = 3.0
+IFOREST_PARAMS = {"n_estimators": 200, "max_samples": "auto", "contamination": "auto",
+                  "random_state": RANDOM_SEED, "n_jobs": 1}
+MODEL_COMPRESSION = 3              # joblib zlib level for models.joblib
 
 
 class LeakageError(RuntimeError):
@@ -271,6 +288,11 @@ def build_plan(assets_root: Path = ASSETS_ROOT, log=print,
                 a.status, a.reason = "excluded", "family has insufficient training data"
         else:
             fam["status"] = "planned"
+        if vehicle in EXCLUDED_FAMILIES:
+            fam["status"], fam["reason"] = "excluded", EXCLUDED_FAMILIES[vehicle]
+            for a in recs:
+                if a.status in ("train", "holdout"):
+                    a.status, a.reason = "excluded", f"family excluded by policy: {EXCLUDED_FAMILIES[vehicle]}"
         plan.families[vehicle] = fam
 
     check_no_leakage(plan)
@@ -296,42 +318,78 @@ def corpus_fingerprint(recs: list[RecordingInfo]) -> str:
 
 # ── features and validation ──────────────────────────────────────────────────
 
-def recording_features(info: RecordingInfo, assets_root: Path) -> np.ndarray:
-    """Canonical features of one recording's ready frames, re-verified against the plan."""
+def recording_features(info: RecordingInfo, assets_root: Path) -> tuple[np.ndarray, np.ndarray]:
+    """Canonical features and CAN IDs of one recording's ready frames, re-verified against the plan.
+
+    Each recording starts from an empty feature state, so no window spans two
+    recordings.
+    """
     rec = Recording(info.vehicle, Path(assets_root) / info.path, info.fmt, info.frame_cap)
     with contextlib.redirect_stdout(io.StringIO()):
         frames = rec_mod.load_recording(rec)
     if rec_mod.content_hash(frames) != info.content_sha256:
         raise RuntimeError(f"{info.path} changed since it was planned")
-    x, ready = canonical.compute_features_frame(rec_mod.chronological(frames))
-    return x[ready]
+    frames = rec_mod.chronological(frames)
+    x, ready = canonical.compute_features_frame(frames)
+    return x[ready], frames["can_id"].to_numpy(dtype=np.int64)[ready]
 
 
-def select_features(x: np.ndarray) -> tuple[list[str], dict[str, str]]:
-    """Canonical features usable for this family; the others with the reason."""
+def varying_features(x: np.ndarray) -> tuple[list[str], dict[str, float]]:
+    """Canonical features that vary for one identifier; constant ones with their value.
+
+    A feature is dropped only when every training row has the same value: an
+    IsolationForest cannot split on it, so keeping it would change nothing.
+    """
     if not np.isfinite(x).all():
         raise ValueError(f"{int((~np.isfinite(x)).sum())} feature values are NaN or Inf")
     kept: list[str] = []
-    dropped: dict[str, str] = {}
+    constant: dict[str, float] = {}
     for i, name in enumerate(canonical.FEATURES):
         col = x[:, i]
-        iqr = float(np.subtract(*np.percentile(col, [75, 25])))
-        if iqr < NEAR_CONSTANT_IQR:
-            dropped[name] = f"near-constant (IQR {iqr:.3g}, std {float(col.std()):.3g})"
-        else:
+        if col.max() > col.min():
             kept.append(name)
-    return kept, dropped
+        else:
+            constant[name] = float(col[0])
+    return kept, constant
 
 
-def robust_threshold(scores: np.ndarray) -> dict:
-    median = float(np.median(scores))
-    mad = float(np.median(np.abs(scores - median)))
-    if mad < 1e-6:
-        value, method = float(np.quantile(scores, 0.02)), "p02_fallback_low_mad"
-    else:
-        value, method = median - ROBUST_K * mad, "median_minus_kmad"
-    return {"value": value, "method": method, "k": ROBUST_K, "median": median, "mad": mad,
-            "score_min": float(scores.min()), "score_max": float(scores.max()), "fit_rows": int(len(scores))}
+def fit_id_models(x: np.ndarray, ids: np.ndarray, id_recordings: np.ndarray) -> tuple[dict, dict, dict, dict]:
+    """One IsolationForest per identifier with enough rows; the rest classified.
+
+    Returns (models, id_models, sparse_ids, unmodelled_ids) keyed by "0x..." with
+    the manifest entries for each.
+    """
+    from sklearn.ensemble import IsolationForest
+
+    from backend.ml.runtime.model_manifest import calibrate_threshold, can_id_key
+
+    models, id_models, sparse, unmodelled = {}, {}, {}, {}
+    for cid in np.unique(ids):
+        key = can_id_key(int(cid))
+        rows = np.flatnonzero(ids == cid)
+        n_rec = int(len(np.unique(id_recordings[rows])))
+        if len(rows) < MIN_ID_ROWS:
+            sparse[key] = {"rows": int(len(rows)), "recordings": n_rec}
+            continue
+        xi = x[rows]
+        kept, constant = varying_features(xi)
+        if not kept:
+            unmodelled[key] = {"rows": int(len(rows)), "recordings": n_rec,
+                               "reason": "no canonical feature varies in training", "constant": constant}
+            continue
+        index = [canonical.FEATURES.index(f) for f in kept]
+        xf = np.ascontiguousarray(xi[:, index])
+        model = IsolationForest(**IFOREST_PARAMS).fit(xf)
+        cal = calibrate_threshold(model.score_samples(xf), TARGET_CONTAMINATION)
+        if not cal["median"] > cal["threshold"]:
+            unmodelled[key] = {"rows": int(len(rows)), "recordings": n_rec,
+                               "reason": "training scores do not separate (median equals threshold)"}
+            continue
+        models[key] = model
+        id_models[key] = {"features": kept, "constant_features": constant, "recordings": n_rec,
+                          **{k: cal[k] for k in ("threshold", "median", "rows", "k", "flagged_count",
+                                                 "ties_at_threshold")}}
+    return models, id_models, sparse, unmodelled
 
 
 # ── training (writes only to staging) ────────────────────────────────────────
@@ -363,14 +421,12 @@ def _output_dir(assets_root: Path, version: str, out_root: Path | None) -> Path:
 
 def train(version: str, assets_root: Path = ASSETS_ROOT, out_root: Path | None = None,
           plan: TrainingPlan | None = None, log=print) -> Path:
-    """Fit one model per planned family into ``<staging>/<version>/``. Returns that directory."""
+    """Fit per-CAN-ID models for every planned family into ``<staging>/<version>/``."""
     import joblib
     import sklearn
-    from sklearn.ensemble import IsolationForest
-    from sklearn.preprocessing import RobustScaler
 
     from backend.ml.runtime.model_manifest import (
-        CANONICAL_PIPELINE_NAME, FAMILY_SCHEMA_VERSION, MANIFEST_NAME, file_sha256, load_family_model,
+        CANONICAL_PIPELINE_NAME, ID_SCHEMA_VERSION, MANIFEST_NAME, SCORED, file_sha256, load_id_family,
     )
 
     assets_root = Path(assets_root)
@@ -389,17 +445,15 @@ def train(version: str, assets_root: Path = ASSETS_ROOT, out_root: Path | None =
         train_recs = plan.by_status("train", family)
         hold_recs = plan.by_status("holdout", family)
         try:
-            x = np.vstack([recording_features(r, assets_root) for r in train_recs])
+            parts = [recording_features(r, assets_root) for r in train_recs]
+            x = np.vstack([p[0] for p in parts])
+            ids = np.concatenate([p[1] for p in parts])
+            rec_of = np.concatenate([np.full(len(p[1]), i) for i, p in enumerate(parts)])
             if len(x) < MIN_TRAIN_ROWS:
                 raise ValueError(f"{len(x)} feature rows after warm-up (minimum {MIN_TRAIN_ROWS})")
-            kept, dropped = select_features(x)
-            if len(kept) < MIN_FEATURES:
-                raise ValueError(f"only {len(kept)} usable features ({dropped})")
-            index = [canonical.FEATURES.index(f) for f in kept]
-            xf = x[:, index]
-            scaler = RobustScaler().fit(xf)
-            model = IsolationForest(**IFOREST_PARAMS).fit(scaler.transform(xf))
-            threshold = robust_threshold(model.decision_function(scaler.transform(xf)))
+            models, id_models, sparse, unmodelled = fit_id_models(x, ids, rec_of)
+            if not id_models:
+                raise ValueError(f"no CAN ID has {MIN_ID_ROWS} training rows with a varying feature")
         except Exception as exc:
             results[family] = {"status": "failed", "reason": f"{type(exc).__name__}: {exc}"}
             log(f"  FAILED {family}: {exc}")
@@ -407,49 +461,67 @@ def train(version: str, assets_root: Path = ASSETS_ROOT, out_root: Path | None =
 
         fam_dir = out / family
         fam_dir.mkdir()
-        joblib.dump(scaler, fam_dir / "scaler.joblib")
-        joblib.dump(model, fam_dir / "model.joblib")
+        joblib.dump(models, fam_dir / "models.joblib", compress=MODEL_COMPRESSION)
         corpus = {"fingerprint": corpus_fingerprint(train_recs),
                   "recordings": [_rec_entry(r) for r in train_recs]}
         holdout = {"recordings": [_rec_entry(r) for r in hold_recs]}
-        _write_json(fam_dir / "features.json", {"feature_pipeline": canonical.FEATURE_VERSION,
-                                                "window": canonical.WINDOW, "features": kept,
-                                                "dropped_features": dropped})
-        _write_json(fam_dir / "threshold.json", threshold)
+        calibration = {"method": "empirical_quantile_strict", "target_contamination": TARGET_CONTAMINATION,
+                       "definition": "threshold = (k+1)-th smallest training score_samples value, "
+                                     "k = floor(target_contamination x rows); flagged iff score < threshold; "
+                                     "ties at the threshold are not flagged"}
+        _write_json(fam_dir / "features.json", {"feature_pipeline": canonical.FEATURE_VERSION, "window": canonical.WINDOW,
+                                                "per_can_id": {k: {"features": v["features"],
+                                                                   "constant_features": v["constant_features"]}
+                                                               for k, v in id_models.items()}})
+        _write_json(fam_dir / "thresholds.json", {"calibration": calibration,
+                                                  "per_can_id": {k: {c: v[c] for c in ("threshold", "median", "rows", "k",
+                                                                                       "flagged_count", "ties_at_threshold")}
+                                                                 for k, v in id_models.items()}})
         _write_json(fam_dir / "corpus.json", {"training": corpus, "holdout": holdout})
         manifest = {
-            "schema_version": FAMILY_SCHEMA_VERSION,
+            "schema_version": ID_SCHEMA_VERSION,
             "model_family": family,
             "model_version": version,
             "created_at": _now(),
             "training_pipeline": {"name": PIPELINE_NAME, "version": PIPELINE_VERSION, **git},
             "feature_pipeline": {"name": CANONICAL_PIPELINE_NAME, "version": canonical.FEATURE_VERSION,
                                  "window": canonical.WINDOW},
-            "features": kept,
-            "dropped_features": dropped,
-            "scaler": {"path": "scaler.joblib", "sha256": file_sha256(fam_dir / "scaler.joblib")},
-            "model": {"path": "model.joblib", "sha256": file_sha256(fam_dir / "model.joblib")},
-            "model_params": {"scaler": "RobustScaler", "model": "IsolationForest", **IFOREST_PARAMS},
-            "threshold": threshold,
+            "model_type": "isolation_forest_per_can_id",
+            "model_params": {"model": "IsolationForest", "scaler": None, **IFOREST_PARAMS},
+            "calibration": calibration,
+            "min_id_rows": MIN_ID_ROWS,
+            "models_file": {"path": "models.joblib", "sha256": file_sha256(fam_dir / "models.joblib")},
+            "id_models": id_models,
+            "sparse_ids": sparse,
+            "unmodelled_ids": unmodelled,
             "training_corpus": corpus,
             "holdout": holdout,
             "environment": env,
         }
         _write_json(fam_dir / MANIFEST_NAME, manifest)
-        bundle = load_family_model(out, family)          # the staged family must validate as written
+        bundle = load_id_family(out, family)             # the staged family must validate as written
 
-        # Holdout is scored, never fitted on: report how the model sees unseen normal traffic.
+        # Holdout is scored, never fitted or calibrated on.
         evaluation = []
         for r in hold_recs:
-            xh = recording_features(r, assets_root)
-            s = bundle.score(xh)
-            evaluation.append({"path": r.path, "rows": int(len(s)),
-                               "above_threshold": int((s >= 0.5).sum()),
-                               "share_above_threshold": float((s >= 0.5).mean()) if len(s) else None})
-        results[family] = {"status": "staged", "features": kept, "dropped_features": dropped,
-                           "training_rows": int(len(x)), "threshold": threshold["value"],
-                           "holdout_evaluation": evaluation}
-        log(f"  staged {family}: {len(x):,} rows, {len(kept)} features")
+            xh, idh = recording_features(r, assets_root)
+            _, flagged, status = bundle.score_rows(xh, idh)
+            scored = status == SCORED
+            evaluation.append({
+                "path": r.path, "rows": int(len(idh)),
+                "status_rows": {s: int((status == s).sum()) for s in sorted(set(status.tolist()))},
+                "scored_rows": int(scored.sum()), "flagged": int(flagged.sum()),
+                "flagged_share_of_scored": float(flagged[scored].mean()) if scored.any() else None,
+            })
+        train_rows_scored = sum(v["rows"] for v in id_models.values())
+        results[family] = {
+            "status": "staged", "training_rows": int(len(x)), "can_ids": int(len(np.unique(ids))),
+            "id_models": len(id_models), "sparse_ids": len(sparse), "unmodelled_ids": len(unmodelled),
+            "training_rows_modelled": int(train_rows_scored),
+            "training_flagged": int(sum(v["flagged_count"] for v in id_models.values())),
+            "holdout_evaluation": evaluation,
+        }
+        log(f"  staged {family}: {len(id_models)} CAN-ID models, {len(sparse)} sparse, {len(unmodelled)} unmodelled")
 
     _write_json(out / "training_report.json", {"version": version, "plan": plan.to_dict(), "results": results,
                                                "environment": env, "training_pipeline": git})
@@ -458,7 +530,8 @@ def train(version: str, assets_root: Path = ASSETS_ROOT, out_root: Path | None =
     _write_json(out / "pipeline.json", {"name": PIPELINE_NAME, "version": PIPELINE_VERSION,
                                         "feature_pipeline": canonical.FEATURE_VERSION,
                                         "window": canonical.WINDOW, "features": list(canonical.FEATURES),
-                                        "model_params": IFOREST_PARAMS, "robust_k": ROBUST_K,
+                                        "model_params": IFOREST_PARAMS, "min_id_rows": MIN_ID_ROWS,
+                                        "target_contamination": TARGET_CONTAMINATION,
                                         "min_train_rows": MIN_TRAIN_ROWS, **git})
     return out
 

@@ -17,7 +17,7 @@ import pandas as pd
 import pytest
 
 from backend.ml.features import canonical
-from backend.ml.runtime.model_manifest import ManifestError, load_family_model, load_validated_bundle
+from backend.ml.runtime.model_manifest import ManifestError, load_id_family, load_validated_bundle
 from backend.ml.training import clean_pipeline as cp
 from backend.ml.training import model_promotion as mp
 from backend.ml.training import recordings as rec
@@ -223,6 +223,21 @@ def test_containment_check() -> None:
     assert not rec.contains(big, rec.traffic_rows(_traffic(5, 2))[:50])
 
 
+def test_policy_excluded_family_is_not_trained(assets, monkeypatch) -> None:
+    monkeypatch.setitem(cp.EXCLUDED_FAMILIES, "alpha_car", "test policy")
+    plan = cp.build_plan(assets, log=lambda *_: None, protected_files=PROTECTED)
+    assert plan.families["alpha_car"]["status"] == "excluded"
+    assert plan.families["alpha_car"]["reason"] == "test policy"
+    alpha = [r for r in plan.recordings if r.vehicle == "alpha_car"]
+    assert alpha and not any(r.status in ("train", "holdout") for r in alpha)
+    assert all("test policy" in r.reason or "identical traffic" in r.reason for r in alpha)
+
+
+def test_nissan_leaf_is_excluded_by_policy() -> None:
+    assert "nissan_leaf" in cp.EXCLUDED_FAMILIES
+    assert "nissan_leaf_2019" not in cp.EXCLUDED_FAMILIES
+
+
 def test_single_recording_family_has_no_holdout(plan) -> None:
     assert _status(plan, "only.log").status == "train"
     assert plan.families["beta_car"]["holdout_recordings"] == 0
@@ -239,19 +254,27 @@ def test_leakage_check_raises(plan) -> None:
 
 # ── feature validation ───────────────────────────────────────────────────────
 
-def test_constant_feature_is_dropped_with_reason() -> None:
+def test_constant_feature_is_dropped_with_its_value() -> None:
     rng = np.random.default_rng(0)
     x = rng.normal(size=(3000, len(canonical.FEATURES)))
     x[:, canonical.FEATURES.index("payload_entropy")] = 1.5
-    kept, dropped = cp.select_features(x)
-    assert "payload_entropy" not in kept and "near-constant" in dropped["payload_entropy"]
+    kept, constant = cp.varying_features(x)
+    assert "payload_entropy" not in kept and constant == {"payload_entropy": 1.5}
+
+
+def test_rarely_changing_feature_is_kept() -> None:
+    """IQR 0 is not constant: a feature that changes on a few rows still separates them."""
+    x = np.zeros((3000, len(canonical.FEATURES)))
+    x[::97, canonical.FEATURES.index("byte_diff")] = 2.0
+    kept, _ = cp.varying_features(x)
+    assert "byte_diff" in kept
 
 
 def test_nan_features_are_rejected() -> None:
     x = np.zeros((10, len(canonical.FEATURES)))
     x[3, 2] = np.nan
     with pytest.raises(ValueError, match="NaN or Inf"):
-        cp.select_features(x)
+        cp.varying_features(x)
 
 
 # ── staging ──────────────────────────────────────────────────────────────────
@@ -272,12 +295,13 @@ def test_staged_families_validate_and_carry_their_corpus(staged, plan) -> None:
     families = mp.validate_staging(staged)
     assert set(families) == {"alpha_car", "beta_car", "gamma_car", "echo_car"}   # sierra_car: all protected
     m = families["alpha_car"].manifest
-    assert m["schema_version"] == 2 and m["feature_pipeline"]["version"] == canonical.FEATURE_VERSION
+    assert m["schema_version"] == 3 and m["feature_pipeline"]["version"] == canonical.FEATURE_VERSION
+    assert m["model_params"]["scaler"] is None
     trained = {r["path"] for r in m["training_corpus"]["recordings"]}
     held = {r["path"] for r in m["holdout"]["recordings"]}
     assert trained == {"EV-CANlogs-main/Alpha Car/rec_a.log", "EV-CANlogs-main/Alpha Car/rec_b.log"}
     assert held == {"EV-CANlogs-main/Alpha Car/rec_c.log"}
-    for f in ("model.joblib", "scaler.joblib", "features.json", "threshold.json", "corpus.json", "manifest.json"):
+    for f in ("models.joblib", "features.json", "thresholds.json", "corpus.json", "manifest.json"):
         assert (staged / "alpha_car" / f).is_file()
     for f in ("training_report.json", "corpus.json", "pipeline.json"):
         assert (staged / f).is_file()
@@ -290,30 +314,52 @@ def test_offline_scoring_with_a_staged_family(staged) -> None:
 
     frames = _traffic(5, 11)
     scored = score_frames(frames, "alpha_car", model_root=staged)
-    warm = scored["vehicle_state"] == "unresolved"
-    assert warm.sum() == 3 * canonical.WINDOW                   # first WINDOW frames of each of 3 IDs
-    assert scored.loc[~warm, "anomaly_score"].between(0, 1).all()
-    assert scored.loc[~warm, "anomaly"].isin([-1, 1]).all()
-    assert (scored.loc[warm, "anomaly"] == 0).all() and scored.loc[warm, "anomaly_score"].isna().all()
+    reason = scored["state_resolution"].str.split(":").str[0]
+    assert (reason == "warmup").sum() == 3 * canonical.WINDOW          # first WINDOW frames of each of 3 IDs
+    assert set(reason) == {"", "warmup", "sparse_id"}                   # 0x300 has too few training rows
+    ok = reason == ""
+    assert scored.loc[ok, "anomaly_score"].between(0, 1).all()
+    assert scored.loc[ok, "anomaly"].isin([-1, 1]).all()
+    assert (scored.loc[~ok, "anomaly"] == 0).all() and scored.loc[~ok, "anomaly_score"].isna().all()
 
 
-def test_live_engine_uses_the_same_features_as_batch(staged) -> None:
+def test_live_engine_scores_exactly_like_offline(staged) -> None:
+    """Same frames, same family: the live engine's model scores equal the batch ones."""
     from backend.ml.runtime.realtime_engine import CanFrame, RealtimeEngine
+    from backend.ml.runtime.vehicle_scoring import score_frames
 
     frames = _traffic(4, 12)
+    offline = score_frames(frames, "alpha_car", model_root=staged)
     engine = RealtimeEngine(vehicle_id="alpha_car", model_root=staged)
-    assert engine._family is not None
-    seen = []
-    original = engine._family.score
-    engine._family.score = lambda x: (seen.append(np.asarray(x)[0].tolist()), original(x))[1]
+    live_norm, live_state = [], []
     for r in frames.itertuples(index=False):
-        engine.process_frame(CanFrame(r.timestamp, int(r.can_id), tuple(int(getattr(r, f"b{i}")) for i in range(8))))
-    x, ready = canonical.compute_features_frame(frames)
-    batch_rows = [row.tolist() for row in x[ready]]
-    assert seen and all(v in batch_rows for v in seen)
+        out = engine.process_frame(CanFrame(r.timestamp, int(r.can_id), tuple(int(getattr(r, f"b{i}")) for i in range(8))))
+        live_norm.append(out["ml_norm"])
+        live_state.append(out["vehicle_state"])
+    live_state = np.array(live_state)
+    # the live engine re-scores every _ML_STRIDE frames per ID; compare where it scored this frame
+    from backend.ml.runtime.realtime_engine import _ML_STRIDE
+    counts: dict[int, int] = {}
+    fresh = []
+    for cid in frames["can_id"]:
+        counts[cid] = counts.get(cid, 0) + 1
+        fresh.append(counts[cid])
+    fresh = np.array(fresh)
+    ok = (offline["state_resolution"] == "").to_numpy()
+    assert (live_state[ok] == "can_id_model").all()
+    assert set(live_state[~ok]) <= {"warmup", "sparse_id"}
+    first = np.zeros(len(frames), dtype=bool)
+    seen: set[int] = set()
+    for i, (cid, good) in enumerate(zip(frames["can_id"], ok)):
+        if good and cid not in seen:
+            first[i] = True
+            seen.add(cid)
+    check = ok & ((fresh % _ML_STRIDE == 0) | first)
+    assert check.sum() > 50
+    assert np.array_equal(np.asarray(live_norm)[check], offline["anomaly_score"].to_numpy()[check])
 
 
-# ── schema 2 validation (Step 9 checks stay active) ──────────────────────────
+# ── schema 3 validation ──────────────────────────────────────────────────────
 
 def _copy_family(staged: Path, tmp: Path) -> Path:
     import shutil
@@ -328,36 +374,40 @@ def _edit(root: Path, fn) -> None:
     p.write_text(json.dumps(m))
 
 
-def test_tampered_model_fails(staged, tmp_path) -> None:
+def _first_id(m: dict) -> dict:
+    return m["id_models"][sorted(m["id_models"])[0]]
+
+
+def test_tampered_models_file_fails(staged, tmp_path) -> None:
     root = _copy_family(staged, tmp_path)
-    (root / "alpha_car" / "model.joblib").write_bytes(b"x")
+    (root / "alpha_car" / "models.joblib").write_bytes(b"x")
     with pytest.raises(ManifestError, match="does not match"):
-        load_family_model(root, "alpha_car")
+        load_id_family(root, "alpha_car")
 
 
 def test_other_feature_pipeline_version_fails(staged, tmp_path) -> None:
     root = _copy_family(staged, tmp_path)
     _edit(root, lambda m: m["feature_pipeline"].__setitem__("version", "canonical-0"))
     with pytest.raises(ManifestError, match="feature pipeline"):
-        load_family_model(root, "alpha_car")
+        load_id_family(root, "alpha_car")
 
 
 def test_feature_the_runtime_cannot_produce_fails(staged, tmp_path) -> None:
     root = _copy_family(staged, tmp_path)
-    _edit(root, lambda m: m["features"].__setitem__(0, "rolling_min_byte_diff"))
+    _edit(root, lambda m: _first_id(m)["features"].__setitem__(0, "rolling_min_byte_diff"))
     with pytest.raises(ManifestError, match="not produced by the canonical runtime"):
-        load_family_model(root, "alpha_car")
+        load_id_family(root, "alpha_car")
 
 
 def test_training_holdout_overlap_fails(staged, tmp_path) -> None:
     root = _copy_family(staged, tmp_path)
     _edit(root, lambda m: m["holdout"]["recordings"].append(m["training_corpus"]["recordings"][0]))
     with pytest.raises(ManifestError, match="both training and holdout"):
-        load_family_model(root, "alpha_car")
+        load_id_family(root, "alpha_car")
 
 
-def test_schema_1_loader_refuses_a_schema_2_family(staged) -> None:
-    with pytest.raises(ManifestError, match="unsupported schema_version 2"):
+def test_schema_1_loader_refuses_a_schema_3_family(staged) -> None:
+    with pytest.raises(ManifestError, match="unsupported schema_version 3"):
         load_validated_bundle(staged, "alpha_car")
 
 
@@ -365,7 +415,7 @@ def test_live_engine_refuses_an_invalid_family(staged, tmp_path) -> None:
     from backend.ml.runtime.realtime_engine import RealtimeEngine
 
     root = _copy_family(staged, tmp_path)
-    (root / "alpha_car" / "scaler.joblib").write_bytes(b"x")
+    (root / "alpha_car" / "models.joblib").write_bytes(b"x")
     with pytest.raises(ManifestError):
         RealtimeEngine(vehicle_id="alpha_car", model_root=root)
 
@@ -376,7 +426,7 @@ def test_invalid_staging_never_reaches_production(staged, tmp_path) -> None:
     import shutil
     bad = tmp_path / "staging" / "bad"
     shutil.copytree(staged, bad)
-    (bad / "beta_car" / "model.joblib").write_bytes(b"x")
+    (bad / "beta_car" / "models.joblib").write_bytes(b"x")
     prod = tmp_path / "models"
     (prod / "alpha_car").mkdir(parents=True)
     (prod / "alpha_car" / "model_idle.joblib").write_bytes(b"old")
@@ -401,16 +451,57 @@ def test_promotion_swaps_in_validated_families_and_archives_the_old(staged, tmp_
     assert (Path(record["archive_dir"]) / "alpha_car" / "model_idle.joblib").read_bytes() == b"old"
     assert (prod / "untouched" / "x.bin").read_bytes() == b"keep"
     assert not any(p.name.startswith(".incoming") for p in prod.iterdir())
-    load_family_model(prod, "alpha_car")
+    load_id_family(prod, "alpha_car")
     listed = {m["id"]: m for m in list_available_models(assets)}
-    assert listed["alpha_car"]["kind"] == "single"
+    assert listed["alpha_car"]["kind"] == "per_can_id"
 
 
 def test_real_production_models_are_untouched_by_this_module() -> None:
-    """The module's defaults point at staging; the real assets/models has no schema-2 family yet."""
+    """The module's defaults point at staging; the real assets/models has no clean family yet."""
     assert cp.staging_root() == REPO / "assets" / "models_staging"
     assert cp.production_root() == REPO / "assets" / "models"
     assert not any((p / "manifest.json").is_file() for p in (REPO / "assets" / "models").iterdir() if p.is_dir())
+
+
+CLEAN_1 = REPO / "assets" / "models_staging" / "clean-1-001"
+
+
+@pytest.mark.skipif(not CLEAN_1.is_dir(), reason="clean-1-001 reference version not present")
+def test_clean_1_reference_version_still_validates() -> None:
+    """The schema-2 experiment stays loadable as a reference; nothing here rewrites it."""
+    families = mp.validate_staging(CLEAN_1)
+    assert len(families) == 9
+    assert all(f.manifest["schema_version"] == 2 for f in families.values())
+
+
+# ── calibration metadata recorded and checked ────────────────────────────────
+
+def test_manifest_records_calibration(staged) -> None:
+    m = json.loads((staged / "alpha_car" / "manifest.json").read_text())
+    assert m["calibration"]["method"] == "empirical_quantile_strict"
+    assert m["calibration"]["target_contamination"] == cp.TARGET_CONTAMINATION
+    assert m["min_id_rows"] == cp.MIN_ID_ROWS
+    for key, e in m["id_models"].items():
+        assert e["k"] == int(cp.TARGET_CONTAMINATION * e["rows"]) and 0 <= e["flagged_count"] <= e["k"]
+        assert e["median"] > e["threshold"] and e["rows"] >= cp.MIN_ID_ROWS
+    assert "0x300" in m["sparse_ids"]
+
+
+@pytest.mark.parametrize("mutate, message", [
+    (lambda m: _first_id(m).__setitem__("k", _first_id(m)["k"] + 1), "does not equal floor"),
+    (lambda m: _first_id(m).__setitem__("flagged_count", _first_id(m)["k"] + 1), "flagged_count"),
+    (lambda m: _first_id(m).__setitem__("median", _first_id(m)["threshold"]), "is not above threshold"),
+    (lambda m: _first_id(m).__setitem__("threshold", float("nan")), "not finite"),
+    (lambda m: _first_id(m).__setitem__("rows", 10), "below min_id_rows"),
+    (lambda m: m["calibration"].__setitem__("method", "median_minus_kmad"), "unknown calibration method"),
+    (lambda m: m["sparse_ids"].__setitem__("0x300", {"rows": 50_000}), "sparse means fewer than"),
+    (lambda m: m["id_models"].pop(sorted(m["id_models"])[0]), "disagree on CAN IDs"),
+])
+def test_inconsistent_calibration_metadata_fails(staged, tmp_path, mutate, message) -> None:
+    root = _copy_family(staged, tmp_path)
+    _edit(root, mutate)
+    with pytest.raises(ManifestError, match=message):
+        load_id_family(root, "alpha_car")
 
 
 # ── the real Skoda demo recordings ───────────────────────────────────────────
@@ -419,7 +510,8 @@ SKODA_MF4 = REPO / "assets" / "Train" / "Skoda Enyaq"
 
 
 def test_all_skoda_demo_files_are_protected() -> None:
-    assert {p.as_posix() for p in cp.PROTECTED_EVALUATION_FILES} ==         {f"Skoda Enyaq/file_{n}.csv" for n in range(12, 19)}
+    assert {p.as_posix() for p in cp.PROTECTED_EVALUATION_FILES} == \
+        {f"Skoda Enyaq/file_{n}.csv" for n in range(12, 19)}
 
 
 @pytest.mark.skipif(not SKODA_MF4.is_dir() or not (REPO / "assets" / "Skoda Enyaq" / "file_16.csv").is_file(),

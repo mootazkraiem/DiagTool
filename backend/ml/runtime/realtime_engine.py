@@ -24,22 +24,30 @@ except ModuleNotFoundError:
     from backend.ml.runtime.state_manager import StateManager
 
 from backend.ml.features.canonical import CanonicalFeatureStream
-from backend.ml.runtime.model_manifest import FAMILY_SCHEMA_VERSION, FamilyModel, load_family_model, manifest_schema
+from backend.ml.runtime.model_manifest import (
+    FAMILY_SCHEMA_VERSION,
+    ID_SCHEMA_VERSION,
+    SCORED,
+    FamilyModel,
+    IdModelFamily,
+    load_any_family,
+    manifest_schema,
+)
 
 
-def _load_family(vehicle_id: str, model_root: Path | None = None) -> FamilyModel | None:
-    """The vehicle's single-model family (schema 2), or None when it has none.
+def _load_family(vehicle_id: str, model_root: Path | None = None) -> FamilyModel | IdModelFamily | None:
+    """The vehicle's clean family (manifest schema 2 or 3), or None when it has none.
 
-    A family that has a schema-2 manifest but fails validation raises
+    A family that has such a manifest but fails validation raises
     ManifestError: it is never scored, and never silently replaced by the
     legacy models.
     """
     from backend.ml.runtime.model_loader import _default_assets_root
 
     root = model_root if model_root is not None else _default_assets_root() / "models"
-    if not vehicle_id or manifest_schema(root, vehicle_id) != FAMILY_SCHEMA_VERSION:
+    if not vehicle_id or manifest_schema(root, vehicle_id) not in (FAMILY_SCHEMA_VERSION, ID_SCHEMA_VERSION):
         return None
-    return load_family_model(root, vehicle_id)
+    return load_any_family(root, vehicle_id)
 
 
 # Thresholds for DoS frequency detection heuristic
@@ -93,10 +101,10 @@ class RealtimeEngine:
         # A promoted single-model family scores canonical features - the same
         # definitions training and offline analysis use - computed on every
         # frame. Vehicles without one keep the legacy state-routed models.
-        self._family: FamilyModel | None = _load_family(self.vehicle_id, model_root)
+        self._family: FamilyModel | IdModelFamily | None = _load_family(self.vehicle_id, model_root)
         self._canonical = CanonicalFeatureStream()
         if self._family is not None:
-            print(f"[RUNTIME] Single-model family: {self._family.family} "
+            print(f"[RUNTIME] Clean model family: {self._family.family} "
                   f"({self._family.manifest.get('model_version')})")
 
         # Global sliding window of recent CAN-IDs for cross-ID entropy (Fuzzy detection)
@@ -150,6 +158,21 @@ class RealtimeEngine:
                 # model score for it, and the output says so.
                 ml_norm = 0.0
                 vehicle_state = "warmup"
+            elif isinstance(self._family, IdModelFamily):
+                # Per-CAN-ID family: only this identifier's own model may score
+                # the frame. A sparse, unmodelled or unseen identifier gets no
+                # model score and is reported under that status.
+                status = self._family.status(frame.can_id)
+                if status != SCORED:
+                    ml_norm = 0.0
+                    vehicle_state = status
+                else:
+                    if st.ml_frame_count % _ML_STRIDE == 0 or st.last_vehicle_state != "can_id_model":
+                        norm, _, _ = self._family.score_one(vec, frame.can_id)
+                        st.last_ml_norm = float(norm)
+                        st.last_vehicle_state = "can_id_model"
+                    ml_norm = st.last_ml_norm
+                    vehicle_state = "can_id_model"
             else:
                 if st.ml_frame_count % _ML_STRIDE == 0 or st.last_vehicle_state != "vehicle":
                     st.last_ml_norm = float(self._family.score(_np.asarray([vec]))[0])
