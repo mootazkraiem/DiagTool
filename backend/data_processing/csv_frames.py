@@ -40,6 +40,10 @@ _ZERO_BASED = re.compile(r"^(?:b|byte|data)(\d+)$")
 _ONE_BASED = re.compile(r"^d(\d+)$")
 _SAMPLE_ROWS = 500
 
+# OUTPUT_COLUMNS as _normalize() renders a header row ("can_id" -> "canid"),
+# used to recognise this project's own MF4-converter output exactly.
+_CANONICAL_MF4_COLUMNS = ["timestamp", "canid", "b0", "b1", "b2", "b3", "b4", "b5", "b6", "b7"]
+
 
 def parse_csv_frames(raw: bytes, source_name: str = "") -> pd.DataFrame:
     """Parse column-format CSV bytes into ``timestamp, can_id, b0..b7, source_file``."""
@@ -96,8 +100,22 @@ def _layout_from_header(header_line: str, header: list[str]) -> dict | None:
     if array_index < 0 and not byte_columns:
         return None
 
+    # Radix when the data itself carries no evidence either way (_decide_radix
+    # overrides this whenever it finds any).
+    #
+    # Two formats are known to be decimal at the source. An asammdf MF4 export
+    # writes decimal, and so does this project's own MF4 converter, whose output
+    # is exactly `timestamp,can_id,b0..b7` and whose _normalize_can_id() does
+    # int(float(text)). Identifiers in that file - 2028, 2020, 25 - are all valid
+    # hex that stay inside MAX_CAN_ID, so nothing contradicts a hex default and
+    # UDS response id 0x7EC was being read as 0x2028.
+    #
+    # The match is on the exact canonical column list, not merely on the presence
+    # of a `can_id` column: replay logs carry the same first ten columns followed
+    # by `state,attack_type` and are hex, and they must keep reading as hex.
     asammdf = "can_dataframe" in header_line.lower()
-    default = "dec" if asammdf else "hex"
+    canonical_mf4 = names == _CANONICAL_MF4_COLUMNS
+    default = "dec" if (asammdf or canonical_mf4) else "hex"
     return {
         "ts": ts_index,
         "id": id_index,

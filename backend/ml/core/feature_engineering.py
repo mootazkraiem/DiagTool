@@ -30,7 +30,7 @@ FEATURE_COLS = [
 ]
 
 
-def build_features(df: pd.DataFrame) -> pd.DataFrame:
+def build_features(df: pd.DataFrame, keep_payload: bool = False) -> pd.DataFrame:
     if any(col.startswith("byte_") for col in df.columns):
         raise ValueError("raw byte_ columns detected in input")
 
@@ -56,7 +56,8 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
         base[c] = pd.to_numeric(base[c], errors="coerce")
     base = base.dropna().sort_values(["can_id", "timestamp"]).reset_index(drop=True)
     if base.empty:
-        return pd.DataFrame(columns=["timestamp", "can_id", "is_padded", *FEATURE_COLS])
+        empty_payload = BYTE_COLS if keep_payload else []
+        return pd.DataFrame(columns=["timestamp", "can_id", "is_padded", *empty_payload, *FEATURE_COLS])
 
     # 1) compute raw features
     out = base.copy()
@@ -158,9 +159,17 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     out["inter_arrival_cv"] = np.log1p(out["inter_arrival_cv"])
 
     # 4) drop raw bytes only after feature creation
-    out = out.drop(columns=BYTE_COLS, errors="ignore")
+    #
+    # keep_payload carries them through instead, for callers that score the
+    # frame itself rather than only its engineered features. The bytes travel on
+    # their own row, so they stay with their frame through the sort above; the
+    # engineered columns and every existing caller are unaffected, because the
+    # default drops them exactly as before.
+    kept_payload = [c for c in BYTE_COLS if c in out.columns] if keep_payload else []
+    if not kept_payload:
+        out = out.drop(columns=BYTE_COLS, errors="ignore")
 
-    out = out[["timestamp", "can_id", *FEATURE_COLS]]
+    out = out[["timestamp", "can_id", *kept_payload, *FEATURE_COLS]]
     out[FEATURE_COLS] = out[FEATURE_COLS].clip(-10, 10)
     out = out.replace([np.inf, -np.inf], np.nan).dropna(subset=FEATURE_COLS)
     return out
@@ -188,10 +197,10 @@ def normalize_per_can_id(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def preprocess_pipeline(df: pd.DataFrame, scaler: object = None, fit: bool = False):
+def preprocess_pipeline(df: pd.DataFrame, scaler: object = None, fit: bool = False, keep_payload: bool = False):
     from sklearn.preprocessing import RobustScaler
 
-    feat_df = build_features(df)
+    feat_df = build_features(df, keep_payload=keep_payload)
 
     # Filter per CAN ID (keep only CAN IDs with temporal/content variation)
     valid_groups: list[pd.DataFrame] = []
@@ -230,9 +239,47 @@ def preprocess_pipeline(df: pd.DataFrame, scaler: object = None, fit: bool = Fal
     return feat_df, X_scaled, scaler
 
 
+_PAYLOAD_COLS = [f"b{i}" for i in range(8)]
+
+
 def add_features(df: pd.DataFrame) -> pd.DataFrame:
-    feat_df, _, _ = preprocess_pipeline(df, scaler=None, fit=True)
-    return feat_df[["timestamp", "can_id", *FEATURE_COLS]]
+    """Engineered features, with the frame's own payload carried alongside.
+
+    The engineered columns describe how a frame behaves; the payload is what it
+    said. Both are needed downstream: the runtime scorer
+    (backend.ml.runtime.vehicle_scoring.score_frames) rebuilds its own per-frame
+    features from the raw bytes and silently falls back to an all-zero payload
+    when the byte columns are absent. Returning only timestamp, can_id and the
+    engineered columns meant /analyze scored every frame of every recording as
+    though its eight data bytes were zero.
+
+    The bytes are the frame's own, carried through the pipeline on their own
+    row - nothing is reconstructed and nothing is filled in. They have to travel
+    with the row rather than be re-attached afterwards, because build_features
+    sorts by (can_id, timestamp) and drops incomplete rows: pairing by position
+    after the fact would hand a frame another frame's payload.
+    """
+    feat_df, _, _ = preprocess_pipeline(df, scaler=None, fit=True, keep_payload=True)
+    payload_cols = [c for c in _PAYLOAD_COLS if c in feat_df.columns]
+    out = feat_df[["timestamp", "can_id", *payload_cols, *FEATURE_COLS]]
+
+    # Chronological order on the way out.
+    #
+    # build_features groups by identifier because that is what its rolling
+    # per-CAN-ID columns need, and those values are already computed by the time
+    # we get here. What comes next does not want that order: the runtime scorer
+    # walks these rows through a stateful engine, and the engine's can_id_entropy
+    # is the entropy of the last 200 identifiers it saw. Handed the grouped
+    # frame, that window holds a single identifier, entropy collapses from about
+    # 2.07 to 0.05, the state classifier answers "parking" for traffic that was
+    # recorded while driving, and every frame whose vehicle has no parking model
+    # is returned unscored. On one real recording that silently dropped 17,539
+    # of 19,339 frames.
+    #
+    # Training computes its entropy over the whole dataset, so chronological
+    # order is also the order the models were fitted to expect. A stable sort
+    # keeps frames that share a timestamp in the order they arrived.
+    return out.sort_values("timestamp", kind="mergesort").reset_index(drop=True)
 
 
 def load_kaggle_dataset(path: str | Path) -> pd.DataFrame:

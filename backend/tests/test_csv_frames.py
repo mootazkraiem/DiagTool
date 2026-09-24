@@ -97,3 +97,67 @@ def test_headerless_csv_keeps_previous_behaviour() -> None:
     df = parse_csv_frames(b"0.1,1A0,DE,AD,BE,EF,01,02,03,04\n0.2,7DF,02,01,00,00,00,00,00,00\n", "h.csv")
     assert df["can_id"].tolist() == [0x1A0, 0x7DF]
     assert df.iloc[0][[f"b{k}" for k in range(8)]].tolist() == [0xDE, 0xAD, 0xBE, 0xEF, 1, 2, 3, 4]
+
+
+# ── canonical MF4-converter output is decimal ────────────────────────────────
+#
+# The converter writes can_id via int(float(text)), so 2028 is decimal (UDS
+# response 0x7EC), not hex 0x2028. Values like 2028/2020/25 are valid hex that
+# stay inside MAX_CAN_ID, so nothing in the data contradicts a hex reading and
+# the default decides. Matching is on the exact ten-column canonical header:
+# replay logs add state/attack_type and stay hex (test above).
+
+CANONICAL_MF4 = (
+    b"timestamp,can_id,b0,b1,b2,b3,b4,b5,b6,b7\n"
+    b"0.0,2028,16,62,98,1,1,239,251,231\n"
+    b"0.25,2020,3,34,1,1,170,170,170,170\n"
+    b"0.50,25,15,36,176,201,0,238,79,127\n"
+    b"0.75,5,111,227,180,6,111,227,180,6\n"
+)
+
+
+def test_canonical_mf4_header_reads_ids_as_decimal() -> None:
+    df = parse_csv_frames(CANONICAL_MF4, "converted.csv")
+    assert df["can_id"].tolist() == [0x7EC, 0x7E4, 0x19, 0x5]
+    assert [f"0x{v:X}" for v in df["can_id"]] == ["0x7EC", "0x7E4", "0x19", "0x5"]
+
+
+def test_canonical_mf4_payload_bytes_are_decimal() -> None:
+    df = parse_csv_frames(CANONICAL_MF4, "converted.csv")
+    assert df.iloc[0][[f"b{k}" for k in range(8)]].tolist() == [16, 62, 98, 1, 1, 239, 251, 231]
+    assert df.iloc[3][[f"b{k}" for k in range(8)]].tolist() == [111, 227, 180, 6, 111, 227, 180, 6]
+
+
+def test_canonical_mf4_hex_ids_still_win_over_the_decimal_default() -> None:
+    """Evidence beats the default: an 0x prefix or a hex letter is still hex."""
+    raw = (
+        b"timestamp,can_id,b0,b1,b2,b3,b4,b5,b6,b7\n"
+        b"0.0,7EC,1,2,3,4,5,6,7,8\n"
+        b"0.1,7E4,1,2,3,4,5,6,7,8\n"
+    )
+    assert parse_csv_frames(raw, "hexish.csv")["can_id"].tolist() == [0x7EC, 0x7E4]
+
+
+def test_extra_columns_are_not_the_canonical_format() -> None:
+    """timestamp,can_id,b0..b7,state,attack_type is a replay log and stays hex."""
+    raw = (
+        b"timestamp,can_id,b0,b1,b2,b3,b4,b5,b6,b7,state,attack_type\n"
+        b"0.0,260,0,128,0,51,0,80,5,0,idle,none\n"
+    )
+    assert parse_csv_frames(raw, "replay.csv")["can_id"].tolist() == [0x260]
+
+
+def test_real_converted_file_matches_the_replay_loader() -> None:
+    """The two Python entry points must read one file identically."""
+    converted = ROOT / "backend" / "ml" / "outputs" / "mf4_converted" / "00000158-64CBC290_0da3381ea433ee5a.csv"
+    if not converted.exists():
+        import pytest
+        pytest.skip("converted MF4 not present")
+
+    from backend.offline.session_analyzer import _load_csv
+
+    df = parse_csv_frames(converted.read_bytes(), converted.name)
+    loader_ids = [f[1] for f in _load_csv(converted)]
+
+    assert df["can_id"].tolist() == loader_ids
+    assert 0x7EC in loader_ids and 0x2028 not in loader_ids

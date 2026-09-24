@@ -289,6 +289,22 @@ def _load_mf4(path: Path) -> Iterator[tuple[float, int, tuple]]:
 
 
 def _load_csv(path: Path) -> Iterator[tuple[float, int, tuple]]:
+    """Yield canonical frames from a column-format CSV.
+
+    This delegates to backend.data_processing.csv_frames, the parser the
+    /analyze endpoint already uses: it locates the timestamp, identifier and
+    payload columns by header name, decides hex or decimal from the data, and is
+    covered by tests against the real recordings in assets/.
+
+    It used to carry its own column rules, which recognised a header only when
+    it contained a column named exactly "can_id", or both "id" and "d1". An
+    asammdf MF4 export names them CAN_DataFrame.CAN_DataFrame.ID and
+    .DataBytes, so neither branch matched, the generator ended without yielding
+    anything, and a replay of a real Skoda recording scored an empty stream
+    while reporting success. Sharing one parser means both entry points read the
+    same file the same way; a format neither can read now raises instead of
+    quietly producing nothing.
+    """
     df = pd.read_csv(path, low_memory=False)
     cols = [c.strip().lower() for c in df.columns]
     df.columns = cols
@@ -305,7 +321,10 @@ def _load_csv(path: Path) -> Iterator[tuple[float, int, tuple]]:
                 continue
         return
 
-    # Generic: timestamp, can_id, b0..b7
+    # Generic: timestamp, can_id, b0..b7. Identifiers here are decimal unless
+    # written with an 0x prefix — this is the form the MF4 converter writes, and
+    # reading 2028 as hex instead of decimal turns UDS response id 0x7EC into
+    # 0x2028. Kept exactly as it was for that reason.
     if "can_id" in cols:
         byte_cols = [c for c in cols if c.startswith("b") and c[1:].isdigit()]
         byte_cols = sorted(byte_cols, key=lambda c: int(c[1:]))[:8]
@@ -318,6 +337,38 @@ def _load_csv(path: Path) -> Iterator[tuple[float, int, tuple]]:
                 yield ts, can_id, bs[:8]
             except Exception:
                 continue
+        return
+
+    # Any other header — an asammdf MF4 export names its columns
+    # CAN_DataFrame.CAN_DataFrame.ID and .DataBytes, which neither branch above
+    # recognises. Hand those to the shared parser, which locates columns by
+    # header name and is covered by tests against the real recordings.
+    from backend.data_processing.csv_frames import parse_csv_frames
+
+    df = parse_csv_frames(path.read_bytes(), path.name)
+
+    if df.empty or "can_id" not in df.columns:
+        try:
+            header = path.read_text(encoding="utf-8", errors="ignore").splitlines()[0]
+        except IndexError:
+            header = "<empty file>"
+        raise ValueError(
+            f"No CAN frames could be parsed from '{path.name}'. The file needs a "
+            f"timestamp column, an identifier column and payload bytes (either b0..b7, "
+            f"D1..D8, or a DataBytes array). Header found: {header}"
+        )
+
+    byte_cols = [f"b{i}" for i in range(8)]
+    timestamps = df["timestamp"].to_numpy(dtype=float)
+    can_ids = df["can_id"].to_numpy(dtype="int64")
+    payloads = df[byte_cols].to_numpy(dtype="int64")
+
+    for i in range(len(df)):
+        yield (
+            float(timestamps[i]),
+            int(can_ids[i]),
+            tuple(int(b) & 0xFF for b in payloads[i]),
+        )
 
 
 def _load_asc(path: Path) -> Iterator[tuple[float, int, tuple]]:

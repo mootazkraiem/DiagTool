@@ -23,6 +23,25 @@ except ModuleNotFoundError:
     from backend.ml.runtime.scoring_engine import ScoringEngine
     from backend.ml.runtime.state_manager import StateManager
 
+from backend.ml.features.canonical import CanonicalFeatureStream
+from backend.ml.runtime.model_manifest import FAMILY_SCHEMA_VERSION, FamilyModel, load_family_model, manifest_schema
+
+
+def _load_family(vehicle_id: str, model_root: Path | None = None) -> FamilyModel | None:
+    """The vehicle's single-model family (schema 2), or None when it has none.
+
+    A family that has a schema-2 manifest but fails validation raises
+    ManifestError: it is never scored, and never silently replaced by the
+    legacy models.
+    """
+    from backend.ml.runtime.model_loader import _default_assets_root
+
+    root = model_root if model_root is not None else _default_assets_root() / "models"
+    if not vehicle_id or manifest_schema(root, vehicle_id) != FAMILY_SCHEMA_VERSION:
+        return None
+    return load_family_model(root, vehicle_id)
+
+
 # Thresholds for DoS frequency detection heuristic
 _FREQ_ANOMALY_LOW_HZ = 500.0   # Hz — above baseline before flagging
 _FREQ_ANOMALY_HIGH_HZ = 2000.0  # Hz — saturates at full anomaly score
@@ -41,7 +60,8 @@ class CanFrame:
 
 
 class RealtimeEngine:
-    def __init__(self, cfg: RuntimeConfig = DEFAULT_CONFIG, vehicle_id: str = "", score_ml: bool = True) -> None:
+    def __init__(self, cfg: RuntimeConfig = DEFAULT_CONFIG, vehicle_id: str = "", score_ml: bool = True,
+                 model_root: Path | None = None) -> None:
         self.cfg = cfg
         # Offline batch callers set score_ml=False and score the collected feature
         # vectors in one batch instead (see runtime.vehicle_scoring); per-frame
@@ -69,6 +89,15 @@ class RealtimeEngine:
         # Load trained IsolationForest models — safe no-op if models directory is absent
         self._models: RuntimeModelStore = load_models()
         print(f"[RUNTIME] Trained models loaded: {self._models.is_loaded}")
+
+        # A promoted single-model family scores canonical features - the same
+        # definitions training and offline analysis use - computed on every
+        # frame. Vehicles without one keep the legacy state-routed models.
+        self._family: FamilyModel | None = _load_family(self.vehicle_id, model_root)
+        self._canonical = CanonicalFeatureStream()
+        if self._family is not None:
+            print(f"[RUNTIME] Single-model family: {self._family.family} "
+                  f"({self._family.manifest.get('model_version')})")
 
         # Global sliding window of recent CAN-IDs for cross-ID entropy (Fuzzy detection)
         self._recent_can_ids: deque[int] = deque(maxlen=200)
@@ -114,7 +143,20 @@ class RealtimeEngine:
         ml_norm: float
         vehicle_state: str
         st.ml_frame_count += 1
-        if self._models.is_loaded and self._score_ml:
+        if self._family is not None and self._score_ml:
+            vec = self._canonical.update(frame.timestamp, frame.can_id, frame.payload)
+            if vec is None:
+                # This identifier has not filled its window yet: there is no
+                # model score for it, and the output says so.
+                ml_norm = 0.0
+                vehicle_state = "warmup"
+            else:
+                if st.ml_frame_count % _ML_STRIDE == 0 or st.last_vehicle_state != "vehicle":
+                    st.last_ml_norm = float(self._family.score(_np.asarray([vec]))[0])
+                    st.last_vehicle_state = "vehicle"
+                ml_norm = st.last_ml_norm
+                vehicle_state = "vehicle"
+        elif self._models.is_loaded and self._score_ml:
             if st.ml_frame_count % _ML_STRIDE == 0:
                 features = compute_model_features(st, frame.timestamp, frame.payload, can_id_entropy)
                 vehicle_state = self._models.classify_state(features)

@@ -120,6 +120,51 @@ class StateModelBundle:
                 scores[i] = float(max(0.0, min(1.0, 0.5 + (th - float(raw[j])) / (2.0 * span))))
         return scores
 
+    def score_feature_columns(self, states: list[str], columns) -> list[float | None]:
+        """Score frames from finished feature columns, requiring every model feature.
+
+        Offline counterpart of :meth:`score_many`. ``columns`` maps a feature name
+        to one value per frame (a DataFrame works), already carrying whatever
+        transform training applied - here, per-CAN-ID normalisation. Same bundle
+        choice, scaler, forest, threshold and 0-1 remapping as :meth:`score_many`.
+
+        What it does not do is fill a missing feature with 0.0. score_many reads
+        each feature with ``feature_vec.get(f, 0.0)``, so a feature the caller
+        never produced is scored as zero without a word: the Skoda bundles need
+        rolling_min_byte_diff and rolling_range_byte_diff, which the runtime
+        vector does not contain, and scored 0.0 for both on every frame. Here a
+        missing feature is an error that names it.
+        """
+        scores: list[float | None] = [None] * len(states)
+        groups: dict[str, list[int]] = {}
+        for i, state in enumerate(states):
+            key = state if state in self._models else ("parking" if "parking" in self._models else "")
+            if key:
+                groups.setdefault(key, []).append(i)
+
+        for key in groups:
+            missing = [f for f in self._models[key].features if f not in columns]
+            if missing:
+                raise ValueError(
+                    f"model for state '{key}' requires features that were not produced: {missing}"
+                )
+
+        for key, idxs in groups.items():
+            m = self._models[key]
+            index = np.asarray(idxs)
+            x = np.column_stack([np.asarray(columns[f], dtype=np.float64)[index] for f in m.features])
+            raw = m.model.decision_function(m.scaler.transform(x))
+            th = m.threshold
+            span = max(abs(th), 0.01)
+            for j, i in enumerate(idxs):
+                scores[i] = float(max(0.0, min(1.0, 0.5 + (th - float(raw[j])) / (2.0 * span))))
+        return scores
+
+    def required_features(self, state: str) -> list[str]:
+        """Feature names the model for ``state`` was fitted on (empty if none)."""
+        m = self._models.get(state)
+        return list(m.features) if m is not None else []
+
     @property
     def available_states(self) -> list[str]:
         return list(self._models.keys())
@@ -188,6 +233,19 @@ class RuntimeModelStore:
         if bundle is None:
             return [None] * len(feature_vecs)
         return bundle.score_many(states, feature_vecs)
+
+    def score_feature_columns(self, states: list[str], columns, vehicle: str = "general") -> list[float | None]:
+        """Strict offline form of :meth:`score_many`; same vehicle-then-general choice."""
+        vkey = vehicle.strip().lower().replace(" ", "_")
+        bundle = self._vehicles.get(vkey) or self._general
+        if bundle is None:
+            return [None] * len(states)
+        return bundle.score_feature_columns(states, columns)
+
+    def bundle_for(self, vehicle: str = "general") -> "StateModelBundle | None":
+        """The bundle scoring would use for ``vehicle``."""
+        vkey = vehicle.strip().lower().replace(" ", "_")
+        return self._vehicles.get(vkey) or self._general
 
     @property
     def is_loaded(self) -> bool:
@@ -268,6 +326,27 @@ def _trained_at(model_dir: Path, states: list[str]) -> str:
     return _dt.datetime.fromtimestamp(max(stamps)).strftime("%Y-%m-%d") if stamps else ""
 
 
+def _single_model_entry(model_dir: Path) -> dict | None:
+    """Listing entry for a one-model family (manifest schema 2), without loading it.
+
+    Being listed is not being valid: scoring loads it through
+    model_manifest.load_family_model, which refuses anything inconsistent.
+    """
+    from backend.ml.runtime.model_manifest import FAMILY_SCHEMA_VERSION, MANIFEST_NAME
+
+    path = model_dir / MANIFEST_NAME
+    if not path.is_file():
+        return None
+    try:
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if manifest.get("schema_version") != FAMILY_SCHEMA_VERSION:
+        return None
+    return {"id": model_dir.name, "states": ["vehicle"], "kind": "single",
+            "trained_at": str(manifest.get("created_at", ""))[:10]}
+
+
 def list_available_models(assets_root: Path | None = None) -> list[dict]:
     """The trained model bundles on disk, without loading them.
 
@@ -283,7 +362,11 @@ def list_available_models(assets_root: Path | None = None) -> list[dict]:
         models.append({"id": "general", "states": general_states,
                        "trained_at": _trained_at(model_root / "general", general_states)})
     for candidate in sorted(model_root.iterdir(), key=lambda p: p.name):
-        if candidate.is_dir() and candidate.name not in _NON_VEHICLE_DIRS:
+        if candidate.is_dir() and candidate.name not in _NON_VEHICLE_DIRS and not candidate.name.startswith("."):
+            single = _single_model_entry(candidate)
+            if single is not None:
+                models.append(single)
+                continue
             states = _trained_states(candidate)
             if states:
                 models.append({"id": candidate.name, "states": states,

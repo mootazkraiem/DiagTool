@@ -69,14 +69,17 @@ def test_every_listed_state_has_its_model_and_scaler() -> None:
             assert (MODELS / model["id"] / f"scaler_{state}.joblib").exists()
 
 
-def test_score_frames_keeps_rows_and_produces_the_pipeline_columns() -> None:
-    frames = _replay_frames(600)
-    scored = score_frames(frames, "nissan_leaf_2019")
-    assert len(scored) == len(frames)
-    assert list(scored["timestamp"]) == list(frames["timestamp"])
-    assert set(scored["anomaly"].unique()) <= {-1, 1}
-    assert scored["anomaly_score"].between(0.0, 1.0).all()
-    assert {"cluster", "vehicle_state"} <= set(scored.columns)
+def test_score_frames_refuses_a_family_without_a_manifest() -> None:
+    """Offline scoring needs proof the classifier and models belong together.
+
+    The shipped bundles predate manifests, so they are refused rather than
+    scored. The column contract of a valid family is covered in
+    test_model_manifest.py::test_J_manifest_round_trip_scores_every_frame.
+    """
+    from backend.ml.runtime.model_manifest import ManifestError
+
+    with pytest.raises(ManifestError, match="nissan_leaf_2019"):
+        score_frames(_replay_frames(600), "nissan_leaf_2019")
 
 
 def test_batch_scoring_equals_per_frame_scoring() -> None:

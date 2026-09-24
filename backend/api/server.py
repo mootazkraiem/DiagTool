@@ -50,6 +50,7 @@ from backend.ml.runtime.realtime_engine import RealtimeEngine, CanFrame
 from backend.ml.runtime.ids_statistics import IDSStatistics
 from backend.ml.runtime.runtime_config import VALIDATION_CONFIG
 from backend.ml.runtime.model_loader import list_available_models
+from backend.ml.runtime.model_manifest import ManifestError
 from backend.ml.runtime.vehicle_scoring import score_frames as score_frames_with_model
 from backend.live.can_decoder import decode as can_decode
 from backend.ml.explainer.llm import explain_alert as llm_explain_alert
@@ -138,6 +139,9 @@ class AnalyzeSummary(BaseModel):
     # Which trained model scored this analysis: "general" or a vehicle model id.
     model_id: str = "general"
     model_kind: str = "general"
+    # Frames a vehicle model could not route to a trained state model (see
+    # vehicle_scoring.score_frames). They are neither anomalous nor normal.
+    unresolved_count: int = 0
 
 
 class AnalyzeResult(BaseModel):
@@ -539,6 +543,16 @@ def _vehicle_snapshot_from_hardware() -> dict[str, Any]:
     }
 
 
+def _offline_session_active() -> bool:
+    """True while a recorded capture is being replayed or analysed.
+
+    The live signal stream belongs to the recording for the duration: whatever
+    the synthetic generator produces in the meantime is not part of that file
+    and must not be mixed into it.
+    """
+    return replay_status.get("state") in ("running", "queued", "starting")
+
+
 @app.get("/vehicle")
 def vehicle_snapshot() -> dict[str, Any]:
     global _vehicle_tick
@@ -599,9 +613,18 @@ def vehicle_snapshot() -> dict[str, Any]:
             "anomaly_score": float(out["score"]["fusion_score"]),
             "severity": str(out["score"]["risk_level"]),
         }
-        live_signals_buffer.append(signal_item)
-        if len(live_signals_buffer) > 2000:
-            del live_signals_buffer[:-2000]
+        # The frame above is generated, not observed. While a recorded capture is
+        # being analysed it must not join the live stream: the desktop client
+        # polls /vehicle throughout an offline analysis, and every generated
+        # frame appended here was served straight back through
+        # /api/live/signals into the CAN monitor, which then showed identifiers
+        # (0x1A2, 0x3F1, 0x5D2, 0x6E7) that appear in no recording, beside the
+        # real results of the file being analysed. Scoring and the snapshot are
+        # left exactly as they were; only the shared buffer is protected.
+        if not _offline_session_active():
+            live_signals_buffer.append(signal_item)
+            if len(live_signals_buffer) > 2000:
+                del live_signals_buffer[:-2000]
         if out["alert"] is not None:
             runtime_stats.on_alert(out["alert"])
             alert = out["alert"]
@@ -699,7 +722,7 @@ def _run_post_ml_pipeline(
 @app.post(
     "/analyze",
     response_model=AnalyzeResponse,
-    responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
+    responses={400: {"model": ErrorResponse}, 409: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
 
 )
 async def analyze(
@@ -769,7 +792,13 @@ async def analyze(
     trained_model_ids = {m["id"] for m in list_available_models()}
     if requested_model and requested_model != "general" and requested_model in trained_model_ids:
         model_used, model_kind = requested_model, "vehicle"
-        predicted = await _loop.run_in_executor(None, score_frames_with_model, featured, requested_model)
+        try:
+            predicted = await _loop.run_in_executor(None, score_frames_with_model, featured, requested_model)
+        except ManifestError as exc:
+            # The model's parts cannot be shown to belong together. Refuse
+            # rather than score with them or quietly switch models.
+            logger.error("[ANALYZE] %s", exc)
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
     else:
         if requested_model and requested_model != "general":
             logger.info("[ANALYZE] No trained model for '%s' - scoring with the general model.", requested_model)
@@ -981,6 +1010,7 @@ async def analyze(
         rows_parsed=int(len(unified)),
         anomaly_count=int((predicted["anomaly"] == -1).sum()),
         normal_count=int((predicted["anomaly"] == 1).sum()),
+        unresolved_count=int((predicted["anomaly"] == 0).sum()) if model_kind == "vehicle" else 0,
         cluster_count=int(predicted["cluster"].nunique()) if len(predicted) else 0,
         parse_lines_total=int(parse_total),
         parse_lines_parsed=int(parse_parsed),

@@ -49,8 +49,9 @@ def update_payload(state: CanIdState, payload: tuple[int, ...]) -> dict[str, flo
     hd = float(_hamming_bits(prev, payload))
 
     # Fast delta calculation using numpy
-    prev_arr = np.array(prev, dtype=np.uint8)
-    curr_arr = np.array(payload, dtype=np.uint8)
+    # Signed arithmetic: |1 - 2| on uint8 wraps to 255.
+    prev_arr = np.array(prev, dtype=np.int16)
+    curr_arr = np.array(payload, dtype=np.int16)
     delta = np.mean(np.abs(prev_arr - curr_arr))
 
     state.hamming.append(hd)
