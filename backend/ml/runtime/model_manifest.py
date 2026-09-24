@@ -705,6 +705,7 @@ def load_family_model(model_root: Path, family: str) -> FamilyModel:
 
 ID_SCHEMA_VERSION = 3
 CALIBRATION_METHODS = ("empirical_quantile_strict",)
+VALIDATION_STATUSES = ("holdout_evaluated", "unvalidated_no_holdout", "held_back")
 
 SCORED = "scored"
 SPARSE_ID = "sparse_id"
@@ -935,6 +936,19 @@ def load_id_family(model_root: Path, family: str) -> IdModelFamily:
         problems.append("training_corpus lists no recordings")
     if train_sha & hold_sha:
         problems.append(f"{len(train_sha & hold_sha)} recording(s) appear in both training and holdout")
+
+    # Optional (absent before clean-2-002); when present it must agree with the holdout.
+    validation = manifest.get("validation")
+    if validation is not None:
+        vs = validation.get("status") if isinstance(validation, dict) else None
+        if vs not in VALIDATION_STATUSES:
+            problems.append(f"validation.status {vs!r} is not one of {VALIDATION_STATUSES}")
+        elif vs == "unvalidated_no_holdout" and hold_sha:
+            problems.append("validation.status says no holdout, but holdout recordings are listed")
+        elif vs == "holdout_evaluated" and not hold_sha:
+            problems.append("validation.status says holdout_evaluated, but no holdout recording is listed")
+        elif vs == "held_back" and not str(validation.get("reason", "")).strip():
+            problems.append("a held_back family must record its reason")
 
     if problems:
         raise ManifestError(family, problems)

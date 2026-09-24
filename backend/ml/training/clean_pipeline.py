@@ -77,6 +77,13 @@ ROAD_FRAME_CAP = 150_000                                     # contiguous prefix
 #: opening frames of 00000032/35/36/37/39-1/39-2.
 PROTECTED_EVALUATION_FILES = tuple(Path(f"Skoda Enyaq/file_{n}.csv") for n in range(12, 19))
 
+#: Families trained and staged but never promoted: the reason is written into
+#: their manifest (validation.status = "held_back") and promotion refuses them.
+HELD_BACK_FAMILIES = {
+    "mg_zs_ev": "about 82% of the holdout traffic (clean-2-001) is on CAN IDs absent from its single "
+                "training recording; the model does not cover this vehicle's traffic",
+}
+
 #: Families not trained at all, whatever their recordings. Their recordings stay
 #: in the plan, marked excluded with this reason.
 EXCLUDED_FAMILIES = {
@@ -318,11 +325,13 @@ def corpus_fingerprint(recs: list[RecordingInfo]) -> str:
 
 # ── features and validation ──────────────────────────────────────────────────
 
-def recording_features(info: RecordingInfo, assets_root: Path) -> tuple[np.ndarray, np.ndarray]:
-    """Canonical features and CAN IDs of one recording's ready frames, re-verified against the plan.
+def recording_features(info: RecordingInfo, assets_root: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Canonical features and CAN IDs of one recording's ready frames, re-verified against the plan,
+    plus the CAN ID of every frame (ready or not).
 
     Each recording starts from an empty feature state, so no window spans two
-    recordings.
+    recordings. The full ID list matters: an identifier with fewer than
+    WINDOW + 1 frames yields no ready rows at all, yet it was seen in training.
     """
     rec = Recording(info.vehicle, Path(assets_root) / info.path, info.fmt, info.frame_cap)
     with contextlib.redirect_stdout(io.StringIO()):
@@ -331,7 +340,8 @@ def recording_features(info: RecordingInfo, assets_root: Path) -> tuple[np.ndarr
         raise RuntimeError(f"{info.path} changed since it was planned")
     frames = rec_mod.chronological(frames)
     x, ready = canonical.compute_features_frame(frames)
-    return x[ready], frames["can_id"].to_numpy(dtype=np.int64)[ready]
+    all_ids = frames["can_id"].to_numpy(dtype=np.int64)
+    return x[ready], all_ids[ready], all_ids
 
 
 def varying_features(x: np.ndarray) -> tuple[list[str], dict[str, float]]:
@@ -353,8 +363,15 @@ def varying_features(x: np.ndarray) -> tuple[list[str], dict[str, float]]:
     return kept, constant
 
 
-def fit_id_models(x: np.ndarray, ids: np.ndarray, id_recordings: np.ndarray) -> tuple[dict, dict, dict, dict]:
+def fit_id_models(x: np.ndarray, ids: np.ndarray, id_recordings: np.ndarray,
+                  seen: dict[int, int] | None = None) -> tuple[dict, dict, dict, dict]:
     """One IsolationForest per identifier with enough rows; the rest classified.
+
+    ``ids``/``id_recordings`` describe the ready feature rows. ``seen`` maps every
+    identifier that occurred in the training frames to the number of training
+    recordings it occurred in; an identifier there with no ready row (fewer than
+    WINDOW + 1 frames in every recording) is recorded as sparse with 0 rows, so
+    at runtime it is ``sparse_id``, not ``unseen_id``.
 
     Returns (models, id_models, sparse_ids, unmodelled_ids) keyed by "0x..." with
     the manifest entries for each.
@@ -389,7 +406,28 @@ def fit_id_models(x: np.ndarray, ids: np.ndarray, id_recordings: np.ndarray) -> 
         id_models[key] = {"features": kept, "constant_features": constant, "recordings": n_rec,
                           **{k: cal[k] for k in ("threshold", "median", "rows", "k", "flagged_count",
                                                  "ties_at_threshold")}}
+    with_rows = {int(c) for c in np.unique(ids)}
+    for cid in sorted(set(seen or {}) - with_rows):
+        sparse[can_id_key(cid)] = {"rows": 0, "recordings": int(seen[cid])}
     return models, id_models, sparse, unmodelled
+
+
+def validation_status(family: str, has_holdout: bool) -> dict:
+    """What the staged model may be claimed to be, recorded in its manifest.
+
+    holdout_evaluated       scored on at least one complete recording it never saw
+    unvalidated_no_holdout  the vehicle has a single recording; the model has only
+                            been measured against its own training data
+    held_back               trained, but not to be promoted (HELD_BACK_FAMILIES)
+    """
+    if family in HELD_BACK_FAMILIES:
+        return {"status": "held_back", "reason": HELD_BACK_FAMILIES[family], "has_holdout": has_holdout}
+    if not has_holdout:
+        return {"status": "unvalidated_no_holdout", "has_holdout": False,
+                "reason": "no independent holdout recording exists for this vehicle; the model has only "
+                          "been measured against its own training data and is not evidence of generalisation"}
+    return {"status": "holdout_evaluated", "has_holdout": True,
+            "reason": "scored on complete recordings excluded from fitting and calibration"}
 
 
 # ── training (writes only to staging) ────────────────────────────────────────
@@ -449,9 +487,13 @@ def train(version: str, assets_root: Path = ASSETS_ROOT, out_root: Path | None =
             x = np.vstack([p[0] for p in parts])
             ids = np.concatenate([p[1] for p in parts])
             rec_of = np.concatenate([np.full(len(p[1]), i) for i, p in enumerate(parts)])
+            seen: dict[int, int] = {}
+            for p in parts:
+                for cid in np.unique(p[2]).tolist():
+                    seen[cid] = seen.get(cid, 0) + 1
             if len(x) < MIN_TRAIN_ROWS:
                 raise ValueError(f"{len(x)} feature rows after warm-up (minimum {MIN_TRAIN_ROWS})")
-            models, id_models, sparse, unmodelled = fit_id_models(x, ids, rec_of)
+            models, id_models, sparse, unmodelled = fit_id_models(x, ids, rec_of, seen)
             if not id_models:
                 raise ValueError(f"no CAN ID has {MIN_ID_ROWS} training rows with a varying feature")
         except Exception as exc:
@@ -496,6 +538,7 @@ def train(version: str, assets_root: Path = ASSETS_ROOT, out_root: Path | None =
             "unmodelled_ids": unmodelled,
             "training_corpus": corpus,
             "holdout": holdout,
+            "validation": validation_status(family, bool(hold_recs)),
             "environment": env,
         }
         _write_json(fam_dir / MANIFEST_NAME, manifest)
@@ -504,7 +547,7 @@ def train(version: str, assets_root: Path = ASSETS_ROOT, out_root: Path | None =
         # Holdout is scored, never fitted or calibrated on.
         evaluation = []
         for r in hold_recs:
-            xh, idh = recording_features(r, assets_root)
+            xh, idh, _ = recording_features(r, assets_root)
             _, flagged, status = bundle.score_rows(xh, idh)
             scored = status == SCORED
             evaluation.append({
@@ -519,6 +562,7 @@ def train(version: str, assets_root: Path = ASSETS_ROOT, out_root: Path | None =
             "id_models": len(id_models), "sparse_ids": len(sparse), "unmodelled_ids": len(unmodelled),
             "training_rows_modelled": int(train_rows_scored),
             "training_flagged": int(sum(v["flagged_count"] for v in id_models.values())),
+            "validation": manifest["validation"],
             "holdout_evaluation": evaluation,
         }
         log(f"  staged {family}: {len(id_models)} CAN-ID models, {len(sparse)} sparse, {len(unmodelled)} unmodelled")

@@ -346,6 +346,7 @@ def _single_model_entry(model_dir: Path) -> dict | None:
         return None
     return {"id": model_dir.name, "states": ["vehicle"],
             "kind": "per_can_id" if schema == ID_SCHEMA_VERSION else "single",
+            "validation": (manifest.get("validation") or {}).get("status", ""),
             "trained_at": str(manifest.get("created_at", ""))[:10]}
 
 

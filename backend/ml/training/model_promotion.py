@@ -70,7 +70,14 @@ def promote(version_dir: Path, production_root: Path, archive_root: Path,
         raise PromotionError("the staged version lies inside the production root")
 
     staged = validate_staging(version_dir)
-    selected = sorted(families) if families else sorted(staged)
+    held = sorted(f for f, m in staged.items() if _held_back(m))
+    if families:
+        selected = sorted(families)
+        refused = [f for f in selected if f in held]
+        if refused:
+            raise PromotionError(f"families {refused} are held back in their manifest and cannot be promoted")
+    else:
+        selected = sorted(f for f in staged if f not in held)       # promoting "everything" skips held-back
     unknown = [f for f in selected if f not in staged]
     if unknown:
         raise PromotionError(f"families not in the staged version: {unknown}")
@@ -105,11 +112,15 @@ def promote(version_dir: Path, production_root: Path, archive_root: Path,
         raise PromotionError(f"promotion rolled back: {exc}") from exc
 
     shutil.rmtree(incoming, ignore_errors=True)
-    record = {"version": version_dir.name, "promoted_at": stamp, "families": selected,
+    record = {"version": version_dir.name, "promoted_at": stamp, "families": selected, "held_back": held,
               "archived": [f for f, had in swapped if had], "archive_dir": str(archive)}
     archive.mkdir(parents=True, exist_ok=True)
     (archive / "promotion.json").write_text(json.dumps(record, indent=2), encoding="utf-8")
     return record
+
+
+def _held_back(family_model) -> bool:
+    return (family_model.manifest.get("validation") or {}).get("status") == "held_back"
 
 
 def _roll_back(swapped: list[tuple[str, bool]], production_root: Path, archive: Path) -> None:

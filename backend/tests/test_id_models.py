@@ -143,3 +143,50 @@ def test_fitting_is_deterministic() -> None:
     assert ida == idb
     probe, pid = _rows(300, 1, 9), np.r_[np.full(150, 0x10), np.full(150, 0x20)]
     assert np.array_equal(fam_a.score_rows(probe, pid)[0], fam_b.score_rows(probe, pid)[0])
+
+
+
+# ── seen-but-rowless identifiers (clean-2-002 fix) ───────────────────────────
+
+def _frames_for(counts: dict[int, int]) -> "pd.DataFrame":
+    import pandas as pd
+    rows, t = [], 0.0
+    rng = np.random.default_rng(0)
+    for cid, n in counts.items():
+        for i in range(n):
+            rows.append([t, cid, i % 256, *rng.integers(0, 3, 7).tolist()])
+            t += 0.0005 + rng.uniform(0, 0.0002)
+    return pd.DataFrame(rows, columns=["timestamp", "can_id", *[f"b{i}" for i in range(8)]])
+
+
+@pytest.mark.parametrize("frames_of_rare, rows", [(1, 0), (canonical.WINDOW, 0), (canonical.WINDOW + 1, 1),
+                                                  (canonical.WINDOW + 5, 5)])
+def test_seen_id_boundary(frames_of_rare, rows) -> None:
+    """WINDOW frames give no ready row (sparse, 0 rows); WINDOW + 1 give one."""
+    f = _frames_for({0x10: 2500, 0x7E0: frames_of_rare})
+    x, ready = canonical.compute_features_frame(f)
+    ids = f["can_id"].to_numpy()
+    seen = {int(c): 1 for c in np.unique(ids)}
+    _, id_models, sparse, _ = cp.fit_id_models(x[ready], ids[ready], np.zeros(int(ready.sum()), dtype=int), seen)
+    assert "0x10" in id_models
+    assert sparse["0x7E0"] == {"rows": rows, "recordings": 1}
+
+
+def test_seen_ids_default_to_none_for_direct_callers() -> None:
+    _, _, sparse, _ = _fit({0x10: _rows(2000, 0, 1)})
+    assert sparse == {}
+
+
+def test_never_seen_id_stays_unseen() -> None:
+    f = _frames_for({0x10: 2500, 0x7E0: 3})
+    x, ready = canonical.compute_features_frame(f)
+    ids = f["can_id"].to_numpy()
+    models, id_models, sparse, unmodelled = cp.fit_id_models(
+        x[ready], ids[ready], np.zeros(int(ready.sum()), dtype=int), {0x10: 1, 0x7E0: 1})
+    fam = IdModelFamily("t", {}, {0x10: IdModel(id_models["0x10"]["features"],
+                                                [canonical.FEATURES.index(n) for n in id_models["0x10"]["features"]],
+                                                models["0x10"], id_models["0x10"]["threshold"],
+                                                id_models["0x10"]["median"])},
+                        {int(k, 16) for k in sparse}, set())
+    assert fam.status(0x7E0) == SPARSE_ID
+    assert fam.status(0x123) == UNSEEN_ID

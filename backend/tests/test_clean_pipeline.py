@@ -55,9 +55,18 @@ def _write_generic_csv(path: Path, df: pd.DataFrame) -> None:
     df.assign(timestamp=df["timestamp"] - df["timestamp"].min()).to_csv(path, index=False)
 
 
+RARE_ID = 0x7E0            # 5 frames in rec_a only: seen in training, but never a ready feature row
+
+
+def _with_rare(df: pd.DataFrame) -> pd.DataFrame:
+    t0 = float(df["timestamp"].iloc[0])
+    rare = pd.DataFrame([[t0 + 1.0 + i, RARE_ID, 2, 1, 0, 0, 0, 0, 0, i] for i in range(5)], columns=rec.COLUMNS)
+    return pd.concat([df, rare]).sort_values("timestamp", kind="mergesort").reset_index(drop=True)
+
+
 def _make_assets(root: Path) -> Path:
     ev = root / "EV-CANlogs-main"
-    a, b, c = _traffic(12, 1), _traffic(12, 2), _traffic(12, 3)
+    a, b, c = _with_rare(_traffic(12, 1)), _traffic(12, 2), _traffic(12, 3)
     _write_candump(ev / "Alpha Car" / "rec_a.log", a)
     _write_candump(ev / "Alpha Car" / "rec_b.log", b)
     _write_candump(ev / "Alpha Car" / "rec_c.log", c)
@@ -529,3 +538,91 @@ def test_every_skoda_mf4_is_protected_by_a_demo_file() -> None:
         covered[path.relative_to(SKODA_MF4).as_posix()] = reason
     assert "identical to protected evaluation file Skoda Enyaq/file_16.csv" in covered[
         "LOG/F461BFAC/00000038/00000001-631DB27A.MF4"]
+
+
+
+# ── sparse / unseen labelling (clean-2-002 fix) ──────────────────────────────
+
+def test_seen_id_without_feature_rows_is_sparse_in_manifest(staged) -> None:
+    m = json.loads((staged / "alpha_car" / "manifest.json").read_text())
+    assert m["sparse_ids"]["0x7E0"] == {"rows": 0, "recordings": 1}
+
+
+def test_manifest_and_runtime_agree_on_every_training_id(assets, staged) -> None:
+    """Every CAN ID in the training frames is in exactly one manifest list, and never unseen at runtime."""
+    from backend.ml.runtime.model_manifest import SCORED, SPARSE_ID, UNSEEN_ID
+
+    fam = load_id_family(staged, "alpha_car")
+    m = fam.manifest
+    listed = [set(m["id_models"]), set(m["sparse_ids"]), set(m["unmodelled_ids"])]
+    seen = set()
+    for r in m["training_corpus"]["recordings"]:
+        frames = rec.load_recording(rec.Recording("alpha_car", assets / r["path"], "candump_ts"))
+        seen |= {f"0x{int(c):X}" for c in frames["can_id"].unique()}
+    assert seen == set().union(*listed)
+    assert sum(len(s) for s in listed) == len(seen)                     # no ID in two lists
+    for key in seen:
+        status = fam.status(int(key, 16))
+        assert status != UNSEEN_ID
+        assert status == (SCORED if key in m["id_models"] else SPARSE_ID if key in m["sparse_ids"] else status)
+    assert fam.status(0x555) == UNSEEN_ID
+
+
+def test_rare_seen_id_is_reported_sparse_offline_and_live(staged) -> None:
+    from backend.ml.runtime.realtime_engine import CanFrame, RealtimeEngine
+    from backend.ml.runtime.vehicle_scoring import score_frames
+
+    frames = _with_rare(_traffic(3, 21))
+    frames = pd.concat([frames, frames.iloc[-12:].assign(can_id=RARE_ID)]).reset_index(drop=True)
+    frames["timestamp"] = np.arange(len(frames)) * 0.001               # chronological, rare ID >= 11 frames
+    scored = score_frames(frames, "alpha_car", model_root=staged)
+    rare = scored["can_id"] == RARE_ID
+    reasons = set(scored.loc[rare, "state_resolution"].str.split(":").str[0])
+    assert reasons == {"warmup", "sparse_id"}
+    engine = RealtimeEngine(vehicle_id="alpha_car", model_root=staged)
+    states = [engine.process_frame(CanFrame(r.timestamp, int(r.can_id),
+                                            tuple(int(getattr(r, f"b{i}")) for i in range(8))))["vehicle_state"]
+              for r in frames.itertuples(index=False)]
+    assert {s for s, c in zip(states, frames["can_id"]) if c == RARE_ID} == {"warmup", "sparse_id"}
+
+
+# ── validation status ────────────────────────────────────────────────────────
+
+def test_validation_status_recorded(staged) -> None:
+    alpha = json.loads((staged / "alpha_car" / "manifest.json").read_text())["validation"]
+    beta = json.loads((staged / "beta_car" / "manifest.json").read_text())["validation"]
+    assert alpha["status"] == "holdout_evaluated" and alpha["has_holdout"] is True
+    assert beta["status"] == "unvalidated_no_holdout" and beta["has_holdout"] is False
+    assert "not evidence of generalisation" in beta["reason"]
+
+
+def test_held_back_status_for_policy_families() -> None:
+    assert cp.validation_status("mg_zs_ev", True)["status"] == "held_back"
+    assert cp.validation_status("tesla", False)["status"] == "unvalidated_no_holdout"
+    assert cp.validation_status("kia_ev6", True)["status"] == "holdout_evaluated"
+
+
+@pytest.mark.parametrize("status", ["unvalidated_no_holdout", "validated", "held_back"])
+def test_inconsistent_validation_status_fails(staged, tmp_path, status) -> None:
+    root = _copy_family(staged, tmp_path)
+    _edit(root, lambda m: m.__setitem__("validation", {"status": status, "reason": ""}))
+    with pytest.raises(ManifestError, match="validation"):
+        load_id_family(root, "alpha_car")
+
+
+def test_held_back_family_is_never_promoted(staged, tmp_path) -> None:
+    import shutil
+    ver = tmp_path / "staging" / "v"
+    shutil.copytree(staged, ver)
+    p = ver / "gamma_car" / "manifest.json"
+    m = json.loads(p.read_text())
+    m["validation"] = {"status": "held_back", "reason": "test", "has_holdout": True}
+    p.write_text(json.dumps(m))
+    prod = tmp_path / "models"
+    prod.mkdir()
+    with pytest.raises(mp.PromotionError, match="held back"):
+        mp.promote(ver, prod, tmp_path / "archive", families=["gamma_car"])
+    assert not any(prod.iterdir())
+    record = mp.promote(ver, prod, tmp_path / "archive")
+    assert "gamma_car" not in record["families"] and record["held_back"] == ["gamma_car"]
+    assert not (prod / "gamma_car").exists()
