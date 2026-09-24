@@ -465,11 +465,24 @@ def test_promotion_swaps_in_validated_families_and_archives_the_old(staged, tmp_
     assert listed["alpha_car"]["kind"] == "per_can_id"
 
 
-def test_real_production_models_are_untouched_by_this_module() -> None:
-    """The module's defaults point at staging; the real assets/models has no clean family yet."""
+PROMOTED = {"jaguar_ipace", "kia_ev6", "nissan_leaf_2019", "road_ambient"}      # clean-2-002, Step 10I
+
+
+def test_production_holds_exactly_the_promoted_clean_families() -> None:
+    """Only holdout-evaluated clean families are in production, and each validates there."""
+    from backend.ml.runtime.model_manifest import load_any_family
+
     assert cp.staging_root() == REPO / "assets" / "models_staging"
     assert cp.production_root() == REPO / "assets" / "models"
-    assert not any((p / "manifest.json").is_file() for p in (REPO / "assets" / "models").iterdir() if p.is_dir())
+    prod = REPO / "assets" / "models"
+    clean = {p.name for p in prod.iterdir() if p.is_dir() and (p / "manifest.json").is_file()}
+    assert clean == PROMOTED
+    for name in clean:
+        m = load_any_family(prod, name).manifest
+        assert m["model_version"] == "clean-2-002"
+        assert m["validation"]["status"] == "holdout_evaluated"
+    for held in ("mg_zs_ev", "hyundai_ioniq5", "kaggle_normal", "tesla", "skoda_enyaq", "nissan_leaf"):
+        assert not (prod / held / "manifest.json").exists()
 
 
 CLEAN_1 = REPO / "assets" / "models_staging" / "clean-1-001"

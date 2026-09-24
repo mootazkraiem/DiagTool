@@ -1,0 +1,39 @@
+{
+  "training": {
+    "fingerprint": "755307a41303a442052dce89f9548033ec2cdfcb35fb6c2e506a957d976a52be",
+    "recordings": [
+      {
+        "path": "EV-CANlogs-main/Jaguar IPACE/battery_canbus_5s_suspending.csv",
+        "sha256": "88ad2521fdfc6df5c139ef45e1bdc9ab83ad1cd071441fb2972b08d46bd94f65",
+        "content_sha256": "6cb19a13c5c852e5d06d0d1ef9ed19f5ca1a8504808c775284895012a8e61fd1",
+        "frames": 15373,
+        "frame_cap": null
+      },
+      {
+        "path": "EV-CANlogs-main/Jaguar IPACE/canbus_car_turning_on_off_lots2.csv",
+        "sha256": "105963df0eb9a4102a79c72f167ee64f37e6679a97fa687f4880a458ecc7d26e",
+        "content_sha256": "b57f13e36d6016ff88a5054ac7c511f7fcf21be5085ed0b11bc874e0e67bdac8",
+        "frames": 72243,
+        "frame_cap": null
+      },
+      {
+        "path": "EV-CANlogs-main/Jaguar IPACE/canbus_turning_on.csv",
+        "sha256": "409fb4bae83f85e49363df1e128af5ef76adafcd5043ac50214e9b60b039c10f",
+        "content_sha256": "7a4d8585797b66a76c1893231d50f0a12d313fce23964e6b04c59ab3ed62241b",
+        "frames": 145982,
+        "frame_cap": null
+      }
+    ]
+  },
+  "holdout": {
+    "recordings": [
+      {
+        "path": "EV-CANlogs-main/Jaguar IPACE/canbus_turningon_quickly.csv",
+        "sha256": "4980810e3621538dfed83ec9484b22acc4befafddedae864f47f05184c9aa4c6",
+        "content_sha256": "26d0ebdf94514ecc8440d9c6842568502a01622a2feaeeea74f4cd779c9f4fc1",
+        "frames": 50361,
+        "frame_cap": null
+      }
+    ]
+  }
+}

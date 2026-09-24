@@ -313,14 +313,14 @@ def test_J_manifest_round_trip_scores_every_frame(tmp_path: Path) -> None:
 
 # ── the artifacts actually shipped ───────────────────────────────────────────
 
-def test_current_vehicle_families_are_refused_not_scored() -> None:
-    """No production family carries a manifest, so none may be scored offline."""
+def test_legacy_vehicle_families_are_refused_not_scored() -> None:
+    """Every production family without a manifest (the legacy bundles) is refused offline."""
     from backend.ml.runtime.model_loader import list_available_models
     from backend.ml.runtime.vehicle_scoring import score_frames
 
-    vehicles = [m["id"] for m in list_available_models() if m["id"] != "general"]
-    assert vehicles
-    for family in vehicles:
+    legacy = [m["id"] for m in list_available_models() if m["id"] != "general" and "kind" not in m]
+    assert legacy
+    for family in legacy:
         with pytest.raises(ManifestError, match="no manifest.json"):
             score_frames(_frames(50), family)
 

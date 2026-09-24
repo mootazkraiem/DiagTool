@@ -23,10 +23,15 @@ MODELS = REPO / "assets" / "models"
 REPLAY = REPO / "assets" / "Validation" / "validation_fuzzy_replay.csv"
 
 
+LEGACY_VEHICLE = "tesla"            # a production family that still has only legacy state bundles
+
+
 def _dirs_with_model_files() -> list[str]:
+    """Vehicle directories holding a legacy bundle or a clean (manifest) family."""
     return sorted(
         d.name for d in MODELS.iterdir()
-        if d.is_dir() and d.name not in {"general", "score_distributions"} and any(d.glob("model_*.joblib"))
+        if d.is_dir() and d.name not in {"general", "score_distributions"}
+        and (any(d.glob("model_*.joblib")) or (d / "manifest.json").is_file())
     )
 
 
@@ -63,7 +68,13 @@ def test_threshold_only_directories_are_not_offered() -> None:
 
 
 def test_every_listed_state_has_its_model_and_scaler() -> None:
+    """Legacy entries have their files; clean entries validate from production."""
+    from backend.ml.runtime.model_manifest import load_any_family
+
     for model in list_available_models():
+        if "kind" in model:
+            assert load_any_family(MODELS, model["id"]) is not None
+            continue
         for state in model["states"]:
             assert (MODELS / model["id"] / f"model_{state}.joblib").exists()
             assert (MODELS / model["id"] / f"scaler_{state}.joblib").exists()
@@ -78,8 +89,8 @@ def test_score_frames_refuses_a_family_without_a_manifest() -> None:
     """
     from backend.ml.runtime.model_manifest import ManifestError
 
-    with pytest.raises(ManifestError, match="nissan_leaf_2019"):
-        score_frames(_replay_frames(600), "nissan_leaf_2019")
+    with pytest.raises(ManifestError, match=LEGACY_VEHICLE):
+        score_frames(_replay_frames(600), LEGACY_VEHICLE)
 
 
 def test_batch_scoring_equals_per_frame_scoring() -> None:
@@ -87,7 +98,7 @@ def test_batch_scoring_equals_per_frame_scoring() -> None:
     from backend.ml.runtime.model_loader import compute_model_features, load_models
 
     store = load_models()
-    engine = RealtimeEngine(VALIDATION_CONFIG, vehicle_id="nissan_leaf_2019", score_ml=False)
+    engine = RealtimeEngine(VALIDATION_CONFIG, vehicle_id=LEGACY_VEHICLE, score_ml=False)
     frames = _replay_frames(400)
 
     vectors = []
@@ -100,8 +111,8 @@ def test_batch_scoring_equals_per_frame_scoring() -> None:
     states = store.classify_states(vectors)
     assert states == [store.classify_state(v) for v in vectors]
 
-    batched = store.score_many(states, vectors, vehicle="nissan_leaf_2019")
-    one_by_one = [store.score(s, v, vehicle="nissan_leaf_2019") for s, v in zip(states, vectors)]
+    batched = store.score_many(states, vectors, vehicle=LEGACY_VEHICLE)
+    one_by_one = [store.score(s, v, vehicle=LEGACY_VEHICLE) for s, v in zip(states, vectors)]
     assert batched == pytest.approx(one_by_one, abs=1e-9)
 
 

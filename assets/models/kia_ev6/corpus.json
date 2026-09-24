@@ -1,0 +1,32 @@
+{
+  "training": {
+    "fingerprint": "97b5d733057a194209465757c4ad72a6cfab2382a9ab347fe08ce341d9384e0b",
+    "recordings": [
+      {
+        "path": "EV-CANlogs-main/Kia EV6/Ignition On, Motor Off.asc",
+        "sha256": "9cd37ed3cd7792b86a0359a8c18b4b9e7e9fcec5f35a69a2605b07b15c0db327",
+        "content_sha256": "bb2d7e8c48c78c5caa46c1210c981dbd166805091c6cc7cc29e361a54f5b1e51",
+        "frames": 409416,
+        "frame_cap": null
+      },
+      {
+        "path": "EV-CANlogs-main/Kia EV6/OnlyBattery.asc",
+        "sha256": "fc9cb36a7eea89d04a9917544b7cb79bf3f8482678f04447bed65199fc5d5011",
+        "content_sha256": "93c0e6e54a682ca1cb81415a97c260ac7e69f0f5e783ac5186cc0c94cc611781",
+        "frames": 38782,
+        "frame_cap": null
+      }
+    ]
+  },
+  "holdout": {
+    "recordings": [
+      {
+        "path": "EV-CANlogs-main/Kia EV6/Vehicle everthing on.asc",
+        "sha256": "202e4cc53507afbef52c21ee746fe696df8125ac4aea1e4f3fd1e9477546aee2",
+        "content_sha256": "853c476688e730bf4a85048cb1f84646f7f55b2a5bd29e7cf974f1e2c123a393",
+        "frames": 438170,
+        "frame_cap": null
+      }
+    ]
+  }
+}

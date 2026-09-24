@@ -1,0 +1,20 @@
+{
+  "version": "clean-2-002",
+  "promoted_at": "20260924T202939410980Z",
+  "families": [
+    "jaguar_ipace",
+    "kia_ev6",
+    "nissan_leaf_2019",
+    "road_ambient"
+  ],
+  "held_back": [
+    "mg_zs_ev"
+  ],
+  "archived": [
+    "jaguar_ipace",
+    "kia_ev6",
+    "nissan_leaf_2019",
+    "road_ambient"
+  ],
+  "archive_dir": "assets\\models_archive\\20260924T202939410980Z"
+}
