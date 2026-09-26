@@ -28,6 +28,8 @@ internal enum CsvRadix
 ///   asammdf MF4 export    timestamps, ..BusChannel, ..ID, ..IDE, ..DLC, ..DataBytes
 ///                         decimal ID, DataBytes = "[ 3 34 70 ...]" decimal
 ///   SavvyCAN              Time Stamp, ID, Extended, [Dir,] Bus, LEN, D1..D8   hex
+///                         "Time Stamp" is microseconds; converted to seconds
+///                         (backend/data_processing/csv_frames.py does the same)
 ///   timestamp,can_id,b0.. hex unless the data shows otherwise (backend /analyze
 ///                         semantics; bytes such as "128" are decimal by evidence)
 ///
@@ -64,6 +66,9 @@ internal sealed class CsvCanLayout
     public int LengthIndex { get; private set; } = -1;
     public int DataArrayIndex { get; private set; } = -1;
     public IReadOnlyList<int> ByteColumnIndexes { get; private set; } = Array.Empty<int>();
+
+    /// <summary>Divides the timestamp column into seconds: 1e6 for SavvyCAN "Time Stamp" (microseconds), else 1.</summary>
+    public double TimestampDivisor { get; private set; } = 1.0;
     public CsvRadix IdRadix { get; private set; }
     public CsvRadix ByteRadix { get; private set; }
 
@@ -171,6 +176,9 @@ internal sealed class CsvCanLayout
             LengthIndex = FindFirst(names, LengthNames),
             DataArrayIndex = dataArrayIndex,
             ByteColumnIndexes = byteColumns.OrderBy(c => c.Position).Select(c => c.Column).ToList(),
+            TimestampDivisor = formatName == "savvycan"
+                && raw.Any(h => string.Equals(Unquote(h).TrimStart('\uFEFF'), "Time Stamp", StringComparison.OrdinalIgnoreCase))
+                ? 1_000_000.0 : 1.0,
         };
 
         // Convention of the producing tool; overridden by evidence in DecideRadix.
@@ -262,6 +270,8 @@ internal sealed class CsvCanLayout
         {
             return false;
         }
+
+        timestamp /= TimestampDivisor;
 
         if (!TryParseNumber(Unquote(fields[IdIndex]), IdRadix, MaxCanId, out var canId))
         {

@@ -107,7 +107,9 @@ def test_savvycan_csv_reads_identifiers_as_hex(tmp_path: Path) -> None:
 
     assert [f[1] for f in frames] == [0x7E8, 0x1A2]
     assert frames[1][2] == (0xDE, 0xAD, 0xBE, 0xEF, 1, 2, 3, 4)
-    assert frames[0][0] == pytest.approx(1.0), "SavvyCAN timestamps are milliseconds"
+    # SavvyCAN "Time Stamp" is microseconds (the format's unit, and the training
+    # loader's); the previous /1000 read it as milliseconds.
+    assert [f[0] for f in frames] == [1000 / 1e6, 2000 / 1e6]
 
 
 # ── an unreadable file must say so ───────────────────────────────────────────
@@ -137,4 +139,44 @@ def test_unsupported_extension_raises(tmp_path: Path) -> None:
     path.write_bytes(b"\x00\x01\x02")
 
     with pytest.raises(ValueError, match="Unsupported file format"):
+        list(_load_file(path))
+
+
+
+# ── SavvyCAN replay (Step 12, P0-2) ──────────────────────────────────────────
+
+JAGUAR = ROOT / "assets" / "EV-CANlogs-main" / "Jaguar IPACE"
+
+
+def test_savvycan_rows_with_trailing_comma_are_not_dropped(tmp_path: Path) -> None:
+    """Every SavvyCAN row ends with "," - pandas shifted the columns and every row was lost."""
+    path = tmp_path / "trailing.csv"
+    path.write_text("Time Stamp,ID,Extended,Dir,Bus,LEN,D1,D2,D3,D4,D5,D6,D7,D8\n"
+                    "12720014,0000014C,false,Rx,0,8,00,00,10,68,0F,1A,0F,25,\n"
+                    "12720634,000000A3,false,Rx,0,8,B2,06,00,00,00,00,00,00,\n", encoding="utf-8")
+    frames = list(_load_file(path))
+    assert [(f[0], f[1]) for f in frames] == [(12.720014, 0x14C), (12.720634, 0xA3)]
+    assert frames[0][2] == (0x00, 0x00, 0x10, 0x68, 0x0F, 0x1A, 0x0F, 0x25)
+
+
+@pytest.mark.skipif(not JAGUAR.is_dir(), reason="Jaguar recordings not present")
+def test_jaguar_savvycan_replay_matches_training_loader() -> None:
+    import numpy as np
+
+    from backend.ml.training import recordings as rec
+
+    for path in sorted(JAGUAR.glob("*.csv")):
+        frames = list(_load_file(path))
+        trained = rec.load_recording(rec.Recording("jaguar_ipace", path, "savvycan_csv"))
+        assert len(frames) == len(trained) > 0, path.name
+        assert np.array_equal(np.array([f[0] for f in frames]), trained["timestamp"].to_numpy())
+        assert np.array_equal(np.array([f[1] for f in frames]), trained["can_id"].to_numpy())
+        assert np.array_equal(np.array([f[2] for f in frames]),
+                              trained[[f"b{i}" for i in range(8)]].to_numpy())
+
+
+def test_zero_frame_savvycan_raises(tmp_path: Path) -> None:
+    path = tmp_path / "nothing.csv"
+    path.write_text("Time Stamp,ID,Extended,Dir,Bus,LEN,D1,D2\nnot,a,frame,,,,,\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="No CAN frames could be parsed from 'nothing.csv'"):
         list(_load_file(path))

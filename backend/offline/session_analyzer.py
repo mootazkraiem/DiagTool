@@ -305,27 +305,32 @@ def _load_csv(path: Path) -> Iterator[tuple[float, int, tuple]]:
     same file the same way; a format neither can read now raises instead of
     quietly producing nothing.
     """
-    df = pd.read_csv(path, low_memory=False)
-    cols = [c.strip().lower() for c in df.columns]
-    df.columns = cols
+    frames = 0
+    for frame in _iter_csv(path):
+        frames += 1
+        yield frame
+    if frames == 0:
+        try:
+            header = path.read_text(encoding="utf-8", errors="ignore").splitlines()[0]
+        except IndexError:
+            header = "<empty file>"
+        raise ValueError(
+            f"No CAN frames could be parsed from '{path.name}'. The file needs a "
+            f"timestamp column, an identifier column and payload bytes (either b0..b7, "
+            f"D1..D8, or a DataBytes array). Header found: {header}"
+        )
 
-    # SavvyCAN format: Time Stamp, ID, Extended, Dir, Bus, LEN, D1..D8
-    if "id" in cols and "d1" in cols:
-        for _, row in df.iterrows():
-            try:
-                ts = float(row.get("time stamp", row.get("timestamp", 0))) / 1000.0
-                can_id = int(str(row["id"]).strip(), 16)
-                bs = tuple(int(str(row.get(f"d{i}", 0)).strip(), 16) & 0xFF for i in range(1, 9))
-                yield ts, can_id, bs
-            except Exception:
-                continue
-        return
+
+def _iter_csv(path: Path) -> Iterator[tuple[float, int, tuple]]:
+    cols = [c.strip().lower() for c in pd.read_csv(path, nrows=0).columns]
 
     # Generic: timestamp, can_id, b0..b7. Identifiers here are decimal unless
     # written with an 0x prefix — this is the form the MF4 converter writes, and
     # reading 2028 as hex instead of decimal turns UDS response id 0x7EC into
     # 0x2028. Kept exactly as it was for that reason.
     if "can_id" in cols:
+        df = pd.read_csv(path, low_memory=False)
+        df.columns = cols
         byte_cols = [c for c in cols if c.startswith("b") and c[1:].isdigit()]
         byte_cols = sorted(byte_cols, key=lambda c: int(c[1:]))[:8]
         for _, row in df.iterrows():
@@ -339,24 +344,17 @@ def _load_csv(path: Path) -> Iterator[tuple[float, int, tuple]]:
                 continue
         return
 
-    # Any other header — an asammdf MF4 export names its columns
-    # CAN_DataFrame.CAN_DataFrame.ID and .DataBytes, which neither branch above
-    # recognises. Hand those to the shared parser, which locates columns by
-    # header name and is covered by tests against the real recordings.
+    # Everything else - SavvyCAN (Time Stamp, ID, ..., D1..D8, microseconds),
+    # asammdf MF4 exports (CAN_DataFrame.*.ID / .DataBytes) and other headered
+    # exports - goes through the shared parser /analyze uses, which locates
+    # columns by header name and returns seconds. SavvyCAN used to have its own
+    # branch here: pandas shifted its columns by the trailing comma on every row,
+    # every row failed to parse, and the file replayed as an empty stream.
     from backend.data_processing.csv_frames import parse_csv_frames
 
     df = parse_csv_frames(path.read_bytes(), path.name)
-
     if df.empty or "can_id" not in df.columns:
-        try:
-            header = path.read_text(encoding="utf-8", errors="ignore").splitlines()[0]
-        except IndexError:
-            header = "<empty file>"
-        raise ValueError(
-            f"No CAN frames could be parsed from '{path.name}'. The file needs a "
-            f"timestamp column, an identifier column and payload bytes (either b0..b7, "
-            f"D1..D8, or a DataBytes array). Header found: {header}"
-        )
+        return
 
     byte_cols = [f"b{i}" for i in range(8)]
     timestamps = df["timestamp"].to_numpy(dtype=float)

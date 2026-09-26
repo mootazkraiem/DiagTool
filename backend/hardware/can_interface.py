@@ -10,8 +10,14 @@ Usage (from server.py):
     from backend.hardware.can_interface import CanHardwareReader
     hw_reader = CanHardwareReader(runtime_engine, runtime_stats,
                                   live_signals_buffer, live_alerts_buffer,
-                                  runtime_lock)
-    hw_reader.connect("pcan", channel="PCAN_USBBUS1", bitrate=500000)
+                                  runtime_lock, engine_factory=model_status.live_engine)
+    hw_reader.connect("pcan", channel="PCAN_USBBUS1", bitrate=500000, vehicle_id="kia_ev6")
+
+Each connection scores through its own RealtimeEngine, built by ``engine_factory``
+for exactly the selected vehicle (backend.ml.runtime.model_status.live_engine):
+a promoted clean-2 family loads through load_id_family, a legacy vehicle gets
+its legacy bundle, and a held-back, unavailable or unknown selection refuses the
+connection with the reason. The server's shared engine is never re-pointed.
     hw_reader.disconnect()
 """
 from __future__ import annotations
@@ -83,8 +89,13 @@ class CanHardwareReader:
         alerts_buffer: list[dict[str, Any]],
         lock: threading.Lock,
         vehicle_id: str = "",
+        engine_factory: Any = None,
     ) -> None:
+        # The engine a connection scores with; built per connection by
+        # engine_factory(vehicle_id). Without a factory (tests, tools) the engine
+        # passed in is used as it is and its model is never changed here.
         self._engine = runtime_engine
+        self._engine_factory = engine_factory
         self._stats = runtime_stats
         self._signals = signals_buffer
         self._alerts = alerts_buffer
@@ -154,11 +165,14 @@ class CanHardwareReader:
         self.interface_type = interface.lower()
         self.channel = channel
         self.bitrate = bitrate
-        if vehicle_id:
-            self._vehicle_id = vehicle_id
-        # Score against the matching trained model bundle for this vehicle instead
-        # of always falling back to "general" (same fix as the replay paths).
-        self._engine.vehicle_id = self._vehicle_id or "general"
+        # Resolve the model before touching the bus: a selection that cannot be
+        # used live (held back, no clean model, unknown, or a clean family that
+        # fails validation) refuses the connection with its reason. Assigning
+        # vehicle_id to an existing engine did not load the clean-2 family, which
+        # is resolved when an engine is built.
+        if self._engine_factory is not None:
+            self._engine = self._engine_factory(vehicle_id or "general")
+        self._vehicle_id = vehicle_id
         self.error = ""
 
         bus_kwargs: dict[str, Any] = {"interface": bustype, "bitrate": bitrate}
@@ -220,10 +234,10 @@ class CanHardwareReader:
         with self._lock:
             self._signals.clear()
             self._alerts.clear()
-        # Reset the shared engine back to "general" so the synthetic /vehicle
-        # endpoint (resumed after disconnect) doesn't keep scoring generic demo
-        # data against this hardware session's vehicle-specific model.
-        self._engine.vehicle_id = "general"
+        # The session engine (and its model) is dropped; the next connection
+        # builds its own for whatever vehicle it selects.
+        if self._engine_factory is not None:
+            self._engine = None
         logger.info(
             "[HW] Disconnected  frames=%d  alerts=%d",
             self.frames_received, self.alert_count
@@ -243,6 +257,8 @@ class CanHardwareReader:
             "channel":        self.channel,
             "bitrate":        self.bitrate,
             "vehicle_id":     self._vehicle_id,
+            "model_status":   (getattr(self._engine, "model_status", None).to_dict()
+                               if getattr(self._engine, "model_status", None) is not None else None),
             "frames_received": self.frames_received,
             "alert_count":    self.alert_count,
             "current_score":  round(self.current_score, 4),

@@ -533,7 +533,11 @@ public sealed class HomeViewModel : SectionViewModel
             AnalysisStatusText = "GENERATING DETECTIONS";
             AnalysisProgressPercent = 90;
             IsAnalysisIndeterminate = true;
+            // A refusal arrives as PythonApiException (caught below). No response at
+            // all from a backend that was up is a failure, never a completed analysis.
             var analysisResponse = await analyzeTask.ConfigureAwait(true);
+            if (backendOnline && analysisResponse is null)
+                throw new InvalidOperationException("the analysis backend returned no result");
             AnalysisStatusText = "BUILDING INTELLIGENCE";
             var metrics = await pythonApiClient.GetMetricsAsync(CancellationToken.None).ConfigureAwait(true);
             var apiDetections = ConvertApiAnomalies(analysisResponse, packets);
@@ -566,9 +570,16 @@ public sealed class HomeViewModel : SectionViewModel
             }
 
             if (analysisResponse?.Summary is { } summary)
-                VehicleDataService.SetAnalysisFrameCounts(summary.RowsParsed, summary.AnomalyCount);
+            {
+                // A backend that predates scored_count reported every parsed row as scored.
+                var scored = summary.ScoredCount > 0 || summary.UnresolvedCount > 0
+                    ? summary.ScoredCount
+                    : summary.AnomalyCount + summary.NormalCount;
+                VehicleDataService.SetAnalysisFrameCounts(
+                    summary.RowsParsed, summary.AnomalyCount, scored, summary.UnresolvedCount, summary.UnresolvedReasons);
+            }
             VehicleDataService.CompleteReplayAnalysis(detectedAttack, confidence, apiDetections.Select(d => d.Alert).ToList());
-            AnalysisStatusText = $"ANALYSIS COMPLETE — {detectedAttack} · {analysisModel.ModelLabel}";
+            AnalysisStatusText = CompletionStatusText(analysisResponse?.Summary, detectedAttack, analysisModel.Id);
             AnalysisProgressPercent = 100;
             IsAnalysisIndeterminate = false;
             AnalysisProcessedFrames = packets.Count;
@@ -580,11 +591,39 @@ public sealed class HomeViewModel : SectionViewModel
         {
             IsAnalysisIndeterminate = false;
             IsOfflineImporting = false;
-            AnalysisStatusText = $"ANALYSIS FAILED: {exception.Message.ToUpperInvariant()}";
+            AnalysisStatusText = exception is PythonApiException apiError
+                ? RefusalStatusText(apiError)
+                : $"ANALYSIS FAILED: {exception.Message.ToUpperInvariant()}";
             IsAnalysisRunning = false;
             VehicleDataService.CompleteReplayAnalysis("UNKNOWN", 0, Array.Empty<RuntimeAlertEvent>());
             VehicleDataService.PublishExternalSnapshot(VehicleSnapshot.Default());
         }
+    }
+
+    /// <summary>
+    /// Completion line: the model the backend actually used (summary.model_id), and
+    /// the selected id when it differs (a DBC profile scored with the general model).
+    /// Without a summary the backend was offline and no ML analysis ran.
+    /// </summary>
+    internal static string CompletionStatusText(PythonAnalyzeSummary? summary, string detectedAttack, string selectedModelId)
+    {
+        if (summary is null)
+            return "PARSED — NO ML ANALYSIS (BACKEND OFFLINE)";
+        var used = string.IsNullOrWhiteSpace(summary.ModelId) ? "general" : summary.ModelId;
+        var requested = string.IsNullOrWhiteSpace(summary.RequestedModelId) ? selectedModelId : summary.RequestedModelId;
+        var label = used.ToUpperInvariant();
+        if (!string.IsNullOrWhiteSpace(requested) && !string.Equals(used, requested, StringComparison.OrdinalIgnoreCase))
+            label += $" (SELECTED {requested.ToUpperInvariant()})";
+        return $"ANALYSIS COMPLETE — {detectedAttack} · MODEL {label}";
+    }
+
+    /// <summary>A refused or failed analysis, with the backend's status and first line of its reason.</summary>
+    internal static string RefusalStatusText(PythonApiException error)
+    {
+        var reason = (error.Detail ?? string.Empty).Split('\n')[0].Trim();
+        return error.IsRefusal
+            ? $"ANALYSIS REFUSED (HTTP {error.StatusCode}) — {reason.ToUpperInvariant()}"
+            : $"ANALYSIS FAILED (HTTP {error.StatusCode}) — {reason.ToUpperInvariant()}";
     }
 
     private static double ResolvePacketScore(PlaybackPacket packet)

@@ -16,14 +16,21 @@ public sealed class PythonApiClient
 {
     private const string DefaultEndpoint = "http://127.0.0.1:8765/vehicle";
 
-    private readonly HttpClient httpClient = new() { Timeout = TimeSpan.FromMinutes(5) };
+    private readonly HttpClient httpClient;
     private readonly AppLogger logger;
     private readonly string endpoint;
     private readonly string apiBase;
     private readonly string jsonFallbackPath;
 
     public PythonApiClient(AppLogger logger)
+        : this(logger, new HttpClient { Timeout = TimeSpan.FromMinutes(5) })
     {
+    }
+
+    /// <summary>For tests: a client over a given HttpClient (e.g. a fake handler).</summary>
+    internal PythonApiClient(AppLogger logger, HttpClient client)
+    {
+        httpClient = client;
         this.logger = logger;
         endpoint = Environment.GetEnvironmentVariable("CANVISION_PYTHON_API") ?? DefaultEndpoint;
         apiBase = BuildApiBase(endpoint);
@@ -87,8 +94,12 @@ public sealed class PythonApiClient
             using var response = await httpClient.PostAsync(BuildUrl("analyze"), multipart, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
-                logger.Info($"Python analyze endpoint returned {(int)response.StatusCode}.");
-                return null;
+                // A refusal (409: model not usable offline; 400: unknown model id) is
+                // an answer, not a missing one: keep the status and the backend's reason.
+                var body = await response.Content.ReadAsStringAsync();
+                var detail = PythonApiException.DetailFrom(body);
+                logger.Info($"Python analyze endpoint returned {(int)response.StatusCode}: {detail}");
+                throw new PythonApiException((int)response.StatusCode, detail);
             }
 
             var json = await response.Content.ReadAsStringAsync();
@@ -99,6 +110,10 @@ public sealed class PythonApiClient
             logger.Info($"Analyze model: requested={(string.IsNullOrWhiteSpace(modelId) ? "general" : modelId)} " +
                         $"used={payload?.Summary?.ModelId ?? "?"} ({payload?.Summary?.ModelKind ?? "?"})");
             return payload;
+        }
+        catch (PythonApiException)
+        {
+            throw;
         }
         catch (Exception exception)
         {

@@ -19,6 +19,12 @@ three digits or numpy-style ``[ 3 34 ...]`` arrays -> decimal). Without
 evidence the previous behaviour is kept: hex, except asammdf exports whose
 integer IDs and uint8 arrays are decimal by construction.
 
+Timestamps are returned in seconds. SavvyCAN/GVRET exports ("Time Stamp" plus
+one-based D1..D8 byte columns) record microseconds, as the format defines, and
+are divided by 1e6 here - the same unit the training loader
+(backend.ml.training.recordings, "savvycan_csv") applies. Every other layout
+already carries seconds and is left as it is.
+
 Headerless files and headers without recognisable timestamp/ID/payload columns
 keep the previous positional behaviour unchanged.
 """
@@ -39,6 +45,9 @@ _LENGTH = ("datalength", "len", "length", "dlc")  # DataLength = byte count; DLC
 _ZERO_BASED = re.compile(r"^(?:b|byte|data)(\d+)$")
 _ONE_BASED = re.compile(r"^d(\d+)$")
 _SAMPLE_ROWS = 500
+
+#: SavvyCAN/GVRET "Time Stamp" is in microseconds (divide, exactly as the training loader does).
+SAVVYCAN_TIMESTAMP_DIVISOR = 1e6
 
 # OUTPUT_COLUMNS as _normalize() renders a header row ("can_id" -> "canid"),
 # used to recognise this project's own MF4-converter output exactly.
@@ -117,6 +126,8 @@ def _layout_from_header(header_line: str, header: list[str]) -> dict | None:
     canonical_mf4 = names == _CANONICAL_MF4_COLUMNS
     default = "dec" if (asammdf or canonical_mf4) else "hex"
     return {
+        "format": "savvycan" if is_savvycan_header(header, byte_columns) else "generic",
+        "ts_divisor": SAVVYCAN_TIMESTAMP_DIVISOR if is_savvycan_header(header, byte_columns) else 1.0,
         "ts": ts_index,
         "id": id_index,
         "len": _first(names, _LENGTH),
@@ -125,6 +136,16 @@ def _layout_from_header(header_line: str, header: list[str]) -> dict | None:
         "id_radix": default,
         "byte_radix": default,
     }
+
+
+def is_savvycan_header(header: list[str], byte_columns: list[tuple[int, int, bool]]) -> bool:
+    """SavvyCAN/GVRET export: a "Time Stamp" column and only one-based D1..Dn byte columns.
+
+    The same signature the C# importer (CsvCanLayout, format "savvycan") and the
+    training loader (recordings.detect_format) recognise.
+    """
+    raw = [_unquote(h).lstrip("\ufeff").lower() for h in header]
+    return "time stamp" in raw and bool(byte_columns) and all(one for _, _, one in byte_columns)
 
 
 def _decide_radix(layout: dict, rows: list[list[str]]) -> None:
@@ -163,7 +184,7 @@ def _parse_row(layout: dict, fields: list[str]) -> list | None:
     if layout["ts"] >= len(fields) or layout["id"] >= len(fields):
         return None
     try:
-        timestamp = float(_unquote(fields[layout["ts"]]))
+        timestamp = float(_unquote(fields[layout["ts"]])) / layout["ts_divisor"]
     except ValueError:
         return None
 

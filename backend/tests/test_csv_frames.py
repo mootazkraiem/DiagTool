@@ -9,6 +9,9 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+import pandas as pd
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from backend.data_processing.csv_frames import parse_csv_frames  # noqa: E402
@@ -79,6 +82,45 @@ def test_savvycan_without_dir_column() -> None:
     df = _parse(OUTLANDER)
     assert df.iloc[0]["can_id"] == 0x75A
     assert df.iloc[0][[f"b{k}" for k in range(8)]].tolist() == [0x03, 0xE8, 0x03, 0xE8, 0x64, 0x64, 0x38, 0x39]
+
+
+def test_savvycan_timestamps_are_microseconds_converted_to_seconds() -> None:
+    """SavvyCAN "Time Stamp" is microseconds; the parser returns seconds (Step 12, P0-1)."""
+    from backend.data_processing.csv_frames import parse_csv_frames
+
+    text = ("Time Stamp,ID,Extended,Dir,Bus,LEN,D1,D2,D3,D4,D5,D6,D7,D8\n"
+            "12720014,0000014C,false,Rx,0,8,00,00,10,68,0F,1A,0F,25,\n"
+            "12720634,000000A3,false,Rx,0,8,B2,06,00,00,00,00,00,00,\n"
+            "12720651,00000066,false,Rx,0,8,00,00,00,00,00,00,00,00,\n")
+    df = parse_csv_frames(text.encode(), "jaguar.csv")
+    assert df["timestamp"].tolist() == [12720014 / 1e6, 12720634 / 1e6, 12720651 / 1e6]
+    assert df["timestamp"].diff().iloc[1:].round(9).tolist() == [0.00062, 0.000017]
+
+
+def test_non_savvycan_csv_keeps_seconds() -> None:
+    from backend.data_processing.csv_frames import parse_csv_frames
+
+    df = parse_csv_frames(b"timestamp,can_id,b0,b1,b2,b3,b4,b5,b6,b7\n12.5,1A0,1,2,3,4,5,6,7,8\n", "x.csv")
+    assert df["timestamp"].tolist() == [12.5]
+    df = parse_csv_frames(b"Time,ID,D1,D2\n3.25,1A0,01,02\n", "y.csv")      # D-columns without "Time Stamp"
+    assert df["timestamp"].tolist() == [3.25]
+
+
+JAGUAR = ROOT / "assets" / "EV-CANlogs-main" / "Jaguar IPACE"
+
+
+@pytest.mark.skipif(not JAGUAR.is_dir(), reason="Jaguar recordings not present")
+def test_savvycan_frames_are_identical_to_the_training_loader() -> None:
+    """Timestamps, IDs and payloads the app parses equal what the models were trained on."""
+    from backend.data_processing.csv_frames import parse_csv_frames
+    from backend.ml.training import recordings as rec
+
+    for path in sorted(JAGUAR.glob("*.csv")):
+        app = parse_csv_frames(path.read_bytes(), path.name)
+        trained = rec.load_recording(rec.Recording("jaguar_ipace", path, "savvycan_csv"))
+        cols = ["timestamp", "can_id", *[f"b{k}" for k in range(8)]]
+        pd.testing.assert_frame_equal(app[cols].reset_index(drop=True), trained.reset_index(drop=True),
+                                      check_dtype=False, rtol=0, atol=0)
 
 
 # ── timestamp,can_id,b0..b7 ──────────────────────────────────────────────────

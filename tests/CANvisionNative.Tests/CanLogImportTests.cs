@@ -163,6 +163,25 @@ public sealed class CanLogImportTests
         Assert.Equal(new byte[] { 0xAA, 0x02, 0x00, 0x00, 0x80, 0xAA, 0x00, 0x00 }, result.Frames[1].Data);
     }
 
+    [Fact]
+    public async Task SavvyCan_TimeStampMicroseconds_BecomeSeconds()
+    {
+        // SavvyCAN "Time Stamp" is microseconds; the backend (csv_frames.py) and the
+        // training loader read it as such. First rows: 12720014, 12720634, 12720651.
+        var result = await Import(Asset("assets", "EV-CANlogs-main", "Jaguar IPACE", "canbus_turning_on.csv"));
+
+        Assert.Equal(12.720014, result.Frames[0].RelativeTimestampSeconds, 9);
+        Assert.Equal(0.000620, result.Frames[1].RelativeTimestampSeconds - result.Frames[0].RelativeTimestampSeconds, 9);
+        Assert.Equal(0.000017, result.Frames[2].RelativeTimestampSeconds - result.Frames[1].RelativeTimestampSeconds, 9);
+    }
+
+    [Fact]
+    public void SavvyCan_Layout_DividesOnlySavvyCanTimeStamp()
+    {
+        Assert.Equal(1_000_000.0, CsvCanLayout.FromHeader("Time Stamp,ID,Extended,Dir,Bus,LEN,D1,D2")!.TimestampDivisor);
+        Assert.Equal(1.0, CsvCanLayout.FromHeader("timestamp,can_id,b0,b1,b2,b3,b4,b5,b6,b7")!.TimestampDivisor);
+    }
+
     // ── CANvision converter / simulator CSV (timestamp,can_id,b0..b7) ───────
 
     [Fact]

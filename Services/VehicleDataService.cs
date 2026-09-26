@@ -28,6 +28,9 @@ public sealed class VehicleDataService : ObservableObject
     private string? replaySourcePath;
     private int analyzedRows;
     private int flaggedFrames = -1;   // -1: no offline analysis summary
+    private int scoredFrames;
+    private int unresolvedFrames;
+    private IReadOnlyDictionary<string, int> unresolvedReasons = new Dictionary<string, int>();
     private IReadOnlyList<PlaybackPacket>? loadedReplayPackets;
     private double runtimeLatencyMs;
     private double runtimeFps;
@@ -115,23 +118,53 @@ public sealed class VehicleDataService : ObservableObject
         private set { lock (sync) { replayName = value; } }
     }
 
-    // Frame counts of the last offline analysis: rows the backend scored and rows it
-    // flagged. Alerts are fewer (bursts are merged), so rates use these.
-    public int AnalyzedRows  { get { lock (sync) { return analyzedRows; } } }
-    public int FlaggedFrames { get { lock (sync) { return flaggedFrames; } } }
+    // Frame counts of the last offline analysis: rows parsed, rows a model scored,
+    // rows no model scored (warm-up / sparse / unseen CAN IDs) and rows it flagged.
+    // Alerts are fewer (bursts are merged), so rates use these.
+    public int AnalyzedRows     { get { lock (sync) { return analyzedRows; } } }
+    public int FlaggedFrames    { get { lock (sync) { return flaggedFrames; } } }
+    public int ScoredFrames     { get { lock (sync) { return scoredFrames; } } }
+    public int UnresolvedFrames { get { lock (sync) { return unresolvedFrames; } } }
+    public IReadOnlyDictionary<string, int> UnresolvedReasons { get { lock (sync) { return unresolvedReasons; } } }
 
-    /// <summary>Share of analysed frames the model flagged, or null without an offline summary.</summary>
+    /// <summary>
+    /// Flagged frames / scored frames of the last offline analysis, or null without a
+    /// summary. Unresolved frames are neither flagged nor normal and are not in the
+    /// denominator.
+    /// </summary>
     public double? FlaggedFraction
     {
-        get { lock (sync) { return flaggedFrames >= 0 && analyzedRows > 0 ? flaggedFrames / (double)analyzedRows : (double?)null; } }
+        get { lock (sync) { return flaggedFrames >= 0 && scoredFrames > 0 ? flaggedFrames / (double)scoredFrames : (double?)null; } }
     }
 
-    public void SetAnalysisFrameCounts(int rows, int flagged)
+    /// <summary>"of N scored frames · M unresolved (reason n, ...)" for the last offline analysis, or empty.</summary>
+    public string FlaggedFractionBasisText
+    {
+        get
+        {
+            lock (sync)
+            {
+                if (flaggedFrames < 0 || scoredFrames <= 0) return string.Empty;
+                var text = $"of {scoredFrames:N0} scored frames";
+                if (unresolvedFrames > 0)
+                {
+                    var reasons = string.Join(", ", unresolvedReasons.OrderByDescending(r => r.Value).Select(r => $"{r.Key} {r.Value:N0}"));
+                    text += $" · {unresolvedFrames:N0} unresolved" + (reasons.Length > 0 ? $" ({reasons})" : string.Empty);
+                }
+                return text;
+            }
+        }
+    }
+
+    public void SetAnalysisFrameCounts(int rows, int flagged, int scored, int unresolved, IReadOnlyDictionary<string, int>? reasons = null)
     {
         lock (sync)
         {
-            analyzedRows  = Math.Max(0, rows);
-            flaggedFrames = rows > 0 ? Math.Max(0, Math.Min(flagged, rows)) : -1;
+            analyzedRows     = Math.Max(0, rows);
+            scoredFrames     = Math.Max(0, Math.Min(scored, analyzedRows));
+            unresolvedFrames = Math.Max(0, Math.Min(unresolved, analyzedRows));
+            unresolvedReasons = reasons ?? new Dictionary<string, int>();
+            flaggedFrames    = scoredFrames > 0 ? Math.Max(0, Math.Min(flagged, scoredFrames)) : -1;
         }
     }
 
@@ -177,7 +210,7 @@ public sealed class VehicleDataService : ObservableObject
     public void Start()
     {
         // A finished offline analysis must not block live alert polling (IDLE only).
-        lock (sync) { mlAnalysisState = "IDLE"; analyzedRows = 0; flaggedFrames = -1; }
+        lock (sync) { mlAnalysisState = "IDLE"; analyzedRows = 0; flaggedFrames = -1; scoredFrames = 0; unresolvedFrames = 0; unresolvedReasons = new Dictionary<string, int>(); }
         SetAppState(AppState.LiveSession);
         if (!refreshTimer.IsEnabled)
         {
@@ -396,6 +429,9 @@ public sealed class VehicleDataService : ObservableObject
             runtimeLatencyMs    = 0;
             analyzedRows        = 0;
             flaggedFrames       = -1;
+            scoredFrames        = 0;
+            unresolvedFrames    = 0;
+            unresolvedReasons   = new Dictionary<string, int>();
         }
     }
 

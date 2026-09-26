@@ -138,7 +138,9 @@ public sealed class DashboardViewModel : SectionViewModel
     public string AffectedCanIdsText => string.IsNullOrWhiteSpace(VehicleDataService.TopSuspiciousCanId) ? "None" : VehicleDataService.TopSuspiciousCanId;
     public string AttackTypeText => VehicleDataService.TotalAlerts > 0 ? VehicleDataService.DetectedAttackType : "None";
     public string LiveAlertsCountText => $"{VehicleDataService.TotalAlerts:N0}";
-    // Flagged share of the analysed frames when an offline analysis ran (alerts merge bursts).
+    // Flagged share of the SCORED frames when an offline analysis ran (alerts merge
+    // bursts; unresolved frames are neither flagged nor normal), stated by DetectionRateBasisText.
+    public string DetectionRateBasisText => VehicleDataService.FlaggedFractionBasisText;
     public string DetectionRateText => VehicleDataService.FlaggedFraction is { } fraction
         ? (fraction * 100.0).ToString("F1", System.Globalization.CultureInfo.InvariantCulture) + "%"
         : VehicleDataService.ProcessedReplayFrames <= 0 ? "--" : $"{VehicleDataService.TotalAlerts * 100.0 / Math.Max(1, VehicleDataService.ProcessedReplayFrames):F1}%";
@@ -269,6 +271,7 @@ public sealed class DashboardViewModel : SectionViewModel
         OnPropertyChanged(nameof(AttackTypeText));
         OnPropertyChanged(nameof(LiveAlertsCountText));
         OnPropertyChanged(nameof(DetectionRateText));
+        OnPropertyChanged(nameof(DetectionRateBasisText));
         OnPropertyChanged(nameof(ModelHealthText));
         OnPropertyChanged(nameof(PipelineHealthText));
         OnPropertyChanged(nameof(ReplayEngineHealthText));
@@ -305,6 +308,7 @@ public sealed class DashboardViewModel : SectionViewModel
         OnPropertyChanged(nameof(AttackTypeText));
         OnPropertyChanged(nameof(LiveAlertsCountText));
         OnPropertyChanged(nameof(DetectionRateText));
+        OnPropertyChanged(nameof(DetectionRateBasisText));
         OnPropertyChanged(nameof(ModelHealthText));
         OnPropertyChanged(nameof(PipelineHealthText));
         OnPropertyChanged(nameof(ReplayEngineHealthText));

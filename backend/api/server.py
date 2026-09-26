@@ -50,6 +50,7 @@ from backend.ml.runtime.realtime_engine import RealtimeEngine, CanFrame
 from backend.ml.runtime.ids_statistics import IDSStatistics
 from backend.ml.runtime.runtime_config import VALIDATION_CONFIG
 from backend.ml.runtime.model_loader import list_available_models
+from backend.ml.runtime import model_status
 from backend.ml.runtime.model_manifest import ManifestError
 from backend.ml.runtime.vehicle_scoring import score_frames as score_frames_with_model
 from backend.live.can_decoder import decode as can_decode
@@ -144,6 +145,13 @@ class AnalyzeSummary(BaseModel):
     unresolved_count: int = 0
     # Why those frames are unresolved, e.g. {"unseen_id": 120, "warmup": 33}.
     unresolved_reasons: dict[str, int] = {}
+    # Rows a model scored: anomaly_count + normal_count. rows_parsed =
+    # scored_count + unresolved_count; rates of flagged frames use scored_count.
+    scored_count: int = 0
+    # The id the client asked for, and that id's resolved status
+    # (backend.ml.runtime.model_status); model_id above is the model actually used.
+    requested_model_id: str = ""
+    model_status: str = ""
 
 
 class AnalyzeResult(BaseModel):
@@ -274,7 +282,8 @@ live_alerts_buffer: list[dict[str, Any]] = []
 runtime_lock = threading.Lock()
 live_simulator = LiveSimulator(runtime_engine, runtime_stats, live_signals_buffer, live_alerts_buffer, runtime_lock)
 session_recorder = SessionRecorder(live_signals_buffer, runtime_lock)
-hw_reader = CanHardwareReader(runtime_engine, runtime_stats, live_signals_buffer, live_alerts_buffer, runtime_lock)
+hw_reader = CanHardwareReader(runtime_engine, runtime_stats, live_signals_buffer, live_alerts_buffer, runtime_lock,
+                              engine_factory=lambda vid: model_status.live_engine(vid, cfg=runtime_engine.cfg))
 replay_process: Optional[subprocess.Popen[str]] = None
 replay_start_time: Optional[float] = None
 _last_incidents: list[dict] = []
@@ -790,9 +799,15 @@ async def analyze(
     # engine exactly as before. A trained vehicle model scores the same frames
     # through the realtime engine with that model; its anomaly / anomaly_score /
     # cluster columns then feed the unchanged post-ML pipeline and context builder.
-    requested_model = (model_id or "").strip()
-    trained_model_ids = {m["id"] for m in list_available_models()}
-    if requested_model and requested_model != "general" and requested_model in trained_model_ids:
+    requested_model = (model_id or "").strip() or "general"
+    selection = model_status.resolve(requested_model)
+    if selection.status == "unknown":
+        # An id this installation does not know is an error, not a request for
+        # the general model.
+        raise HTTPException(status_code=400, detail=f"unknown model id '{requested_model}': {selection.reason}")
+    if selection.offline == "refused":
+        raise HTTPException(status_code=409, detail=str(model_status.ModelUnavailableError(selection, "offline")))
+    if selection.offline == "clean_2":
         model_used, model_kind = requested_model, "vehicle"
         try:
             predicted = await _loop.run_in_executor(None, score_frames_with_model, featured, requested_model)
@@ -802,8 +817,8 @@ async def analyze(
             logger.error("[ANALYZE] %s", exc)
             raise HTTPException(status_code=409, detail=str(exc)) from exc
     else:
-        if requested_model and requested_model != "general":
-            logger.info("[ANALYZE] No trained model for '%s' - scoring with the general model.", requested_model)
+        # "general", or a vehicle profile configured to score with it (listed by
+        # /api/models with model_id "general"). The summary reports both ids.
         model_used, model_kind = "general", "general"
         predicted = await _loop.run_in_executor(None, engine.predict, featured)
     logger.info("[ANALYZE] model=%s (%s) rows=%d", model_used, model_kind, len(featured))
@@ -1013,6 +1028,9 @@ async def analyze(
         anomaly_count=int((predicted["anomaly"] == -1).sum()),
         normal_count=int((predicted["anomaly"] == 1).sum()),
         unresolved_count=int((predicted["anomaly"] == 0).sum()) if model_kind == "vehicle" else 0,
+        scored_count=int((predicted["anomaly"] == -1).sum() + (predicted["anomaly"] == 1).sum()),
+        requested_model_id=requested_model,
+        model_status=selection.status,
         unresolved_reasons=(
             predicted.loc[predicted["anomaly"] == 0, "state_resolution"].astype(str)
             .str.split(":").str[0].value_counts().astype(int).to_dict()
@@ -2056,17 +2074,24 @@ def api_models() -> dict[str, Any]:
         else:
             name = profile["name"] if profile else m["id"].replace("_", " ").upper()
             kind = "trained"
+        st = model_status.resolve(m["id"])
         models.append({
             "id": m["id"], "name": name, "kind": kind, "model_id": m["id"],
             "states": m["states"], "has_dbc": profile is not None,
             "trained_at": m.get("trained_at", ""),
+            # What this model is and what each path may do with it (model_status).
+            "status": st.status, "status_reason": st.reason,
+            "offline": st.offline, "live": st.live, "model_version": st.model_version,
         })
     for pid, profile in profiles.items():
         if pid not in trained_ids:
+            st = model_status.resolve(pid)
             models.append({
                 "id": pid, "name": profile["name"], "kind": "profile", "model_id": "general",
                 "states": general_states, "has_dbc": True,
                 "trained_at": general_trained_at,
+                "status": st.status, "status_reason": st.reason,
+                "offline": st.offline, "live": st.live, "model_version": st.model_version,
             })
     return {"status": "ok", "models": models}
 
@@ -2225,6 +2250,9 @@ def api_live_hardware_connect(req: HardwareConnectRequest) -> dict[str, Any]:
             bitrate=req.bitrate,
             vehicle_id=req.vehicle_id,
         )
+    except (model_status.ModelUnavailableError, ManifestError) as exc:
+        # The selected model may not be used live: say so, never fall back.
+        raise HTTPException(status_code=409, detail=str(exc))
     except (RuntimeError, ValueError, ModuleNotFoundError) as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 

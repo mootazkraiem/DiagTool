@@ -599,6 +599,18 @@
                                     <TextBlock Text="{Binding DetectionRateText}" FontFamily="{StaticResource CvMonoFont}"
                                                FontSize="11" Foreground="{DynamicResource CvWarnBrush}" Margin="7,0,0,0"/>
                                 </StackPanel>
+                                <TextBlock Text="{Binding DetectionRateBasisText}" FontFamily="{StaticResource CvMonoFont}" FontSize="11"
+                                   Foreground="{DynamicResource CvTextMutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DetectionRateBasisText}" Value="">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                             </StackPanel>
                         </Grid>
                     </StackPanel>

@@ -242,6 +242,9 @@ public sealed class LogPlaybackViewModel : SectionViewModel
         ? fraction * 100.0
         : TotalFrames == 0 ? 0.0 : TotalDetections * 100.0 / TotalFrames;
     public string DetectionRateText => TotalFrames == 0 ? "--" : DetectedPercent.ToString("F1", CultureInfo.InvariantCulture) + "%";
+    // Denominator of DETECTED / NORMAL after an offline analysis: scored frames, with the
+    // unresolved frames (warm-up / sparse / unseen CAN IDs) counted separately.
+    public string DetectionRateBasisText => VehicleDataService.FlaggedFractionBasisText;
     public string NormalFramesPercentText => TotalFrames == 0 ? "100.0%" : (100.0 - DetectedPercent).ToString("F1", CultureInfo.InvariantCulture) + "%";
     // Numeric form of NormalFramesPercentText, for driving the anomaly-distribution
     // ring's arc (StrokeDashArray needs a raw 0-100 double, not a formatted string).
@@ -1607,6 +1610,7 @@ public sealed class LogPlaybackViewModel : SectionViewModel
         OnPropertyChanged(nameof(FalsePositivesText));
         OnPropertyChanged(nameof(FalseNegativesText));
         OnPropertyChanged(nameof(DetectionRateText));
+        OnPropertyChanged(nameof(DetectionRateBasisText));
         OnPropertyChanged(nameof(NormalFramesPercentText));
         OnPropertyChanged(nameof(NormalFramesPercent));
         OnPropertyChanged(nameof(AttackWindowCountText));

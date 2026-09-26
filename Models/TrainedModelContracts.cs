@@ -34,19 +34,60 @@ public sealed class TrainedModelInfo
     [JsonProperty("trained_at")]
     public string TrainedAt { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Backend model status (backend/ml/runtime/model_status.py): clean_holdout_evaluated,
+    /// clean_unvalidated_no_holdout, clean_held_back, unavailable_no_clean_model, legacy,
+    /// general. Empty from a backend that predates it.
+    /// </summary>
+    [JsonProperty("status")]
+    public string Status { get; set; } = string.Empty;
+
+    [JsonProperty("status_reason")]
+    public string StatusReason { get; set; } = string.Empty;
+
+    /// <summary>What offline analysis does with this id: clean_2, general or refused.</summary>
+    [JsonProperty("offline")]
+    public string Offline { get; set; } = string.Empty;
+
+    /// <summary>What live hardware does with this id: clean_2, legacy, general or refused.</summary>
+    [JsonProperty("live")]
+    public string Live { get; set; } = string.Empty;
+
+    [JsonProperty("model_version")]
+    public string ModelVersion { get; set; } = string.Empty;
+
     public bool IsGeneral => Kind == "general";
     public string ModelLabel => ModelId.ToUpperInvariant();
     public string StatesText => States.Count == 0 ? "--" : string.Join(" · ", States).ToUpperInvariant();
 
-    public string KindText => Kind switch
+    public string KindText => Status switch
     {
-        "general" => "GENERAL MODEL",
-        "trained" => "VEHICLE MODEL",
-        _         => "DBC PROFILE · GENERAL MODEL",
+        "clean_holdout_evaluated"      => "CLEAN-2 · HOLDOUT EVALUATED",
+        "clean_unvalidated_no_holdout" => "CLEAN-2 NOT PROMOTED · UNVALIDATED",
+        "clean_held_back"              => "CLEAN-2 HELD BACK",
+        "unavailable_no_clean_model"   => "NO CLEAN MODEL",
+        "legacy"                       => "LEGACY MODEL",
+        _ => Kind switch
+        {
+            "general" => "GENERAL MODEL",
+            "trained" => "VEHICLE MODEL",
+            _         => "DBC PROFILE · GENERAL MODEL",
+        },
     };
 
-    /// <summary>READY for a real trained model; FALLBACK when the selection scores with the general model.</summary>
-    public string StatusText => Kind == "profile" ? "FALLBACK" : "READY";
+    /// <summary>
+    /// What live hardware will do with this selection: READY (clean-2 or general),
+    /// LEGACY, UNAVAILABLE (refused), FALLBACK (a DBC profile scored with the general model).
+    /// </summary>
+    public string StatusText => Kind == "profile" ? "FALLBACK" : Live switch
+    {
+        "refused" => "UNAVAILABLE",
+        "legacy"  => "LEGACY",
+        _         => "READY",
+    };
+
+    /// <summary>True when offline analysis would refuse this selection.</summary>
+    public bool OfflineRefused => Offline == "refused";
 
     public string DecodeText => HasDbc ? "DBC DECODE" : "NO DBC";
 

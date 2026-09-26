@@ -799,6 +799,18 @@
                                 <Run Text="{Binding TotalAlertsText, Mode=OneWay}"/><Run Text=" / "/><Run Text="{Binding PacketsAnalyzedText, Mode=OneWay}"/>
                             </TextBlock>
                         </StackPanel>
+                        <TextBlock Text="{Binding DetectionRateBasisText}" FontFamily="{StaticResource CvMonoFont}" FontSize="11"
+                                   Foreground="{DynamicResource CvTextMutedBrush}" TextWrapping="Wrap" Margin="0,-6,0,8">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DetectionRateBasisText}" Value="">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                         <!-- 20 x 6 s alert-count buckets (last 120 s), from AlertTrendBars -->
                         <ItemsControl ItemsSource="{Binding AlertTrendBars}" Height="44">
                             <ItemsControl.ItemsPanel>

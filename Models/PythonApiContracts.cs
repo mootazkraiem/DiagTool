@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -80,6 +81,24 @@ public sealed class PythonAnalyzeSummary
 
     [JsonProperty("model_kind")]
     public string ModelKind { get; set; } = "general";
+
+    /// <summary>Rows a model scored (anomaly + normal). RowsParsed = ScoredCount + UnresolvedCount.</summary>
+    [JsonProperty("scored_count")]
+    public int ScoredCount { get; set; }
+
+    /// <summary>Rows no model scored: warm-up, sparse_id, unseen_id, unmodelled_id.</summary>
+    [JsonProperty("unresolved_count")]
+    public int UnresolvedCount { get; set; }
+
+    [JsonProperty("unresolved_reasons")]
+    public Dictionary<string, int> UnresolvedReasons { get; set; } = new();
+
+    /// <summary>The id the client asked for; ModelId is the model actually used.</summary>
+    [JsonProperty("requested_model_id")]
+    public string RequestedModelId { get; set; } = string.Empty;
+
+    [JsonProperty("model_status")]
+    public string ModelStatus { get; set; } = string.Empty;
 }
 
 public sealed class PythonAnalyzeItem
