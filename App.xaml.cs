@@ -33,6 +33,16 @@ public partial class App : Application
                 DevOptions.StartupSection = devSection;
                 DevOptions.SkipDataGate = true;
             }
+
+            // "--entrance-delay=3": hold the entrance on its first frame for 3 s.
+            const string entranceDelay = "--entrance-delay=";
+            if (arg.StartsWith(entranceDelay, System.StringComparison.OrdinalIgnoreCase)
+                && double.TryParse(arg.Substring(entranceDelay.Length), System.Globalization.NumberStyles.Float,
+                                   System.Globalization.CultureInfo.InvariantCulture, out var delaySeconds)
+                && delaySeconds > 0)
+            {
+                DevOptions.EntranceDelaySeconds = System.Math.Min(delaySeconds, 30);
+            }
         }
 
         logger = new AppLogger();
@@ -66,12 +76,12 @@ public partial class App : Application
         var preview = new PreviewViewModel(null);
 
         var home = new HomeViewModel(vehicleDataService, canLogImportService, pythonApiClient, modelSelection);
-        var dashboard = new DashboardViewModel(vehicleDataService);
-        var telemetry = new TelemetryViewModel(vehicleDataService, canLogImportService);
+        var dashboard = new DashboardViewModel(vehicleDataService, modelSelection, pythonApiClient);
+        var telemetry = new TelemetryViewModel(vehicleDataService, canLogImportService, pythonApiClient, modelSelection);
         var diagnostics = new DiagnosticsViewModel(vehicleDataService);
         var playback = new LogPlaybackViewModel(vehicleDataService, canLogImportService, logger, modelSelection);
         _ = modelSelection.LoadAsync();
-        var anomalyIntel = new AnomalyIntelViewModel(vehicleDataService, pythonApiClient);
+        var anomalyIntel = new AnomalyIntelViewModel(vehicleDataService, pythonApiClient, modelSelection);
 
         var navigationService = new NavigationService(
             logger,
@@ -91,12 +101,15 @@ public partial class App : Application
         navigationService.NavigateToGarageCommand.Execute(null);
         logger.Info("Startup navigation set to Garage.");
 
-        // When replay analysis completes → go straight to Anomaly Intel
+        // When replay analysis completes → the Dashboard, which is the session
+        // overview you read results from. It used to land on Anomaly Intel, which
+        // jumped straight to one alert and read as the app opening on the wrong
+        // screen; the analyst walks to Anomaly Intel from here instead.
         home.AnalysisCompleted += () =>
         {
             Dispatcher.BeginInvoke((System.Action)(() =>
             {
-                navigationService.NavigateTo("AnomalyIntel");
+                navigationService.NavigateTo("Dashboard");
             }));
         };
 

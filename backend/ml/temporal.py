@@ -18,6 +18,10 @@ import pandas as pd
 
 WINDOW_SEC = 1.0          # analysis window in seconds
 DOS_FREQ_MULTIPLIER = 5.0 # freq must be 5x baseline to be DoS
+# ...and a flood needs volume. Without this floor, an identifier that was almost silent
+# in the baseline (baseline just above 0) became a "dos_burst" at 0.2 msg/s and was
+# given the ISOLATE response. No identifier floods a bus below this rate.
+DOS_MIN_FREQ_HZ = 20.0
 FREEZE_MIN_REPEATS = 10    # minimum consecutive identical payloads to flag
 
 
@@ -78,7 +82,7 @@ def detect_patterns(df: pd.DataFrame, freq_baseline: dict[str, float]) -> pd.Dat
         base_freq_vec = hex_ids.map(freq_baseline).fillna(0.0)
         freq          = out["msg_frequency"].replace([np.inf, -np.inf], 0.0).fillna(0.0)
         ratio         = (freq / base_freq_vec.clip(lower=1e-9)).clip(upper=50.0)
-        dos_mask      = (base_freq_vec > 0) & (freq > base_freq_vec * DOS_FREQ_MULTIPLIER)
+        dos_mask      = (base_freq_vec > 0) & (freq > base_freq_vec * DOS_FREQ_MULTIPLIER) & (freq >= DOS_MIN_FREQ_HZ)
         dos_score     = ((ratio - DOS_FREQ_MULTIPLIER) / DOS_FREQ_MULTIPLIER).clip(0.0, 1.0)
         patterns[dos_mask] = "dos_burst"
         t_scores[dos_mask] = dos_score[dos_mask]
@@ -135,30 +139,36 @@ def summarize_anomaly(
         return {"temporal_pattern": "normal", "temporal_score": 0.0}
 
     base = freq_baseline.get(can_id_hex, 0.0)
+    # One decimal below 10 msg/s: "{:.0f}" printed 0.3 msg/s as "0 msg/s", which read as
+    # "sent nothing" next to "flood".
+    freq_txt = f"{current_freq:.1f}" if current_freq < 10 else f"{current_freq:.0f}"
 
+    # These texts describe what was measured and what could cause it. The recordings carry
+    # no attack labels, so none of them states that an attack took place.
     if temporal_pattern == "dos_burst":
         if base >= 0.5:
             detail = (
                 f"Message frequency is {round(current_freq / base, 1)}× above baseline "
-                f"({current_freq:.0f} msg/s vs {base:.0f} msg/s normal) — "
-                f"consistent with a DoS flood attack on {can_id_hex}."
+                f"({freq_txt} msg/s vs {base:.0f} msg/s normal). A flood of {can_id_hex}, "
+                f"from injected frames or from a faulty ECU, would look like this."
             )
         else:
             # Silent (or almost silent) in the baseline: a ratio is meaningless here
             # (dividing by ~0 msg/s printed values like 2.57e+17x).
             detail = (
-                f"{can_id_hex} sent {current_freq:.0f} msg/s but was essentially silent in the "
-                f"baseline (under 0.5 msg/s) — consistent with a DoS flood or an injected ID."
+                f"{can_id_hex} sent {freq_txt} msg/s but was essentially silent in the "
+                f"baseline (under 0.5 msg/s). An ECU that started sending later in the "
+                f"recording, or an injected identifier, would look like this."
             )
     elif temporal_pattern == "rate_spike":
         detail = (
-            f"Sudden burst of {can_id_hex} frames detected (burstiness score {temporal_score:.2f}) "
-            f"— irregular inter-arrival pattern, possible injection."
+            f"Sudden burst of {can_id_hex} frames (burstiness score {temporal_score:.2f}): "
+            f"the time between frames became irregular."
         )
     elif temporal_pattern == "payload_freeze":
         detail = (
-            f"Identical payload repeated continuously on {can_id_hex} "
-            f"— consistent with a replay attack or stuck ECU."
+            f"Identical payload repeated continuously on {can_id_hex}. "
+            f"A stuck ECU or replayed frames would look like this."
         )
     else:
         detail = f"Temporal anomaly detected: {temporal_pattern}."

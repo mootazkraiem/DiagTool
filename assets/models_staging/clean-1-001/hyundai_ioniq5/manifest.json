@@ -1,0 +1,77 @@
+{
+  "schema_version": 2,
+  "model_family": "hyundai_ioniq5",
+  "model_version": "clean-1-001",
+  "created_at": "2026-09-24T11:47:44+00:00",
+  "training_pipeline": {
+    "name": "backend.ml.training.clean_pipeline",
+    "version": "clean-1",
+    "git_commit": "bbdb84b3f830ec7a970c29f86cf8129031d33c34",
+    "git_dirty": false
+  },
+  "feature_pipeline": {
+    "name": "backend.ml.features.canonical",
+    "version": "canonical-1",
+    "window": 10
+  },
+  "features": [
+    "time_diff",
+    "rolling_mean_time_diff",
+    "rolling_std_time_diff",
+    "payload_entropy"
+  ],
+  "dropped_features": {
+    "byte_diff": "near-constant (IQR 0, std 0.558)",
+    "rolling_mean_byte_diff": "near-constant (IQR 0, std 0.571)",
+    "rolling_std_byte_diff": "near-constant (IQR 0, std 0.788)",
+    "rolling_max_byte_diff": "near-constant (IQR 0, std 1.22)",
+    "changed_bytes_count": "near-constant (IQR 0, std 0.597)"
+  },
+  "scaler": {
+    "path": "scaler.joblib",
+    "sha256": "0cdbf095f16807b0cb390a6c18ee13e2ad7f1b01eaa594c62284420d32a6a370"
+  },
+  "model": {
+    "path": "model.joblib",
+    "sha256": "a76f96b23b891f00a342eccfeef832552f5fd114ce8ef9c3b024967a17778527"
+  },
+  "model_params": {
+    "scaler": "RobustScaler",
+    "model": "IsolationForest",
+    "n_estimators": 200,
+    "contamination": 0.02,
+    "random_state": 42,
+    "n_jobs": 1
+  },
+  "threshold": {
+    "value": 0.09900453171212131,
+    "method": "median_minus_kmad",
+    "k": 3.0,
+    "median": 0.2472771569342408,
+    "mad": 0.04942420840737316,
+    "score_min": -0.06497129070792251,
+    "score_max": 0.3190068952609943,
+    "fit_rows": 52997
+  },
+  "training_corpus": {
+    "fingerprint": "1eff4d537f453558da383f7003f0f46145754f0240856bee0138870fb6970fcc",
+    "recordings": [
+      {
+        "path": "Train/Hyundai Ioniq5/LOG/BE3BF653/00000038/00000006.MF4",
+        "sha256": "940ff656cefcdd92bd11a5b5a61e7f0387a87d5c5123bc7fa4379e3def16aae6",
+        "content_sha256": "f00fbf7843b6736fc02eb8f4bd04ed5e9c39416d3dc270d45ae560ddaa5d06eb",
+        "frames": 53037,
+        "frame_cap": null
+      }
+    ]
+  },
+  "holdout": {
+    "recordings": []
+  },
+  "environment": {
+    "python": "3.14.4",
+    "sklearn": "1.9.0",
+    "numpy": "2.4.4",
+    "pandas": "3.0.3"
+  }
+}

@@ -21,21 +21,26 @@ namespace CANvision.Native.ViewModels;
 public sealed class AnomalyIntelViewModel : SectionViewModel
 {
     private readonly PythonApiClient pythonApiClient;
+    private readonly ModelSelectionService? modelSelection;
     private string engineStatusText = "CHECKING...";
     private string engineDetailText = "CONTACTING BACKEND";
     private AlertDetailItem? selectedAlert;
     private string statusText    = "NO ALERTS — WAITING FOR IDS EVENTS";
     private string chatInputText = string.Empty;
 
-    public AnomalyIntelViewModel(VehicleDataService vehicleDataService, PythonApiClient pythonApiClient)
+    public AnomalyIntelViewModel(VehicleDataService vehicleDataService, PythonApiClient pythonApiClient,
+                                 ModelSelectionService? modelSelection = null)
         : base(vehicleDataService, SectionKey.AnomalyIntel)
     {
         this.pythonApiClient = pythonApiClient;
+        this.modelSelection = modelSelection;
         Alerts             = new ObservableCollection<AlertDetailItem>();
+        VisibleAlerts      = new ObservableCollection<AlertDetailItem>();
         ChatMessages       = new ObservableCollection<ChatMessage>();
         AttackDistribution = new ObservableCollection<AttackTypeBarItem>();
         TimelineMarkers    = new ObservableCollection<TimelineMarker>();
         SelectAlertCommand        = new RelayCommand<AlertDetailItem?>(SelectAlert);
+        SetSeverityFilterCommand  = new RelayCommand<string?>(f => SeverityFilter = f ?? FilterAll);
         SelectMarkerAlertCommand  = new RelayCommand<TimelineMarker?>(m => { if (m?.Alert is not null) SelectAlert(m.Alert); });
         RefreshCommand      = new RelayCommand(Refresh);
         SendChatCommand     = new AsyncRelayCommand(SendChatAsync, CanSendChat);
@@ -46,7 +51,16 @@ public sealed class AnomalyIntelViewModel : SectionViewModel
         _ = RefreshEngineStatusAsync();
     }
 
+    /// <summary>Every alert of the session. The KPI tiles, the attack distribution,
+    /// the timeline and both exports read this, so they always report the whole
+    /// session however the list is filtered.</summary>
     public ObservableCollection<AlertDetailItem>   Alerts             { get; }
+
+    /// <summary>What the alert list shows: <see cref="Alerts"/> passed through
+    /// <see cref="SeverityFilter"/>. A session is mostly LOW alerts, so reading the
+    /// few that matter means scrolling past hundreds that do not; this filters them
+    /// out of the list without changing any count.</summary>
+    public ObservableCollection<AlertDetailItem>   VisibleAlerts      { get; }
     public ObservableCollection<ChatMessage>       ChatMessages       { get; }
     public ObservableCollection<AttackTypeBarItem> AttackDistribution { get; }
     public ObservableCollection<TimelineMarker>    TimelineMarkers    { get; }
@@ -88,9 +102,14 @@ public sealed class AnomalyIntelViewModel : SectionViewModel
                     continue;
                 }
 
-                var provider = string.IsNullOrWhiteSpace(health.LlmProvider) ? "NONE" : health.LlmProvider.ToUpperInvariant();
-                EngineStatusText = health.ModelLoaded ? "ONLINE" : "MODEL NOT LOADED";
-                EngineDetailText = $"LLM {provider}";
+                // What the backend actually checks: a Gemini key is configured (not a test call),
+                // and Ollama answered on localhost:11434. "ONLINE" used to mean only that the
+                // detection model was loaded. The engine that wrote each answer is shown on it.
+                EngineStatusText = health.GeminiConfigured ? "GEMINI KEY SET"
+                                 : health.OllamaAvailable ? "OLLAMA REACHABLE" : "RULES ONLY";
+                EngineDetailText = health.GeminiConfigured
+                    ? (health.OllamaAvailable ? "FALLBACK OLLAMA, THEN RULES" : "FALLBACK RULES (OLLAMA OFF)")
+                    : health.OllamaAvailable ? "FALLBACK RULES" : "NO LLM AVAILABLE";
                 return;
             }
             catch
@@ -120,12 +139,89 @@ public sealed class AnomalyIntelViewModel : SectionViewModel
     public bool HasAlerts       => Alerts.Count > 0;
 
     /// <summary>The alert "SELECT FIRST" acts on. Binding a command parameter to Alerts[0]
-    /// throws inside WPF whenever the list is empty, so the view binds this instead.</summary>
-    public AlertDetailItem? FirstAlert => Alerts.Count > 0 ? Alerts[0] : null;
+    /// throws inside WPF whenever the list is empty, so the view binds this instead.
+    /// It follows the filtered list, so "select first" picks the first alert actually shown.</summary>
+    public AlertDetailItem? FirstAlert => VisibleAlerts.Count > 0 ? VisibleAlerts[0] : null;
     public string AlertCountText => Alerts.Count == 0 ? "NO EVENTS" : $"{Alerts.Count} EVENT{(Alerts.Count == 1 ? "" : "S")}";
     public int CriticalCount    => Alerts.Count(a => a.Severity == "CRITICAL");
     public int HighCount        => Alerts.Count(a => a.Severity is "HIGH" or "WARNING");
 
+    // ── Severity filter ──────────────────────────────────────────────────────
+    // Three steps, because that is what an analyst actually asks of the list:
+    // everything, only what is worth reading, only what is urgent.
+    public const string FilterAll      = "ALL";
+    public const string FilterWarning  = "WARNING+";
+    public const string FilterCritical = "CRITICAL";
+
+    private string severityFilter = FilterAll;
+
+    /// <summary>Which severities the list shows. One of <see cref="FilterAll"/>,
+    /// <see cref="FilterWarning"/> or <see cref="FilterCritical"/>.</summary>
+    public string SeverityFilter
+    {
+        get => severityFilter;
+        set
+        {
+            var next = value is FilterWarning or FilterCritical ? value : FilterAll;
+            if (severityFilter == next) return;
+            severityFilter = next;
+            OnPropertyChanged(nameof(SeverityFilter));
+            OnPropertyChanged(nameof(IsFilterAll));
+            OnPropertyChanged(nameof(IsFilterWarning));
+            OnPropertyChanged(nameof(IsFilterCritical));
+            ApplyFilter();
+        }
+    }
+
+    public bool IsFilterAll      => severityFilter == FilterAll;
+    public bool IsFilterWarning  => severityFilter == FilterWarning;
+    public bool IsFilterCritical => severityFilter == FilterCritical;
+
+    /// <summary>True when the filter is hiding at least one alert, so the view can
+    /// explain an empty or shortened list instead of looking broken.</summary>
+    public bool IsFiltered => severityFilter != FilterAll;
+
+    public bool HasVisibleAlerts => VisibleAlerts.Count > 0;
+
+    /// <summary>The session has alerts but the filter hides all of them. Without this
+    /// the panel would simply go blank and read as a failure.</summary>
+    public bool ShowFilterEmptyState => Alerts.Count > 0 && VisibleAlerts.Count == 0;
+
+    private static bool Passes(string severity, string filter) => filter switch
+    {
+        FilterCritical => severity == "CRITICAL",
+        FilterWarning  => severity is "CRITICAL" or "HIGH" or "WARNING",
+        _              => true,
+    };
+
+    /// <summary>Rebuilds <see cref="VisibleAlerts"/> from <see cref="Alerts"/>. The
+    /// selection is kept when it survives the filter; when it does not, the first
+    /// remaining alert is selected so the detail panel is never left showing an
+    /// alert the list no longer offers.</summary>
+    private void ApplyFilter()
+    {
+        VisibleAlerts.Clear();
+        foreach (var alert in Alerts)
+            if (Passes(alert.Severity, severityFilter))
+                VisibleAlerts.Add(alert);
+
+        StatusText = Alerts.Count == 0
+            ? "NO ALERTS — WAITING FOR IDS EVENTS"
+            : IsFiltered
+                ? $"SHOWING {VisibleAlerts.Count} OF {Alerts.Count} — {severityFilter}"
+                : $"SHOWING {Alerts.Count} IDS ALERT{(Alerts.Count == 1 ? "" : "S")}";
+
+        OnPropertyChanged(nameof(FirstAlert));
+        OnPropertyChanged(nameof(HasVisibleAlerts));
+        OnPropertyChanged(nameof(ShowFilterEmptyState));
+        OnPropertyChanged(nameof(IsFiltered));
+
+        if (VisibleAlerts.Count == 0) return;
+        if (selectedAlert is null || !VisibleAlerts.Contains(selectedAlert))
+            SelectAlert(VisibleAlerts[0]);
+    }
+
+    public IRelayCommand<string?>          SetSeverityFilterCommand { get; }
     public IRelayCommand<AlertDetailItem?> SelectAlertCommand  { get; }
     public IRelayCommand                   RefreshCommand      { get; }
     public IAsyncRelayCommand              SendChatCommand     { get; }
@@ -141,9 +237,11 @@ public sealed class AnomalyIntelViewModel : SectionViewModel
         Alerts.Clear();
         if (history.Count == 0)
         {
+            VisibleAlerts.Clear();
             StatusText = "NO ALERTS — WAITING FOR IDS EVENTS";
             OnPropertyChanged(nameof(FirstAlert));
             OnPropertyChanged(nameof(HasAlerts));
+            OnPropertyChanged(nameof(HasVisibleAlerts));
             OnPropertyChanged(nameof(AlertCountText));
             OnPropertyChanged(nameof(CriticalCount));
             OnPropertyChanged(nameof(HighCount));
@@ -153,15 +251,13 @@ public sealed class AnomalyIntelViewModel : SectionViewModel
         for (var i = 0; i < history.Count; i++)
             Alerts.Add(BuildDetailItem(i, history[i]));
 
-        StatusText = $"SHOWING {Alerts.Count} IDS ALERT{(Alerts.Count == 1 ? "" : "S")}";
-        OnPropertyChanged(nameof(FirstAlert));
         OnPropertyChanged(nameof(HasAlerts));
         OnPropertyChanged(nameof(AlertCountText));
         OnPropertyChanged(nameof(CriticalCount));
         OnPropertyChanged(nameof(HighCount));
 
-        if (selectedAlert is null && Alerts.Count > 0)
-            SelectAlert(Alerts[0]);
+        // Sets StatusText, rebuilds the visible list and selects within it.
+        ApplyFilter();
 
         RefreshDistribution();
         RefreshTimeline();
@@ -533,13 +629,15 @@ public sealed class AnomalyIntelViewModel : SectionViewModel
         if (dialog.ShowDialog() != true) return;
         var lines = new System.Collections.Generic.List<string>
         {
-            "Time,CAN_ID,Severity,AttackType,Score,Reason,KbMatch,Explanation,Recommendation"
+            "Time,CAN_ID,Severity,Pattern,Score,Reason,KbMatch,Explanation,Recommendation"
         };
         lines.AddRange(Alerts.Select(a =>
         {
             static string Esc(string s) => $"\"{s.Replace("\"", "\"\"")}\"";
             return string.Join(",",
-                a.Time, a.CanId, a.Severity, a.AttackType, $"{a.Score:F3}",
+                // Invariant culture: on a French Windows "{0:F3}" wrote "0,415", an
+                // unquoted comma that shifted every later column of the file.
+                a.Time, a.CanId, a.Severity, a.AttackType, a.Score.ToString("F3", System.Globalization.CultureInfo.InvariantCulture),
                 Esc(a.Reason),
                 Esc(a.KbMatchLabel),
                 Esc(a.ExplanationSummary),
@@ -554,16 +652,31 @@ public sealed class AnomalyIntelViewModel : SectionViewModel
         var dialog = new SaveFileDialog
         {
             Filter   = "PDF files (*.pdf)|*.pdf",
-            FileName = $"CANvision_AlertReport_{DateTime.Now:yyyyMMdd_HHmmss}.pdf",
-            Title    = "Export Alert Report as PDF",
+            FileName = $"CANvisionNative_AnomalyReport_{DateTime.Now:yyyyMMdd_HHmmss}.pdf",
+            Title    = "Export Anomaly Report as PDF",
         };
         if (dialog.ShowDialog() != true) return;
 
-        var snapshot  = Alerts.ToList();
-        var filePath  = dialog.FileName;
-        var generated = DateTime.Now;
+        var snapshot = Alerts.ToList();
+        var filePath = dialog.FileName;
+        var data     = VehicleDataService;
+        var model    = modelSelection?.SelectedModel;
+        var hasCounts = data.AnalyzedRows > 0;
+        var context = new PdfReportContext
+        {
+            Generated         = DateTime.Now,
+            RecordingName     = !string.IsNullOrWhiteSpace(data.ReplayName) ? data.ReplayName
+                                : (data.ReplaySourcePath is { Length: > 0 } p ? Path.GetFileName(p) : string.Empty),
+            ModelName         = model?.Name ?? string.Empty,
+            ModelStatus       = model?.Status ?? string.Empty,
+            AnalyzedRows      = hasCounts ? data.AnalyzedRows : -1,
+            ScoredFrames      = hasCounts ? data.ScoredFrames : -1,
+            FlaggedFrames     = hasCounts ? data.FlaggedFrames : -1,
+            UnresolvedFrames  = hasCounts ? data.UnresolvedFrames : -1,
+            UnresolvedReasons = data.UnresolvedReasons,
+        };
 
-        await Task.Run(() => PdfReportBuilder.Build(snapshot, filePath, generated)).ConfigureAwait(true);
+        await Task.Run(() => PdfReportBuilder.Build(snapshot, filePath, context)).ConfigureAwait(true);
     }
 
     protected override void OnDataUpdated(VehicleSnapshot snapshot) => base.OnDataUpdated(snapshot);

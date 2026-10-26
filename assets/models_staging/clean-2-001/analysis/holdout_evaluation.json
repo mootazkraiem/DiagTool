@@ -1,0 +1,393 @@
+{
+  "families": {
+    "hyundai_ioniq5": {
+      "id_models": 2,
+      "sparse_ids": 2,
+      "unmodelled_ids": 0,
+      "training_rows_modelled": 51508,
+      "training_flagged": 1029,
+      "training_flag_rate": 0.019977479226527917,
+      "training_ids_flag_rate_max": 0.019993425181554645,
+      "ties_ids": 0,
+      "models_file_mb": 1.173494,
+      "load_seconds": 2.452463700001317,
+      "clean1_holdout": [],
+      "score_one_ms": 23.543988000019453,
+      "holdout": []
+    },
+    "jaguar_ipace": {
+      "id_models": 46,
+      "sparse_ids": 97,
+      "unmodelled_ids": 0,
+      "training_rows_modelled": 192753,
+      "training_flagged": 3829,
+      "training_flag_rate": 0.019864801066650065,
+      "training_ids_flag_rate_max": 0.019989339019189766,
+      "ties_ids": 0,
+      "models_file_mb": 28.820021,
+      "load_seconds": 3.969672000001083,
+      "clean1_holdout": [
+        0.13575408731859653
+      ],
+      "score_one_ms": 23.830589999997756,
+      "holdout": [
+        {
+          "path": "EV-CANlogs-main/Jaguar IPACE/canbus_turningon_quickly.csv",
+          "frames": 50361,
+          "ready_rows": 48993,
+          "status_share": {
+            "scored": 0.8261792500969526,
+            "sparse_id": 0.17228991896801585,
+            "unseen_id": 0.0015308309350315352
+          },
+          "scored_rows": 40477,
+          "flagged": 1249,
+          "flagged_share_of_scored": 0.030857029918225164,
+          "scored_ids": 45,
+          "ids_flagged_over_50pct": 0,
+          "ids_flagged_100pct": 0,
+          "top_ids_by_flags": [
+            [
+              "0xA2",
+              1653,
+              0.27041742286751363
+            ],
+            [
+              "0x2DD",
+              1362,
+              0.08370044052863436
+            ],
+            [
+              "0x41",
+              1653,
+              0.04597701149425287
+            ],
+            [
+              "0x8C",
+              822,
+              0.09245742092457421
+            ],
+            [
+              "0xA8",
+              821,
+              0.06211936662606577
+            ],
+            [
+              "0xD",
+              1653,
+              0.030248033877797943
+            ]
+          ],
+          "batch_score_us_per_row": 37.19269461668999,
+          "norm_pct": {
+            "50": 0.03408811244062382,
+            "95": 0.43136421320994883,
+            "99": 0.6312788007143867
+          }
+        }
+      ]
+    },
+    "kaggle_normal": {
+      "id_models": 25,
+      "sparse_ids": 2,
+      "unmodelled_ids": 0,
+      "training_rows_modelled": 987607,
+      "training_flagged": 19740,
+      "training_flag_rate": 0.01998770766104331,
+      "training_ids_flag_rate_max": 0.019999605141063356,
+      "ties_ids": 0,
+      "models_file_mb": 15.262878,
+      "load_seconds": 2.0727802000001248,
+      "clean1_holdout": [],
+      "score_one_ms": 23.750935999996727,
+      "holdout": []
+    },
+    "kia_ev6": {
+      "id_models": 161,
+      "sparse_ids": 26,
+      "unmodelled_ids": 0,
+      "training_rows_modelled": 438418,
+      "training_flagged": 8672,
+      "training_flag_rate": 0.019780209754161553,
+      "training_ids_flag_rate_max": 0.019990248659190638,
+      "ties_ids": 7,
+      "models_file_mb": 78.779342,
+      "load_seconds": 13.276720899999418,
+      "clean1_holdout": [
+        0.05600348260416309
+      ],
+      "score_one_ms": 24.892863999994006,
+      "holdout": [
+        {
+          "path": "EV-CANlogs-main/Kia EV6/Vehicle everthing on.asc",
+          "frames": 438170,
+          "ready_rows": 436455,
+          "status_share": {
+            "scored": 0.9841197832537146,
+            "sparse_id": 0.015880216746285414
+          },
+          "scored_rows": 429524,
+          "flagged": 11109,
+          "flagged_share_of_scored": 0.0258635140294838,
+          "scored_ids": 149,
+          "ids_flagged_over_50pct": 0,
+          "ids_flagged_100pct": 0,
+          "top_ids_by_flags": [
+            [
+              "0x1CF",
+              21529,
+              0.02740489572204933
+            ],
+            [
+              "0x2BE",
+              5931,
+              0.046366548642724666
+            ],
+            [
+              "0x2BC",
+              5931,
+              0.04434328106558759
+            ],
+            [
+              "0x2BD",
+              5931,
+              0.04434328106558759
+            ],
+            [
+              "0x419",
+              8537,
+              0.022958884854164228
+            ],
+            [
+              "0xA3",
+              5290,
+              0.028544423440453687
+            ]
+          ],
+          "batch_score_us_per_row": 18.105789664841897,
+          "norm_pct": {
+            "50": 0.006097580767633337,
+            "95": 0.39795176484731704,
+            "99": 0.6258644360260442
+          }
+        }
+      ]
+    },
+    "mg_zs_ev": {
+      "id_models": 33,
+      "sparse_ids": 43,
+      "unmodelled_ids": 0,
+      "training_rows_modelled": 82192,
+      "training_flagged": 1629,
+      "training_flag_rate": 0.019819447148140937,
+      "training_ids_flag_rate_max": 0.02,
+      "ties_ids": 2,
+      "models_file_mb": 21.257666,
+      "load_seconds": 2.9414084000000003,
+      "clean1_holdout": [
+        0.030696955400074284
+      ],
+      "score_one_ms": 23.084082000023045,
+      "holdout": [
+        {
+          "path": "EV-CANlogs-main/MG ZS EV/Charging_6kW_CAN1_Test2.asc",
+          "frames": 100000,
+          "ready_rows": 99619,
+          "status_share": {
+            "scored": 0.11910378542245957,
+            "sparse_id": 0.05867354621106415,
+            "unseen_id": 0.8222226683664763
+          },
+          "scored_rows": 11865,
+          "flagged": 5173,
+          "flagged_share_of_scored": 0.4359882005899705,
+          "scored_ids": 3,
+          "ids_flagged_over_50pct": 1,
+          "ids_flagged_100pct": 1,
+          "top_ids_by_flags": [
+            [
+              "0x94",
+              5162,
+              1.0
+            ],
+            [
+              "0x1F1",
+              3352,
+              0.0032816229116945108
+            ],
+            [
+              "0x1F2",
+              3351,
+              0.0
+            ]
+          ],
+          "batch_score_us_per_row": 13.459730299173351,
+          "norm_pct": {
+            "50": 0.12377983254241387,
+            "95": 0.9417096474013266,
+            "99": 0.9791582710345716
+          }
+        }
+      ]
+    },
+    "nissan_leaf_2019": {
+      "id_models": 12,
+      "sparse_ids": 2,
+      "unmodelled_ids": 0,
+      "training_rows_modelled": 1315990,
+      "training_flagged": 26312,
+      "training_flag_rate": 0.01999407290328954,
+      "training_ids_flag_rate_max": 0.01999991202642726,
+      "ties_ids": 2,
+      "models_file_mb": 8.292958,
+      "load_seconds": 1.0182993000016722,
+      "clean1_holdout": [
+        0.1489911980171648
+      ],
+      "score_one_ms": 24.115202000029967,
+      "holdout": [
+        {
+          "path": "Train/Nissan Leaf 2019/LOG/2F6913DB/00000021/00000001-61D9D9BA.MF4",
+          "frames": 491969,
+          "ready_rows": 491821,
+          "status_share": {
+            "scored": 0.9999512017583633,
+            "sparse_id": 4.8798241636693025e-05
+          },
+          "scored_rows": 491797,
+          "flagged": 2951,
+          "flagged_share_of_scored": 0.006000443272325777,
+          "scored_ids": 12,
+          "ids_flagged_over_50pct": 0,
+          "ids_flagged_100pct": 0,
+          "top_ids_by_flags": [
+            [
+              "0x9",
+              422863,
+              0.004817163005512424
+            ],
+            [
+              "0x10",
+              21526,
+              0.012682337638204961
+            ],
+            [
+              "0x1",
+              4106,
+              0.02898197759376522
+            ],
+            [
+              "0x7BB",
+              11118,
+              0.010523475445223961
+            ],
+            [
+              "0x4",
+              4106,
+              0.02484169508037019
+            ],
+            [
+              "0x2",
+              4106,
+              0.01826595226497808
+            ]
+          ],
+          "batch_score_us_per_row": 10.56100382881752,
+          "norm_pct": {
+            "50": 0.0,
+            "95": 0.29195552026953336,
+            "99": 0.45565299373709817
+          }
+        }
+      ]
+    },
+    "road_ambient": {
+      "id_models": 77,
+      "sparse_ids": 29,
+      "unmodelled_ids": 0,
+      "training_rows_modelled": 1408887,
+      "training_flagged": 28139,
+      "training_flag_rate": 0.019972503117709227,
+      "training_ids_flag_rate_max": 0.019998435585221495,
+      "ties_ids": 5,
+      "models_file_mb": 42.627946,
+      "load_seconds": 6.4199920000010025,
+      "clean1_holdout": [
+        0.04748093243098077
+      ],
+      "score_one_ms": 23.718044000015652,
+      "holdout": [
+        {
+          "path": "road/road/ambient/ambient_highway_street_driving_long.log",
+          "frames": 150000,
+          "ready_rows": 148944,
+          "status_share": {
+            "scored": 0.9902043721130089,
+            "sparse_id": 0.009795627886991084
+          },
+          "scored_rows": 147485,
+          "flagged": 8982,
+          "flagged_share_of_scored": 0.060901108587313964,
+          "scored_ids": 77,
+          "ids_flagged_over_50pct": 1,
+          "ids_flagged_100pct": 0,
+          "top_ids_by_flags": [
+            [
+              "0x193",
+              3125,
+              0.5824
+            ],
+            [
+              "0x125",
+              6260,
+              0.21405750798722045
+            ],
+            [
+              "0x498",
+              3125,
+              0.232
+            ],
+            [
+              "0x69E",
+              3125,
+              0.18176
+            ],
+            [
+              "0x5E1",
+              6260,
+              0.08642172523961661
+            ],
+            [
+              "0x28B",
+              3125,
+              0.13568
+            ]
+          ],
+          "batch_score_us_per_row": 23.215366986471984,
+          "norm_pct": {
+            "50": 0.06098010832754214,
+            "95": 0.5219127447792087,
+            "99": 0.6521657529310545
+          }
+        }
+      ]
+    },
+    "tesla": {
+      "id_models": 15,
+      "sparse_ids": 29,
+      "unmodelled_ids": 0,
+      "training_rows_modelled": 107553,
+      "training_flagged": 2144,
+      "training_flag_rate": 0.01993435794445529,
+      "training_ids_flag_rate_max": 0.02,
+      "ties_ids": 0,
+      "models_file_mb": 8.360519,
+      "load_seconds": 1.259214499999871,
+      "clean1_holdout": [],
+      "score_one_ms": 24.942321999988053,
+      "holdout": []
+    }
+  },
+  "total_models_mb": 204.574824,
+  "total_id_models": 371
+}

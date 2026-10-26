@@ -1,0 +1,105 @@
+{
+  "calibration": {
+    "method": "empirical_quantile_strict",
+    "target_contamination": 0.02,
+    "definition": "threshold = (k+1)-th smallest training score_samples value, k = floor(target_contamination x rows); flagged iff score < threshold; ties at the threshold are not flagged"
+  },
+  "per_can_id": {
+    "0x1": {
+      "threshold": -0.6457630543516734,
+      "median": -0.4401993628636929,
+      "rows": 10974,
+      "k": 219,
+      "flagged_count": 218,
+      "ties_at_threshold": 2
+    },
+    "0x2": {
+      "threshold": -0.6661549915968741,
+      "median": -0.3601820717752421,
+      "rows": 10974,
+      "k": 219,
+      "flagged_count": 219,
+      "ties_at_threshold": 1
+    },
+    "0x3": {
+      "threshold": -0.5958541354392451,
+      "median": -0.4469862475042625,
+      "rows": 10974,
+      "k": 219,
+      "flagged_count": 219,
+      "ties_at_threshold": 1
+    },
+    "0x4": {
+      "threshold": -0.634319732884295,
+      "median": -0.42663317392248007,
+      "rows": 10974,
+      "k": 219,
+      "flagged_count": 219,
+      "ties_at_threshold": 1
+    },
+    "0x5": {
+      "threshold": -0.5979995019150974,
+      "median": -0.4534224551934269,
+      "rows": 10974,
+      "k": 219,
+      "flagged_count": 219,
+      "ties_at_threshold": 1
+    },
+    "0x6": {
+      "threshold": -0.6016028677207761,
+      "median": -0.44415751468294884,
+      "rows": 10974,
+      "k": 219,
+      "flagged_count": 219,
+      "ties_at_threshold": 1
+    },
+    "0x7": {
+      "threshold": -0.6092641187755806,
+      "median": -0.4374006885584868,
+      "rows": 10974,
+      "k": 219,
+      "flagged_count": 219,
+      "ties_at_threshold": 1
+    },
+    "0x8": {
+      "threshold": -0.6588287851563916,
+      "median": -0.4239018875496412,
+      "rows": 10974,
+      "k": 219,
+      "flagged_count": 219,
+      "ties_at_threshold": 1
+    },
+    "0x9": {
+      "threshold": -0.5843399046994938,
+      "median": -0.43435046203005,
+      "rows": 1136705,
+      "k": 22734,
+      "flagged_count": 22734,
+      "ties_at_threshold": 1
+    },
+    "0x10": {
+      "threshold": -0.6448169827697782,
+      "median": -0.3894262021240393,
+      "rows": 57929,
+      "k": 1158,
+      "flagged_count": 1157,
+      "ties_at_threshold": 3
+    },
+    "0x79B": {
+      "threshold": -0.6547596545469122,
+      "median": -0.4791662544557836,
+      "rows": 9228,
+      "k": 184,
+      "flagged_count": 184,
+      "ties_at_threshold": 1
+    },
+    "0x7BB": {
+      "threshold": -0.5883233745657983,
+      "median": -0.46405759360002363,
+      "rows": 24336,
+      "k": 486,
+      "flagged_count": 486,
+      "ties_at_threshold": 1
+    }
+  }
+}

@@ -1,31 +1,42 @@
 @startuml
-skinparam backgroundColor white
-skinparam defaultFontName Helvetica
-skinparam defaultFontSize 12
-skinparam shadowing false
-skinparam sequence {
-  ArrowColor #2C5AA0
-  LifeLineBorderColor #2C5AA0
-  ParticipantBackgroundColor #EAF2FF
-  ParticipantBorderColor #2C5AA0
-}
+!include style.iuml
+skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
+hide footbox
 
 actor Analyst
-participant "Desktop Client" as Client
-participant "Backend API" as Backend
-participant "LLM Provider" as LLM
+participant "AnomalyIntelViewModel" as VM
+participant "PythonApiClient" as Client
+participant "server.py" as Server
+participant "explainer.llm" as Explainer
+participant "Gemini" as Gemini
+participant "Ollama" as Ollama
 
-Analyst -> Client : select alert / click Explain
-Client -> Backend : GET /api/explain/{index}
-activate Backend
-Backend -> Backend : resolve alert context
-Backend -> LLM : request explanation
-alt LLM available
-  LLM --> Backend : generated text
-else LLM unavailable
-  Backend -> Backend : rule-based fallback\n(no external call)
+Analyst -> VM : select alert
+VM -> Client : GetAlertExplanationAsync(index)
+Client -> Server : GET /api/explain/{index}
+activate Server
+Server -> Server : find the alert\n(last analysis or replay,\nelse live buffer)
+opt explanation not in the cache
+  Server -> Explainer : explain_alert(alert)
+  activate Explainer
+  Explainer -> Explainer : build_context(alert),\nsignal map, web search
+  Explainer -> Gemini : prompt with the\nweb results
+  alt Gemini answers
+    Gemini --> Explainer : explanation
+  else Gemini not available
+    Explainer -> Ollama : prompt without\nthe web results
+    alt Ollama answers
+      Ollama --> Explainer : explanation
+    else no model available
+      Explainer -> Explainer : rule based\ntemplate
+    end
+  end
+  Explainer --> Server : explanation + mode
+  deactivate Explainer
 end
-Backend --> Client : summary, detail,\nlayer scores, recommendation
-deactivate Backend
-Client --> Analyst : display explanation\nin Chat panel
+Server --> Client : JSON
+deactivate Server
+Client --> VM : ExplainAlertResponse
+VM --> Analyst : explanation,\nengine name
 @enduml

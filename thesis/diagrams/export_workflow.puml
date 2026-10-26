@@ -1,23 +1,21 @@
 @startuml
-skinparam backgroundColor white
-skinparam defaultFontName Helvetica
-skinparam defaultFontSize 12
-skinparam shadowing false
-skinparam roundcorner 6
-skinparam component {
-  BackgroundColor #EAF2FF
-  BorderColor #2C5AA0
-  ArrowColor #2C5AA0
-}
-left to right direction
+!include style.iuml
+skinparam roundCorner 14
 
-component "In-memory\nalert list" as Alerts
-component "CSV writer\n(Time, CAN_ID, Severity,\nAttackType, Score, Reason, ...)" as CSV
-component "PdfReportBuilder\n(PDFsharp, paginated A4)" as PDF
-component "User-chosen\nfile on disk" as File
-
-Alerts --> CSV
-Alerts --> PDF
-CSV --> File
-PDF --> File
+start
+:Alert list shown in Anomaly Intel;
+if (which export?) then (EXPORT CSV)
+  :One row per alert: time, CAN ID,
+  severity, pattern, score, reason,
+  knowledge base match, explanation;
+  :Numbers written in a fixed format
+  (independent of the Windows language);
+  :alerts_<date>.csv;
+else (EXPORT PDF)
+  :PdfReportBuilder.Build();
+  :A4 report: header, summary
+  by severity, table of the alerts;
+  :CANvision_AlertReport_<date>.pdf;
+endif
+stop
 @enduml

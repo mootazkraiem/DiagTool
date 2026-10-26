@@ -1,26 +1,53 @@
 @startuml
-skinparam backgroundColor white
-skinparam defaultFontName Helvetica
-skinparam defaultFontSize 12
-skinparam shadowing false
-skinparam roundcorner 6
-skinparam ArrowColor #2C5AA0
-skinparam ArrowThickness 1.1
-skinparam component {
-  BackgroundColor #EAF2FF
-  BorderColor #2C5AA0
-}
-left to right direction
+!include style.iuml
+skinparam roundCorner 14
 
-component "Selected alert\n(can_id, score, reason)" as Alert
-component "Context builder\n(features + state stats\n+ KB match + similar case)" as Context
-component "LLM provider chain\nGemini -> Ollama" as LLMChain
-component "Rule-based\nfallback template" as Rule #FFF3E0
-component "Summary, detail,\nrecommendation" as Output #E8F5E9
-
-Alert -> Context
-Context -> LLMChain
-LLMChain -> Output
-LLMChain ..> Rule : if all providers fail
-Rule -> Output
+start
+:Analyst selects an alert:
+GET /api/explain/{index};
+if (index in the alert list of the
+last analysis or replay?) then (yes)
+  :Take that alert;
+else (no)
+  if (live alert buffer empty?) then (yes)
+    :404, no alert to explain;
+    stop
+  else (no)
+    :Take the alert from the live
+    buffer (newest first);
+  endif
+endif
+if (explanation already
+in the cache?) then (yes)
+  :Return the cached text;
+  stop
+else (no)
+endif
+:Build the context
+----
+features and scores of the alert
+expected statistics of the identifier
+closest pattern in the knowledge base
+most similar past explanation
+signals of the identifier (signal map)
+short web search (Wikipedia, NVD),
+used by Gemini only;
+if (Gemini answers?) then (yes)
+  :mode = gemini
+  numbers of the answer that are
+  not in the context are recorded;
+else (no)
+  if (local Ollama answers?) then (yes)
+    :mode = ollama
+    numbers of the answer that are
+    not in the context are recorded;
+  else (no)
+    :Rule based template
+    mode = rule_based;
+  endif
+endif
+:Save it in the history store, then show
+the summary, detail and recommendation
+with the name of the engine;
+stop
 @enduml

@@ -1,10 +1,10 @@
 \chapter{REST API Endpoints}
 \label{app:api}
 
-Table~\ref{tab:api-endpoints} lists the \gls{rest} endpoints exposed by the backend, grouped by function. All endpoints are served on http://127.0.0.1:8765 and consumed by the desktop client only.
+Table~\ref{tab:api-endpoints} lists the 52 \gls{rest} endpoints of the backend, grouped by function. All of them are served on \texttt{http://127.0.0.1:8765}, and only the desktop client calls them.
 
 \footnotesize
-\begin{longtable}{|p{1.4cm}|p{7.3cm}|p{6.0cm}|}
+\begin{longtable}{|p{1.4cm}|p{7.2cm}|p{6.0cm}|}
 \caption{Backend REST API endpoints.}\label{tab:api-endpoints}\\
 \hline
 \textbf{Method} & \textbf{Path} & \textbf{Purpose} \\
@@ -26,7 +26,7 @@ POST & /analyze                                & Offline batch analysis of one o
 \hline
 GET  & /incidents                             & Grouped incidents from the last analysis \\
 \hline
-POST & /inject                                & Attack injection into an uploaded log \\
+POST & /inject                                & Injection of a synthetic anomaly into an uploaded log \\
 \hline
 POST & /feedback                              & Analyst feedback on a frame label \\
 \hline
@@ -64,13 +64,15 @@ GET  & /api/replay/alerts                       & Alerts from the latest replay 
 \hline
 GET  & /api/replay/partial-alerts               & Partial alerts while replay is running \\
 \hline
-POST & /api/simulator/generate                 & Generate a simulated attack \\
+POST & /api/simulator/generate                 & Generate a simulated anomaly \\
 \hline
-GET  & /api/simulator/attacks                  & List available simulated attack types \\
+GET  & /api/simulator/attacks                  & List the available simulated anomaly types \\
 \hline
 GET  & /api/validation/reports                 & List validation report files \\
 \hline
 GET  & /api/vehicles                           & Supported vehicle profile list \\
+\hline
+GET  & /api/models                             & Selectable vehicle models, each with its status (evaluated on a holdout, not validated, held back, legacy or general) \\
 \hline
 GET  & /api/vehicles/\{vehicle\_id\}/can\_ids   & CAN identifiers defined in a vehicle's DBC \\
 \hline
@@ -83,6 +85,10 @@ GET  & /api/offline/frames/\{session\_id\}      & Paginated decoded frames \\
 GET  & /api/offline/summary/\{session\_id\}     & Offline analysis summary \\
 \hline
 POST & /api/mf4/convert                        & Convert an MF4 file to CSV \\
+\hline
+POST & /api/signals/discover                   & Signals carried by a loaded capture: decoded signals, or raw payload bytes marked as undecoded \\
+\hline
+POST & /api/dataset/describe                   & Measured facts about a capture and whether the selected model was trained or tested on it \\
 \hline
 POST & /api/live/hardware/connect               & Connect a physical CAN adapter \\
 \hline

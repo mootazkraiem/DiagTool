@@ -1,0 +1,494 @@
+{
+  "feature_pipeline": "canonical-1",
+  "window": 10,
+  "per_can_id": {
+    "0x94": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {}
+    },
+    "0x9D": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "payload_entropy"
+      ],
+      "constant_features": {
+        "changed_bytes_count": 3.0
+      }
+    },
+    "0xAC": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "payload_entropy"
+      ],
+      "constant_features": {
+        "changed_bytes_count": 2.0
+      }
+    },
+    "0xAF": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "payload_entropy"
+      ],
+      "constant_features": {
+        "changed_bytes_count": 4.0
+      }
+    },
+    "0xC1": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "payload_entropy"
+      ],
+      "constant_features": {
+        "rolling_max_byte_diff": 2.5649493574615367,
+        "changed_bytes_count": 2.0
+      }
+    },
+    "0xC5": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "payload_entropy"
+      ],
+      "constant_features": {
+        "rolling_max_byte_diff": 2.5649493574615367,
+        "changed_bytes_count": 2.0
+      }
+    },
+    "0xC7": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.0
+      }
+    },
+    "0xF1": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.5435644431995964
+      }
+    },
+    "0xFB": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {}
+    },
+    "0x163": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {}
+    },
+    "0x165": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.0
+      }
+    },
+    "0x167": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.5435644431995964
+      }
+    },
+    "0x169": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 2.4056390622295662
+      }
+    },
+    "0x185": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {}
+    },
+    "0x194": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 1.2987949406953985
+      }
+    },
+    "0x196": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 1.811278124459133
+      }
+    },
+    "0x19C": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {}
+    },
+    "0x19F": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.0
+      }
+    },
+    "0x1A9": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.0
+      }
+    },
+    "0x1AF": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.0
+      }
+    },
+    "0x1C7": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "payload_entropy"
+      ],
+      "constant_features": {
+        "changed_bytes_count": 3.0
+      }
+    },
+    "0x1E1": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "payload_entropy"
+      ],
+      "constant_features": {
+        "rolling_max_byte_diff": 0.5596157879354227,
+        "changed_bytes_count": 2.0
+      }
+    },
+    "0x1E5": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {}
+    },
+    "0x1E9": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.0
+      }
+    },
+    "0x1F1": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count"
+      ],
+      "constant_features": {
+        "payload_entropy": 1.061278124459133
+      }
+    },
+    "0x1F2": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.0
+      }
+    },
+    "0x227": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {}
+    },
+    "0x22A": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.5435644431995964
+      }
+    },
+    "0x230": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.0
+      }
+    },
+    "0x242": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.0
+      }
+    },
+    "0x244": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.5435644431995964
+      }
+    },
+    "0x246": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.0
+      }
+    },
+    "0x2F6": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 1.061278124459133
+      }
+    }
+  }
+}

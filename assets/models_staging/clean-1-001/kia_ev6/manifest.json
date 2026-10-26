@@ -1,0 +1,91 @@
+{
+  "schema_version": 2,
+  "model_family": "kia_ev6",
+  "model_version": "clean-1-001",
+  "created_at": "2026-09-24T11:49:13+00:00",
+  "training_pipeline": {
+    "name": "backend.ml.training.clean_pipeline",
+    "version": "clean-1",
+    "git_commit": "bbdb84b3f830ec7a970c29f86cf8129031d33c34",
+    "git_dirty": false
+  },
+  "feature_pipeline": {
+    "name": "backend.ml.features.canonical",
+    "version": "canonical-1",
+    "window": 10
+  },
+  "features": [
+    "time_diff",
+    "rolling_mean_time_diff",
+    "rolling_std_time_diff",
+    "byte_diff",
+    "rolling_mean_byte_diff",
+    "rolling_std_byte_diff",
+    "rolling_max_byte_diff",
+    "changed_bytes_count",
+    "payload_entropy"
+  ],
+  "dropped_features": {},
+  "scaler": {
+    "path": "scaler.joblib",
+    "sha256": "6b9652a0b17aabbdda7edb6638784b45d770826d837db2972c995f6f57ae7e79"
+  },
+  "model": {
+    "path": "model.joblib",
+    "sha256": "280cb32d7a1301bee3be2f43b400b0d753d5f53aab4aa59e90c680d2a2167eda"
+  },
+  "model_params": {
+    "scaler": "RobustScaler",
+    "model": "IsolationForest",
+    "n_estimators": 200,
+    "contamination": 0.02,
+    "random_state": 42,
+    "n_jobs": 1
+  },
+  "threshold": {
+    "value": 0.043085488761861024,
+    "method": "median_minus_kmad",
+    "k": 3.0,
+    "median": 0.1725528625876776,
+    "mad": 0.04315579127527219,
+    "score_min": -0.09649535916549812,
+    "score_max": 0.2430552717802365,
+    "fit_rows": 446315
+  },
+  "training_corpus": {
+    "fingerprint": "97b5d733057a194209465757c4ad72a6cfab2382a9ab347fe08ce341d9384e0b",
+    "recordings": [
+      {
+        "path": "EV-CANlogs-main/Kia EV6/Ignition On, Motor Off.asc",
+        "sha256": "9cd37ed3cd7792b86a0359a8c18b4b9e7e9fcec5f35a69a2605b07b15c0db327",
+        "content_sha256": "bb2d7e8c48c78c5caa46c1210c981dbd166805091c6cc7cc29e361a54f5b1e51",
+        "frames": 409416,
+        "frame_cap": null
+      },
+      {
+        "path": "EV-CANlogs-main/Kia EV6/OnlyBattery.asc",
+        "sha256": "fc9cb36a7eea89d04a9917544b7cb79bf3f8482678f04447bed65199fc5d5011",
+        "content_sha256": "93c0e6e54a682ca1cb81415a97c260ac7e69f0f5e783ac5186cc0c94cc611781",
+        "frames": 38782,
+        "frame_cap": null
+      }
+    ]
+  },
+  "holdout": {
+    "recordings": [
+      {
+        "path": "EV-CANlogs-main/Kia EV6/Vehicle everthing on.asc",
+        "sha256": "202e4cc53507afbef52c21ee746fe696df8125ac4aea1e4f3fd1e9477546aee2",
+        "content_sha256": "853c476688e730bf4a85048cb1f84646f7f55b2a5bd29e7cf974f1e2c123a393",
+        "frames": 438170,
+        "frame_cap": null
+      }
+    ]
+  },
+  "environment": {
+    "python": "3.14.4",
+    "sklearn": "1.9.0",
+    "numpy": "2.4.4",
+    "pandas": "3.0.3"
+  }
+}

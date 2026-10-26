@@ -1,0 +1,15 @@
+' Common look of the report diagrams: plain black and white UML, no icons,
+' no shadows, square corners, one font.
+skinparam monochrome true
+skinparam shadowing false
+skinparam dpi 200
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam roundCorner 0
+skinparam ArrowThickness 0.8
+skinparam packageStyle rectangle
+skinparam componentStyle rectangle
+skinparam classAttributeIconSize 0
+skinparam noteBorderThickness 0.6
+skinparam titleFontSize 12
+skinparam backgroundColor white

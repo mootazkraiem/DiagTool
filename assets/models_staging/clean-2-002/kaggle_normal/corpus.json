@@ -1,0 +1,17 @@
+{
+  "training": {
+    "fingerprint": "d6358db41b2afb35548815d5ef0087f8862a585933dc84dfa33b9b12789f0613",
+    "recordings": [
+      {
+        "path": "archive/normal_run_data.txt",
+        "sha256": "27a076832b0b9aa051d804b8c996a5dd14b312210c721676b5a9ebc58113aa7d",
+        "content_sha256": "5b1eb8d1a4f851825b22a78496bdadcdbf8828d91703ebe6882f428fc02d047b",
+        "frames": 988871,
+        "frame_cap": null
+      }
+    ]
+  },
+  "holdout": {
+    "recordings": []
+  }
+}

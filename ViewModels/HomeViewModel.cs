@@ -44,6 +44,7 @@ public sealed class HomeViewModel : SectionViewModel
     private bool isLiveConnecting;
     private bool isOfflineImporting;
     private bool backendOnline;
+    private string? detectedDevice;
     private bool isSelectingModel;
     private string pendingImportName = string.Empty;
     private string? pendingImportPath;
@@ -134,6 +135,7 @@ public sealed class HomeViewModel : SectionViewModel
                     : $"{h.UptimeSeconds / 60:F0}m {h.UptimeSeconds % 60:F0}s";
                 HealthFpsText    = $"{h.LiveFps:F1}";
             }
+            await RefreshDetectedDeviceAsync().ConfigureAwait(true);
             if (wasOnline != backendOnline)
             {
                 OnPropertyChanged(nameof(BackendStatusText));
@@ -149,6 +151,35 @@ public sealed class HomeViewModel : SectionViewModel
         }
         catch { backendOnline = false; }
     }
+
+    // A live session needs hardware: the start button unlocks only while a USB device
+    // (Arduino, Raspberry Pi, USB-serial CAN bridge) is plugged into the PC.
+    private async Task RefreshDetectedDeviceAsync()
+    {
+        string? device = null;
+        if (backendOnline)
+        {
+            var ports = await pythonApiClient.GetHardwarePortsAsync(CancellationToken.None).ConfigureAwait(true);
+            device = UsbDeviceCatalog.FirstDevice(ports?.Ports);
+        }
+        if (device == detectedDevice)
+            return;
+        detectedDevice = device;
+        OnPropertyChanged(nameof(HardwareStatusText));
+        OnPropertyChanged(nameof(IsHardwareDetected));
+        OnPropertyChanged(nameof(LiveActionToolTip));
+        OnPropertyChanged(nameof(CanStartLive));
+        LaunchOnlineDiagnosisCommand.NotifyCanExecuteChanged();
+    }
+
+    public bool IsHardwareDetected => detectedDevice is not null;
+
+    public string HardwareStatusText => detectedDevice is null ? "NO DEVICE PLUGGED IN" : detectedDevice.ToUpperInvariant();
+
+    public string LiveActionToolTip =>
+        !backendOnline ? "Waiting for the backend to start."
+        : detectedDevice is null ? "Plug in the Arduino / Raspberry Pi (USB) to unlock the live session."
+        : $"Start monitoring the live CAN bus through {detectedDevice}.";
 
     public event Action? AnalysisCompleted;
     public event Action? OnlineDiagnosisRequested;
@@ -199,7 +230,7 @@ public sealed class HomeViewModel : SectionViewModel
         private set => SetProperty(ref isOfflineImporting, value);
     }
 
-    public bool CanStartLive => backendOnline && !isLiveConnecting;
+    public bool CanStartLive => backendOnline && detectedDevice is not null && !isLiveConnecting;
 
     public IRelayCommand ShowOfflineImportCommand     { get; }
     public IRelayCommand BackToChoiceCommand          { get; }
@@ -511,16 +542,13 @@ public sealed class HomeViewModel : SectionViewModel
                     AnalysisCurrentScore = score;
                     AnalysisCurrentCanId = $"0x{packet.Frame.CanId:X3}";
 
+                    // A preview of the traffic being analysed, nothing more. This loop
+                    // walks the file at its own pace to animate the card's progress bar;
+                    // it is not the analysis and it must not report the session's frame
+                    // count, which the backend's own progress now supplies. Writing it
+                    // here made the Dashboard's frames, alerts and detection rate three
+                    // readings of three different moments.
                     VehicleDataService.PublishPlaybackPacket(packet);
-                    var fps = stopwatch.Elapsed.TotalSeconds <= 0
-                        ? 0
-                        : AnalysisProcessedFrames / stopwatch.Elapsed.TotalSeconds;
-                    VehicleDataService.UpdateReplayRuntime(
-                        AnalysisProcessedFrames,
-                        packet.Frame.CanId,
-                        score,
-                        fps,
-                        VehicleDataService.RuntimeLatencyMs);
 
                     await Task.Delay(delayMs).ConfigureAwait(true);
                 }
@@ -576,7 +604,8 @@ public sealed class HomeViewModel : SectionViewModel
                     ? summary.ScoredCount
                     : summary.AnomalyCount + summary.NormalCount;
                 VehicleDataService.SetAnalysisFrameCounts(
-                    summary.RowsParsed, summary.AnomalyCount, scored, summary.UnresolvedCount, summary.UnresolvedReasons);
+                    summary.RowsParsed, summary.AnomalyCount, scored, summary.UnresolvedCount, summary.UnresolvedReasons,
+                    summary.ModelKind);
             }
             VehicleDataService.CompleteReplayAnalysis(detectedAttack, confidence, apiDetections.Select(d => d.Alert).ToList());
             AnalysisStatusText = CompletionStatusText(analysisResponse?.Summary, detectedAttack, analysisModel.Id);
@@ -750,29 +779,36 @@ public sealed class HomeViewModel : SectionViewModel
         return frameTimes[index].Utc;
     }
 
+    // The pattern the backend's timing / payload heuristics named for most flagged items
+    // (context "temporal_pattern"). Most flagged frames match no named pattern, and the
+    // headline then says "UNUSUAL TRAFFIC". The old version searched every explanation for
+    // the substring "dos" or "flood" and printed "DOS" when it appeared anywhere (61 of the
+    // 339 Jaguar items), and with nothing flagged it reported the analyst's own dropdown
+    // choice as if the model had found it.
     private static string ResolveAttackType(PythonAnalyzeResponse? response, IReadOnlyList<CanAnomaly> anomalies, string fallback)
     {
-        var tokens = new List<string>();
-        if (response?.Anomalies is not null)
+        var patterns = response?.Anomalies?
+            .Select(item => ReadString(item.Context ?? new Newtonsoft.Json.Linq.JObject(), "temporal_pattern", "normal"))
+            .ToList();
+        if (patterns is null || patterns.Count == 0)
+            return anomalies.Count > 0 ? "UNUSUAL TRAFFIC" : "NONE";
+        var top = patterns.GroupBy(pattern => string.IsNullOrWhiteSpace(pattern) ? "normal" : pattern)
+                          .OrderByDescending(group => group.Count())
+                          .First().Key;
+        return top switch
         {
-            foreach (var item in response.Anomalies)
-            {
-                tokens.Add(ReadString(item.Context ?? new Newtonsoft.Json.Linq.JObject(), "type", string.Empty));
-                tokens.Add(ReadString(item.Explanation ?? new Newtonsoft.Json.Linq.JObject(), "issue", string.Empty));
-                tokens.Add(ReadString(item.Explanation ?? new Newtonsoft.Json.Linq.JObject(), "reason", string.Empty));
-            }
-        }
-
-        tokens.AddRange(anomalies.Select(a => $"{a.Title} {a.Description}"));
-        var normalized = string.Join(" ", tokens).ToLowerInvariant();
-        if (normalized.Contains("dos") || normalized.Contains("flood")) return "DOS";
-        if (normalized.Contains("fuzzy") || normalized.Contains("random")) return "FUZZY";
-        if (normalized.Contains("rpm") || normalized.Contains("overspeed")) return "RPM";
-        if (normalized.Contains("gear") || normalized.Contains("shift")) return "GEAR";
-        if (normalized.Contains("normal")) return "NORMAL";
-        return string.IsNullOrWhiteSpace(fallback) ? "UNKNOWN" : fallback.ToUpperInvariant();
+            "normal"         => "UNUSUAL TRAFFIC",
+            "dos_burst"      => "DOS-LIKE BURST",
+            "alert_burst"    => "ALERT BURST",
+            "payload_freeze" => "PAYLOAD FREEZE",
+            "rate_spike"     => "RATE SPIKE",
+            _                => top.Replace('_', ' ').ToUpperInvariant(),
+        };
     }
 
+    // Confidence reported by the backend's explanations, or 0 when none is given; the
+    // screens then show "--". The previous fallbacks (55 + 45 x flagged share, the
+    // mean alert severity, a constant 52) were not a confidence of anything.
     private static double ResolveConfidence(PythonAnalyzeResponse? response, IReadOnlyList<CanAnomaly> anomalies, int totalFrames)
     {
         if (response?.Anomalies is not null && response.Anomalies.Count > 0)
@@ -793,18 +829,7 @@ public sealed class HomeViewModel : SectionViewModel
             }
         }
 
-        if (response?.Summary is not null && response.Summary.RowsParsed > 0)
-        {
-            var ratio = response.Summary.AnomalyCount / (double)Math.Max(1, response.Summary.RowsParsed);
-            return Clamp(55 + (ratio * 45), 0, 100);
-        }
-
-        if (anomalies.Count > 0)
-        {
-            return Clamp(anomalies.Average(a => a.SeverityScore), 0, 100);
-        }
-
-        return totalFrames > 0 ? 52 : 0;
+        return 0;
     }
 
     private static int ReadHexOrInt(Newtonsoft.Json.Linq.JObject source, string key)

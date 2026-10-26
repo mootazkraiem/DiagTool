@@ -41,6 +41,7 @@ That's it — just those two wires, directly between the two modules. Nothing co
 4. Open `bridge_node/bridge_node.ino`, select the correct board and COM port, and upload it to the Arduino that's plugged into your PC.
 5. Open `simulator_node/simulator_node.ino`, upload it to the second Arduino. This one can stay plugged into your PC too, or run off any USB power source (phone charger, power bank) once it's flashed — it doesn't need to talk to your PC at all, it just needs power.
 6. In your Python backend, connect using `interface="slcan"` and the COM port the bridge Arduino shows up as — exactly the same call your code already makes for any other hardware adapter.
+7. In the app (Hardware Setup), pick the vehicle **Arduino bench rig**. Its DBC (`assets/dbc_files/bench-rig.dbc`) decodes 0x316 as `Vehicle_Speed` (60 km/h) and 0x3F9 as `State_Of_Charge` (78 %), which then show on the Dashboard and in Telemetry. It leaves 0x666 out on purpose, and because the profile declares its DBC complete, every 0x666 frame is flagged in Anomaly Intel as an identifier this bus should not carry (layer WHITELIST), from its very first frame.
 
 ## If nothing shows up / no CAN traffic
 

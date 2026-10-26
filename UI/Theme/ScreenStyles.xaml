@@ -574,7 +574,7 @@
     </Style>
     <Style x:Key="CvStatKey" TargetType="cv:CvTrackedText">
         <Setter Property="FontFamily" Value="{StaticResource CvMonoFont}" />
-        <Setter Property="FontSize" Value="8.5" />
+        <Setter Property="FontSize" Value="10.5" />
         <Setter Property="Foreground" Value="{DynamicResource CvTextDimBrush}" />
         <Setter Property="HorizontalAlignment" Value="Center" />
     </Style>
@@ -718,7 +718,7 @@
     <Style x:Key="CvTileMeta" TargetType="cv:CvTrackedText">
         <Setter Property="Margin" Value="0,5,0,0" />
         <Setter Property="FontFamily" Value="{StaticResource CvMonoFont}" />
-        <Setter Property="FontSize" Value="9" />
+        <Setter Property="FontSize" Value="11" />
         <Setter Property="Foreground" Value="{DynamicResource CvTextDimBrush}" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         <Setter Property="TextWrapping" Value="NoWrap" />

@@ -21,6 +21,14 @@ public sealed class LogPlaybackViewModel : SectionViewModel
     private string playbackMode = "STOPPED";
     private double playbackSpeed = 1;
     private readonly DispatcherTimer playbackTimer;
+    // Playback follows the capture's own clock: each tick plays every frame whose
+    // timestamp the capture would have reached by now (wall time x speed) since the
+    // clock was last based on a frame. One frame per timer tick - the old scheme -
+    // played this 3,000-frames/s bus about 50x slower than real time at "1x".
+    private readonly System.Diagnostics.Stopwatch playbackClock = new();
+    private double clockBaseSeconds;
+    private int clockExpectedIndex = -1;
+    private const int MaxFramesPerTick = 4000;
     private readonly CanLogImportService canLogImportService;
     private readonly AppLogger logger;
     private readonly ModelSelectionService modelSelection;
@@ -40,7 +48,9 @@ public sealed class LogPlaybackViewModel : SectionViewModel
     // Detection threshold as a fraction of the plot height, measured from the top.
     // Normal traffic tops out at density*0.62, so 0.28 from the top (score 0.72)
     // sits above it: only real ML detections cross the line.
-    private const double ScoreThresholdFromTop = 0.28;
+    // A vehicle model flags a frame when its normalised 0-1 score is above 0.50
+    // (backend MODEL_THRESHOLD; clean-2 per-ID models normalise to the same cut-off).
+    private const double VehicleModelThreshold = 0.5;
     private const int ScorePlotW = 540;
     private const int ScorePlotH = 126;
     private double[] _scoreBuckets = Array.Empty<double>();
@@ -107,7 +117,7 @@ public sealed class LogPlaybackViewModel : SectionViewModel
             playbackSpeed = Math.Max(0.25, Math.Min(32, parsed));
             if (playbackTimer.IsEnabled)
             {
-                UpdateTimerInterval();
+                RebaseClock();
             }
             NotifyForensicProperties();
         });
@@ -226,7 +236,9 @@ public sealed class LogPlaybackViewModel : SectionViewModel
     public string CurrentCanIdText => CurrentPacket is null ? "--" : $"0x{CurrentPacket.Frame.CanId:X3}";
     public string CurrentSeverityText => CurrentPacket?.Anomalies.FirstOrDefault()?.Severity ?? (playbackData.Count == 0 ? "--" : "INFO");
     public string CurrentFilePositionText => playbackData.Count == 0 ? "--" : $"{Math.Min(100, Math.Max(0, currentFrameIndex / (double)Math.Max(1, playbackData.Count) * 100.0)):F1}%";
-    public string CurrentAttackTypeText => CurrentPacket?.Anomalies.FirstOrDefault()?.Title ?? VehicleDataService.DetectedAttackType;
+    // Cursor-specific: the anomaly of the frame under the replay cursor, never the session-level label.
+    public string CurrentAttackTypeText => CurrentPacket?.Anomalies.FirstOrDefault()?.Title
+        ?? (playbackData.Count == 0 ? "--" : "NO FLAG AT CURSOR");
     public string TotalDetectionsText => TotalDetections.ToString("N0");
     public string AlertCountText => TotalAlerts.ToString("N0");
     public bool HasAlerts => TotalAlerts > 0;
@@ -276,9 +288,13 @@ public sealed class LogPlaybackViewModel : SectionViewModel
     /// </summary>
     public IReadOnlyList<double> DetectionScoreValues { get; private set; } = Array.Empty<double>();
 
-    /// <summary>Threshold in the same 0-1 space as <see cref="DetectionScoreValues"/>.</summary>
-    public double DetectionThresholdValue => 1.0 - ScoreThresholdFromTop;
-    public string DetectionThresholdText => DetectionThresholdValue.ToString("F2");
+    /// <summary>
+    /// The analysing model's cut-off in the same 0-1 space as <see cref="DetectionScoreValues"/>.
+    /// Only a vehicle model has one; the general engine flags by its own rule, so no line is drawn.
+    /// </summary>
+    public bool HasScoreThreshold => VehicleDataService.AnalysisModelKind == "vehicle";
+    public string DetectionThresholdText => HasScoreThreshold ? VehicleModelThreshold.ToString("F2") : "--";
+    public string DetectionThresholdMetaText => HasScoreThreshold ? "SCORE ABOVE IS FLAGGED" : "MODEL'S OWN RULE";
     public string DetectionScoreCeilingText => "/ 1.00";
     public System.Windows.Media.PointCollection DetectionThresholdPoints { get; private set; } = new() { new System.Windows.Point(0, 76), new System.Windows.Point(420, 76) };
     public System.Windows.Media.PointCollection LiveScorePoints { get; private set; } = new();
@@ -301,9 +317,21 @@ public sealed class LogPlaybackViewModel : SectionViewModel
             if (SetProperty(ref playbackMode, value))
             {
                 OnPropertyChanged(nameof(PlaybackStatus));
+                OnPropertyChanged(nameof(IsReplayComplete));
             }
         }
     }
+
+    /// <summary>
+    /// The capture has been replayed to its last frame. The transport controls
+    /// then offer to replay it rather than leaving the analyst with readouts
+    /// that have stopped moving and no statement of why.
+    /// </summary>
+    public bool IsReplayComplete => playbackMode == "COMPLETE" && playbackData.Count > 0;
+
+    /// <summary>The end-of-capture line, e.g. "REPLAY COMPLETE — 152 / 152 FRAMES".</summary>
+    public string ReplayCompleteText =>
+        $"REPLAY COMPLETE — {playbackData.Count:N0} / {playbackData.Count:N0} FRAMES";
 
     public string ReplayProgressText => $"{ReplayProgressPercent:F1}%";
     public string ProcessedFramesText => $"{currentFrameIndex}/{Math.Max(1, playbackData.Count)}";
@@ -323,9 +351,12 @@ public sealed class LogPlaybackViewModel : SectionViewModel
     public string FileNameShortText => loadedFileName == "NO SESSION" ? "No file loaded" : loadedFileName;
     public string ConnectionStatusText => playbackData.Count > 0 ? "SIMULATION" : "DISCONNECTED";
     public string MessagesPerSecondText => $"{VehicleDataService.RuntimeFps:F0}";
-    public string CanTxLoadText => $"{Math.Min(100, VehicleDataService.RuntimeFps / 20.0):F1}%";
+    // Bus load needs the bus frame rate and its bitrate. The value shown before was the
+    // app's processing rate divided by 20 (999 frames/s read as 50%), which measured
+    // nothing about the bus, so the field now says it is not measured.
+    public string CanTxLoadText => "--";
     public string ErrorFramesCountText => "0";
-    public string BusLoadText => $"{Math.Min(100, VehicleDataService.RuntimeFps / 20.0):F1}%";
+    public string BusLoadText => "--";
     public string CanInterfaceText => playbackData.Count > 0 ? "SIMULATION" : "--";
     public string BitrateText => "--";
     public string SamplePointText => "--";
@@ -364,7 +395,10 @@ public sealed class LogPlaybackViewModel : SectionViewModel
         StopRecordCommand.NotifyCanExecuteChanged();
         InjectTestCommand.NotifyCanExecuteChanged();
         if (!string.IsNullOrEmpty(path))
+        {
+            autoPlayReplayName = VehicleDataService.ReplayName;
             await VehicleDataService.TriggerBackendReplayAsync(path!, SelectedVehicleId);
+        }
     }
 
     private async Task InjectTestAsync()
@@ -403,7 +437,8 @@ public sealed class LogPlaybackViewModel : SectionViewModel
         }
 
         PlaybackMode = "PLAYING";
-        UpdateTimerInterval();
+        playbackTimer.Interval = TimeSpan.FromMilliseconds(16);
+        RebaseClock();
         playbackTimer.Start();
     }
 
@@ -433,8 +468,12 @@ public sealed class LogPlaybackViewModel : SectionViewModel
     private void FinishPlayback()
     {
         currentFrameIndex = Math.Max(0, playbackData.Count - 1);
-        PlaybackMode = "STOPPED";
+        // "COMPLETE", not "STOPPED": the capture ran to its last frame rather than
+        // being stopped, and the screen says so and offers to run it again instead
+        // of leaving the readouts frozen with nothing to explain them.
+        PlaybackMode = "COMPLETE";
         playbackTimer.Stop();
+        OnPropertyChanged(nameof(IsReplayComplete));
         OnPropertyChanged(nameof(ReplayProgressText));
         OnPropertyChanged(nameof(ReplayProgressPercent));
         OnPropertyChanged(nameof(ProcessedFramesText));
@@ -552,8 +591,10 @@ public sealed class LogPlaybackViewModel : SectionViewModel
             VehicleDataService.LoadReplayPackets(originalFileName, packets, dialog.FileName);
             LoadReplayData(originalFileName, packets, result.Events.ToList());
             PlaybackMode = playbackData.Count == 0
-                ? $"NO PARSABLE FRAMES ({result.ParsedLines}/{result.TotalLines})"
-                : $"LOADED {playbackData.Count} FRAMES ({result.ParsedLines}/{result.TotalLines})";
+                ? "NO FRAMES PARSED"
+                : "LOADED";   // the frame count is in the FRAMES field beside it; the long form overflowed
+            logger.Info($"[PLAYBACK] {originalFileName}: {playbackData.Count} frames, {result.ParsedLines}/{result.TotalLines} lines parsed.");
+            autoPlayReplayName = originalFileName;
             _ = VehicleDataService.TriggerBackendReplayAsync(effectiveFilePath, SelectedVehicleId)
                 .ContinueWith(t => logger.Error("Backend replay trigger failed.", t.Exception?.InnerException),
                     System.Threading.Tasks.TaskContinuationOptions.OnlyOnFaulted);
@@ -705,6 +746,10 @@ public sealed class LogPlaybackViewModel : SectionViewModel
         RebuildForensicWorkspace();
     }
 
+    // The capture this screen imported and handed to the backend; it plays when that
+    // analysis completes. Null for captures loaded elsewhere (Home).
+    private string? autoPlayReplayName;
+
     private void OnReplayLoaded()
     {
         LoadReplayFromService();
@@ -712,7 +757,15 @@ public sealed class LogPlaybackViewModel : SectionViewModel
 
     private void OnAppStateChanged(AppState state)
     {
-        if (state == AppState.AnalysisComplete && playbackData.Count > 0)
+        if (state != AppState.AnalysisComplete) return;
+        // Auto-play only the capture this screen imported itself. An analysis run from
+        // Home also completes here; playing it started a hidden timer that rewrote the
+        // session's frame counters (Dashboard / Diagnostics showed a playback position
+        // instead of the analysed total) without the screen ever being opened.
+        var playThis = autoPlayReplayName is not null && playbackData.Count > 0
+            && string.Equals(autoPlayReplayName, VehicleDataService.ReplayName, StringComparison.Ordinal);
+        autoPlayReplayName = null;
+        if (playThis)
         {
             currentFrameIndex = 0;
             Play();
@@ -967,18 +1020,21 @@ public sealed class LogPlaybackViewModel : SectionViewModel
         // only when alerts actually change (RevealMarkersUpTo, RebuildForensicWorkspace).
     }
 
-    private void UpdateTimerInterval()
+    // A frame's place on the capture clock: its timestamp, or - for a log whose timestamps
+    // do not advance - its index at a nominal 1,000 frames/s, so it still plays over time.
+    private double FrameClockSeconds(int index)
     {
-        // At 4x+ ignore log timestamps and fire at display rate — batching handles throughput
-        if (playbackSpeed >= 4)
-        {
-            playbackTimer.Interval = TimeSpan.FromMilliseconds(16);
-            return;
-        }
-        var packetDelay = playbackData.Count == 0
-            ? 1000
-            : Math.Max(16, playbackData[Math.Min(currentFrameIndex, playbackData.Count - 1)].DelayMilliseconds / playbackSpeed);
-        playbackTimer.Interval = TimeSpan.FromMilliseconds(packetDelay);
+        var first = playbackData[0].Frame.RelativeTimestampSeconds;
+        var last = playbackData[playbackData.Count - 1].Frame.RelativeTimestampSeconds;
+        return last > first ? playbackData[index].Frame.RelativeTimestampSeconds : index * 0.001;
+    }
+
+    // Base the capture clock on the frame at the cursor, from now.
+    private void RebaseClock()
+    {
+        clockBaseSeconds = playbackData.Count == 0 ? 0 : FrameClockSeconds(Math.Min(currentFrameIndex, playbackData.Count - 1));
+        clockExpectedIndex = currentFrameIndex;
+        playbackClock.Restart();
     }
 
     private void OnPlaybackTick(object? sender, EventArgs e)
@@ -989,19 +1045,33 @@ public sealed class LogPlaybackViewModel : SectionViewModel
             return;
         }
 
-        // At high speed batch multiple frames per tick to overcome the 16ms/frame floor
-        int batch = playbackSpeed >= 4 ? (int)(playbackSpeed / 2) : 1;
+        // A seek or step moved the cursor since the last tick: continue from there.
+        if (currentFrameIndex != clockExpectedIndex)
+            RebaseClock();
 
+        // Every frame the capture reached by now. Only frames carrying an alert, and the
+        // last frame reached, are published: each publish refreshes every screen, and
+        // this bus carries thousands of frames a second.
+        var target = clockBaseSeconds + playbackClock.Elapsed.TotalSeconds * playbackSpeed;
         PlaybackPacket? lastPacket = null;
-        for (int b = 0; b < batch && currentFrameIndex < playbackData.Count; b++)
+        var played = 0;
+        while (currentFrameIndex < playbackData.Count && played < MaxFramesPerTick
+               && FrameClockSeconds(currentFrameIndex) <= target)
         {
             var p = playbackData[currentFrameIndex];
-            VehicleDataService.PublishPlaybackPacket(p);
+            if (p.Anomalies.Count > 0)
+                VehicleDataService.PublishPlaybackPacket(p);
             lastPacket = p;
             currentFrameIndex++;
+            played++;
         }
+        if (played >= MaxFramesPerTick)
+            RebaseClock();                    // could not keep up: carry on from here, skipping nothing
+        clockExpectedIndex = currentFrameIndex;
 
-        if (lastPacket == null) return;
+        if (lastPacket == null) return;       // no frame due yet
+        if (lastPacket.Anomalies.Count == 0)
+            VehicleDataService.PublishPlaybackPacket(lastPacket);
 
         VehicleDataService.SetReplayCursor(currentFrameIndex - 1);
         VehicleDataService.UpdateReplayRuntime(
@@ -1024,9 +1094,6 @@ public sealed class LogPlaybackViewModel : SectionViewModel
         ReplayEventRows.Clear();
         foreach (var row in EventRows)
             ReplayEventRows.Add(new ReplayEventRowItem(row.Timestamp, "INFO", row.FrameId, row.DecodedSignal));
-
-        if (currentFrameIndex < playbackData.Count)
-            UpdateTimerInterval();
 
         // O(1): slide cursor without rebuilding all forensic collections
         UpdatePlaybackCursor();
@@ -1312,41 +1379,12 @@ public sealed class LogPlaybackViewModel : SectionViewModel
         SignalPlotSeries.Add(new SignalPlotSeriesItem(label, color, BuildPointCollection(values, 360, 120)));
     }
 
-    // Build frame-density scores: how many frames fall in each time bucket.
-    // Uses RelativeTimestampSeconds (float) for sub-ms accuracy.
-    // Returns one score per frame, normalised 0–1. Always produces visible variation.
-    private List<double> BuildFrameDensityScores()
-    {
-        if (playbackData.Count < 2) return Enumerable.Repeat(0.5, playbackData.Count).ToList();
-
-        var ts = playbackData.Select(p => p.Frame.RelativeTimestampSeconds).ToArray();
-        var t0 = ts[0];
-        var tTotal = Math.Max(0.001, ts[ts.Length - 1] - t0);
-
-        // Divide session into ScorePlotW buckets and count frames in each
-        var counts = new int[ScorePlotW];
-        foreach (var t in ts)
-        {
-            var b = (int)((t - t0) / tTotal * (ScorePlotW - 1));
-            counts[Math.Max(0, Math.Min(ScorePlotW - 1, b))]++;
-        }
-
-        var maxCount = Math.Max(1, counts.Max());
-
-        // Map each frame to its bucket's normalised density
-        var result = new List<double>(playbackData.Count);
-        foreach (var t in ts)
-        {
-            var b = (int)((t - t0) / tTotal * (ScorePlotW - 1));
-            b = Math.Max(0, Math.Min(ScorePlotW - 1, b));
-            result.Add((double)counts[b] / maxCount);
-        }
-        return result;
-    }
-
+    // One value per pixel column: the highest score among the frames the model flagged in
+    // that stretch of the capture, 0 where it flagged none. Frames it did not flag carry no
+    // score here (the analysis returns scores for flagged frames only), so nothing is drawn
+    // for them - the chart used to fill that space with frame density x 0.62.
     private void RebuildDetectionAnalysis()
     {
-        var densityBuckets = BuildFrameDensityBuckets();  // ScorePlotW values, one per pixel column
         var mlBuckets = new double[ScorePlotW];
 
         for (var i = 0; i < playbackData.Count; i++)
@@ -1358,10 +1396,9 @@ public sealed class LogPlaybackViewModel : SectionViewModel
             if (score > mlBuckets[b]) mlBuckets[b] = score;
         }
 
-        // Density forms the base waveform; ML detections spike above the threshold
         var blended = new double[ScorePlotW];
         for (var i = 0; i < ScorePlotW; i++)
-            blended[i] = mlBuckets[i] > 0 ? 1.0 : densityBuckets[i] * 0.62;
+            blended[i] = Math.Max(0.0, Math.Min(1.0, mlBuckets[i]));
 
         var newScorePts = BuildFixedRangePoints(blended, ScorePlotW, ScorePlotH);
         DetectionScorePoints = newScorePts;
@@ -1370,10 +1407,15 @@ public sealed class LogPlaybackViewModel : SectionViewModel
         DetectionScoreValues = (double[])blended.Clone();
         OnPropertyChanged(nameof(DetectionScoreValues));
 
-        // Threshold sits above the max normal-traffic level (density*0.62 <= 0.62, y>=45)
         DetectionThresholdPoints.Clear();
-        DetectionThresholdPoints.Add(new System.Windows.Point(0, ScorePlotH * ScoreThresholdFromTop));
-        DetectionThresholdPoints.Add(new System.Windows.Point(ScorePlotW, ScorePlotH * ScoreThresholdFromTop));
+        if (HasScoreThreshold)
+        {
+            DetectionThresholdPoints.Add(new System.Windows.Point(0, ScorePlotH * (1.0 - VehicleModelThreshold)));
+            DetectionThresholdPoints.Add(new System.Windows.Point(ScorePlotW, ScorePlotH * (1.0 - VehicleModelThreshold)));
+        }
+        OnPropertyChanged(nameof(HasScoreThreshold));
+        OnPropertyChanged(nameof(DetectionThresholdText));
+        OnPropertyChanged(nameof(DetectionThresholdMetaText));
 
         PreBuildScoreBuckets(blended);
 
@@ -1398,23 +1440,6 @@ public sealed class LogPlaybackViewModel : SectionViewModel
         }
 
         UpdateLiveChart();
-    }
-
-    private double[] BuildFrameDensityBuckets()
-    {
-        if (playbackData.Count < 2)
-            return Enumerable.Repeat(0.5, ScorePlotW).ToArray();
-        var ts = playbackData.Select(p => p.Frame.RelativeTimestampSeconds).ToArray();
-        var t0 = ts[0];
-        var tTotal = Math.Max(0.001, ts[ts.Length - 1] - t0);
-        var counts = new int[ScorePlotW];
-        foreach (var t in ts)
-        {
-            var b = (int)((t - t0) / tTotal * (ScorePlotW - 1));
-            counts[Math.Max(0, Math.Min(ScorePlotW - 1, b))]++;
-        }
-        var maxCount = Math.Max(1, counts.Max());
-        return counts.Select(c => (double)c / maxCount).ToArray();
     }
 
     private static System.Windows.Media.PointCollection BuildFixedRangePoints(IReadOnlyList<double> values, double width, double height)

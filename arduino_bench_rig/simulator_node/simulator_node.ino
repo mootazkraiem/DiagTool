@@ -79,14 +79,14 @@ void loop() {
   }
 
   // Every 20 seconds, one frame on an ID that's never used above.
-  // A clean, repeatable way to trigger the whitelist-violation check
-  // (book Chapter 22) live, in front of a jury.
+  // A clean, repeatable way to trigger the unknown-identifier check live,
+  // in front of a jury.
   //
-  // The backend learns "normal" CAN IDs for the first 30s after you
-  // connect. The very first anomaly frame must land AFTER that window
-  // closes, or it gets learned as normal instead of flagged. So we wait
-  // 35s after power-on before ever sending the first one — power-cycle
-  // this board right as you click CONNECT so the timing lines up.
+  // Connect with the "Arduino bench rig" vehicle profile: its DBC
+  // (assets/dbc_files/bench-rig.dbc) defines 0x316 and 0x3F9 only, so the
+  // backend flags 0x666 on its very first frame. There is no learning
+  // window in live capture; the first frame still waits 35s after power-on
+  // only so the first half minute of a demo shows clean decoded traffic.
   if (!firstAnomalySent) {
     if (now >= 35000) {
       firstAnomalySent = true;

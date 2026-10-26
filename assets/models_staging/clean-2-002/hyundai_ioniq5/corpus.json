@@ -1,0 +1,17 @@
+{
+  "training": {
+    "fingerprint": "1eff4d537f453558da383f7003f0f46145754f0240856bee0138870fb6970fcc",
+    "recordings": [
+      {
+        "path": "Train/Hyundai Ioniq5/LOG/BE3BF653/00000038/00000006.MF4",
+        "sha256": "940ff656cefcdd92bd11a5b5a61e7f0387a87d5c5123bc7fa4379e3def16aae6",
+        "content_sha256": "f00fbf7843b6736fc02eb8f4bd04ed5e9c39416d3dc270d45ae560ddaa5d06eb",
+        "frames": 53037,
+        "frame_cap": null
+      }
+    ]
+  },
+  "holdout": {
+    "recordings": []
+  }
+}

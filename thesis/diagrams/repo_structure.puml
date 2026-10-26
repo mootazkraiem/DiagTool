@@ -1,20 +1,28 @@
-@startuml
-skinparam backgroundColor white
-skinparam defaultFontName Helvetica
-skinparam defaultFontSize 14
-skinparam shadowing false
-skinparam roundcorner 6
-skinparam component {
-  BackgroundColor #EAF2FF
-  BorderColor #2C5AA0
-  ArrowColor #2C5AA0
+@startsalt
+scale 3
+skinparam defaultFontName Arial
+{
+{T
+ + <b>can_project/</b>
+ ++ UI/ | XAML views and controls
+ ++ ViewModels/ | one ViewModel per screen
+ ++ Services/ | API client, data service, import, PDF
+ ++ Models/ | API contracts, runtime models
+ ++ tests/CANvisionNative.Tests/ | xUnit tests (80)
+ ++ backend/
+ +++ api/ | server.py (FastAPI, 52 endpoints)
+ +++ decoding/ | DBC decoding, signal discovery
+ +++ ml/ | features, runtime engine, training, explainer
+ +++ offline/ | offline analysis, dataset facts
+ +++ hardware/ | python-can interface, recorder
+ +++ tests/ | pytest tests (318)
+ ++ assets/
+ +++ models/ | models in production (Git LFS)
+ +++ models_staging/ | trained models awaiting evaluation
+ +++ models_archive/ | replaced models
+ +++ dbc_files/ | DBC files of the vehicle profiles
+ +++ EV-CANlogs-main/, road/, Train/ | recordings
+ ++ arduino_bench_rig/ | firmware of the bench rig
 }
-
-component "WPF Client Project" as Client
-component "Python Backend Project" as Backend
-component "Shared Assets\n(trained models, DBC files, datasets)" as Assets
-
-Client --> Backend
-Client ..> Assets
-Backend ..> Assets
-@enduml
+}
+@endsalt

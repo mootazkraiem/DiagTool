@@ -46,6 +46,9 @@ public sealed class ModelSelectionService : ObservableObject
     }
 
     public int TrainedModelCount => Models.Count(m => m.Kind == "trained");
+    /// <summary>Models evaluated on a holdout recording (in production). The selector also lists
+    /// the general model, legacy, held-back and unvalidated entries, so Models.Count is larger.</summary>
+    public int EvaluatedModelCount => Models.Count(m => m.Status == "clean_holdout_evaluated");
 
     /// <summary>The selected id. Bound TwoWay by the selectors; null/empty writes are ignored
     /// (a ComboBox briefly reports null while its list is being refreshed).</summary>
@@ -101,6 +104,7 @@ public sealed class ModelSelectionService : ObservableObject
                     Models.Add(model);
                 IsLoaded = true;
                 OnPropertyChanged(nameof(TrainedModelCount));
+                OnPropertyChanged(nameof(EvaluatedModelCount));
 
                 // A persisted selection whose model no longer exists falls back to GENERAL.
                 var resolved = Resolve(selectedModelId, Models.Select(m => m.Id));

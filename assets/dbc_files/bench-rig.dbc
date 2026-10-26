@@ -1,0 +1,20 @@
+VERSION ""
+
+
+NS_ :
+
+BS_:
+
+BU_: SIMULATOR BRIDGE
+
+
+BO_ 790 Vehicle_Speed: 8 SIMULATOR
+ SG_ Vehicle_Speed : 0|8@1+ (1,0) [0|250] "km/h" BRIDGE
+
+BO_ 1017 Battery_Status: 8 SIMULATOR
+ SG_ State_Of_Charge : 0|8@1+ (1,0) [0|100] "%" BRIDGE
+
+
+CM_ "Arduino bench rig (arduino_bench_rig/simulator_node). Defines every identifier the rig sends on purpose: 0x316 and 0x3F9. The rig also sends 0x666, which is left out on purpose so that live capture flags it as an identifier this bus should not carry.";
+CM_ BO_ 790 "Sent every 20 ms by the simulator board.";
+CM_ BO_ 1017 "Sent every 200 ms by the simulator board.";

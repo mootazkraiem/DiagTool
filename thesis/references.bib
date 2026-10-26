@@ -5,21 +5,21 @@
 
 @misc{iso11898,
   author       = {{International Organization for Standardization}},
-  title        = {{ISO 11898-1:2015} — Road vehicles — Controller area network (CAN) — Part 1: Data link layer and physical signalling},
+  title        = {{ISO 11898-1:2015 — Road vehicles — Controller area network (CAN) — Part 1: Data link layer and physical signalling}},
   year         = {2015},
   howpublished = {ISO Standard},
 }
 
 @misc{iso14229,
   author       = {{International Organization for Standardization}},
-  title        = {{ISO 14229-1:2020} — Road vehicles — Unified diagnostic services (UDS) — Part 1: Application layer},
+  title        = {{ISO 14229-1:2020 — Road vehicles — Unified diagnostic services (UDS) — Part 1: Application layer}},
   year         = {2020},
   howpublished = {ISO Standard},
 }
 
 @misc{sae_j1979,
   author       = {{SAE International}},
-  title        = {{SAE J1979} — E/E Diagnostic Test Modes},
+  title        = {{SAE J1979 — E/E Diagnostic Test Modes}},
   year         = {2017},
   howpublished = {SAE Standard},
 }
@@ -35,7 +35,7 @@
 
 @article{verma2020road,
   author       = {Verma, Miki E. and Iannacone, Michael D. and Bridges, Robert A. and Hollifield, Samuel C. and Kay, Bill and Combs, Frank L.},
-  title        = {ROAD: The Real ORNL Automotive Dynamometer Controller Area Network Intrusion Detection Dataset (with a comprehensive CAN IDS dataset survey)},
+  title        = {{ROAD}: The Real {ORNL} Automotive Dynamometer Controller Area Network Intrusion Detection Dataset (with a comprehensive {CAN} {IDS} dataset survey)},
   journal      = {arXiv preprint arXiv:2012.14600},
   year         = {2020},
 }
@@ -78,7 +78,194 @@
   author       = {Ram{\'i}rez, Sebasti{\'a}n},
   title        = {{FastAPI}: Modern, Fast (High-Performance) Web Framework for Building {API}s with {P}ython},
   howpublished = {\url{https://fastapi.tiangolo.com}},
-  year         = {2023},
   note         = {Accessed 2026},
 }
 
+% ---- automotive attacks -------------------------------------------------------
+
+@inproceedings{koscher2010experimental,
+  author       = {Koscher, Karl and Czeskis, Alexei and Roesner, Franziska and Patel, Shwetak and Kohno, Tadayoshi and Checkoway, Stephen and McCoy, Damon and Kantor, Brian and Anderson, Danny and Shacham, Hovav and Savage, Stefan},
+  title        = {Experimental Security Analysis of a Modern Automobile},
+  booktitle    = {Proceedings of the 2010 IEEE Symposium on Security and Privacy},
+  year         = {2010},
+  pages        = {447--462},
+  publisher    = {IEEE},
+}
+
+@inproceedings{checkoway2011comprehensive,
+  author       = {Checkoway, Stephen and McCoy, Damon and Kantor, Brian and Anderson, Danny and Shacham, Hovav and Savage, Stefan and Koscher, Karl and Czeskis, Alexei and Roesner, Franziska and Kohno, Tadayoshi},
+  title        = {Comprehensive Experimental Analyses of Automotive Attack Surfaces},
+  booktitle    = {Proceedings of the 20th USENIX Security Symposium},
+  year         = {2011},
+  publisher    = {USENIX Association},
+}
+
+@techreport{miller2015remote,
+  author       = {Miller, Charlie and Valasek, Chris},
+  title        = {Remote Exploitation of an Unaltered Passenger Vehicle},
+  institution  = {IOActive},
+  type         = {White paper},
+  note         = {Presented at Black Hat USA 2015},
+  year         = {2015},
+}
+
+% ---- CAN intrusion detection ---------------------------------------------------
+
+@article{lokman2019intrusion,
+  author       = {Lokman, Siti-Farhana and Othman, Abu Talib and Abu-Bakar, Muhammad-Husaini},
+  title        = {Intrusion Detection System for Automotive {Controller Area Network (CAN)} Bus System: A Review},
+  journal      = {EURASIP Journal on Wireless Communications and Networking},
+  volume       = {2019},
+  pages        = {184},
+  year         = {2019},
+  doi          = {10.1186/s13638-019-1484-3},
+}
+
+@inproceedings{muter2011entropy,
+  author       = {M{\"u}ter, Michael and Asaj, Naim},
+  title        = {Entropy-Based Anomaly Detection for In-Vehicle Networks},
+  booktitle    = {Proceedings of the 2011 IEEE Intelligent Vehicles Symposium (IV)},
+  year         = {2011},
+  pages        = {1110--1115},
+  publisher    = {IEEE},
+}
+
+@inproceedings{song2016intrusion,
+  author       = {Song, Hyun Min and Kim, Ha Rang and Kim, Huy Kang},
+  title        = {Intrusion Detection System Based on the Analysis of Time Intervals of {CAN} Messages for In-Vehicle Network},
+  booktitle    = {Proceedings of the 2016 International Conference on Information Networking (ICOIN)},
+  year         = {2016},
+  pages        = {63--68},
+  publisher    = {IEEE},
+}
+
+@inproceedings{cho2016fingerprinting,
+  author       = {Cho, Kyong-Tak and Shin, Kang G.},
+  title        = {Fingerprinting Electronic Control Units for Vehicle Intrusion Detection},
+  booktitle    = {Proceedings of the 25th USENIX Security Symposium},
+  year         = {2016},
+  pages        = {911--927},
+  publisher    = {USENIX Association},
+}
+
+% ---- anomaly detection algorithms ---------------------------------------------
+
+@article{scholkopf2001estimating,
+  author       = {Sch{\"o}lkopf, Bernhard and Platt, John C. and Shawe-Taylor, John and Smola, Alex J. and Williamson, Robert C.},
+  title        = {Estimating the Support of a High-Dimensional Distribution},
+  journal      = {Neural Computation},
+  volume       = {13},
+  number       = {7},
+  pages        = {1443--1471},
+  year         = {2001},
+}
+
+@inproceedings{breunig2000lof,
+  author       = {Breunig, Markus M. and Kriegel, Hans-Peter and Ng, Raymond T. and Sander, J{\"o}rg},
+  title        = {{LOF}: Identifying Density-Based Local Outliers},
+  booktitle    = {Proceedings of the 2000 ACM SIGMOD International Conference on Management of Data},
+  year         = {2000},
+  pages        = {93--104},
+  publisher    = {ACM},
+}
+
+@inproceedings{ester1996density,
+  author       = {Ester, Martin and Kriegel, Hans-Peter and Sander, J{\"o}rg and Xu, Xiaowei},
+  title        = {A Density-Based Algorithm for Discovering Clusters in Large Spatial Databases with Noise},
+  booktitle    = {Proceedings of the Second International Conference on Knowledge Discovery and Data Mining (KDD)},
+  year         = {1996},
+  pages        = {226--231},
+  publisher    = {AAAI Press},
+}
+
+% ---- tools and datasets (web resources) ----------------------------------------
+
+@misc{vector_canoe,
+  author       = {{Vector Informatik GmbH}},
+  title        = {{CANoe}},
+  howpublished = {\url{https://www.vector.com/int/en/products/products-a-z/software/canoe/}},
+  note         = {Accessed 2026},
+}
+
+@misc{savvycan,
+  author       = {Kidder, Collin},
+  title        = {{SavvyCAN}: Cross Platform {CAN} Bus Tool},
+  howpublished = {\url{https://github.com/collin80/SavvyCAN}},
+  note         = {Accessed 2026},
+}
+
+@misc{canutils,
+  author       = {{Linux-CAN project}},
+  title        = {{can-utils}: {Linux-CAN} and {SocketCAN} User Space Applications},
+  howpublished = {\url{https://github.com/linux-can/can-utils}},
+  note         = {Accessed 2026},
+}
+
+@misc{pythoncan,
+  author       = {{python-can contributors}},
+  title        = {{python-can}: Controller Area Network Support for {Python}},
+  howpublished = {\url{https://python-can.readthedocs.io}},
+  note         = {Accessed 2026},
+}
+
+@misc{css_evdata,
+  author       = {{CSS Electronics}},
+  title        = {Electric Vehicle Data Pack: {CAN} and {UDS} Log Files and {DBC} Files},
+  howpublished = {\url{https://www.csselectronics.com/pages/ev-data-pack-electric-vehicles}},
+  note         = {Accessed 2026},
+}
+
+@misc{evcanlogs,
+  author       = {{EV-CANlogs contributors}},
+  title        = {{EV-CANlogs}: Collection of {CAN} Data from Different Electric Vehicle Projects},
+  howpublished = {\url{https://github.com/dalathegreat/EV-CANlogs}},
+  note         = {Accessed 2026},
+}
+
+@book{jacobson1999unified,
+  author    = {Jacobson, Ivar and Booch, Grady and Rumbaugh, James},
+  title     = {The Unified Software Development Process},
+  publisher = {Addison-Wesley},
+  address   = {Reading, MA},
+  year      = {1999}
+}
+
+@book{kruchten2003rup,
+  author    = {Kruchten, Philippe},
+  title     = {The Rational Unified Process: An Introduction},
+  edition   = {3rd},
+  publisher = {Addison-Wesley},
+  address   = {Boston, MA},
+  year      = {2003}
+}
+
+@book{roques2007uml,
+  author    = {Roques, Pascal and Vallée, Franck},
+  title     = {{UML} 2 en action : de l'analyse des besoins à la conception},
+  edition   = {4th},
+  publisher = {Eyrolles},
+  address   = {Paris},
+  year      = {2007}
+}
+
+@inproceedings{royce1970managing,
+  author    = {Royce, Winston W.},
+  title     = {Managing the Development of Large Software Systems},
+  booktitle = {Proceedings of IEEE WESCON},
+  pages     = {1--9},
+  year      = {1970}
+}
+
+@misc{schwaber2020scrum,
+  author       = {Schwaber, Ken and Sutherland, Jeff},
+  title        = {The Scrum Guide},
+  howpublished = {\url{https://scrumguides.org}},
+  year         = {2020}
+}
+
+@misc{omg2017uml,
+  author       = {{Object Management Group}},
+  title        = {{OMG} Unified Modeling Language ({OMG UML}), Version 2.5.1},
+  howpublished = {\url{https://www.omg.org/spec/UML/2.5.1}},
+  year         = {2017}
+}

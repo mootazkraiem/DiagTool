@@ -591,3 +591,56 @@ public sealed class HardwareCheckResponse
     [JsonProperty("supported_interfaces")]
     public List<string> SupportedInterfaces { get; set; } = new();
 }
+
+// POST /api/signals/discover: the channels a capture actually carries. "dbc" channels
+// are decoded signals; "raw" channels are undecoded payload bytes (no DBC for the vehicle).
+public sealed class DiscoveredChannel
+{
+    [JsonProperty("key")]      public string Key     { get; set; } = string.Empty;
+    [JsonProperty("label")]    public string Label   { get; set; } = string.Empty;
+    [JsonProperty("unit")]     public string Unit    { get; set; } = string.Empty;
+    [JsonProperty("can_id")]   public int    CanId   { get; set; }
+    [JsonProperty("decoded")]  public bool   Decoded { get; set; }
+    [JsonProperty("group")]    public string Group   { get; set; } = string.Empty;
+    [JsonProperty("samples")]  public int    Samples { get; set; }
+    [JsonProperty("rate_hz")]  public double RateHz  { get; set; }
+    [JsonProperty("min")]      public double Min     { get; set; }
+    [JsonProperty("max")]      public double Max     { get; set; }
+    [JsonProperty("last")]     public double Last    { get; set; }
+    [JsonProperty("distinct")] public int    Distinct { get; set; }
+    [JsonProperty("times")]    public List<double> Times  { get; set; } = new();
+    [JsonProperty("values")]   public List<double> Values { get; set; } = new();
+}
+
+public sealed class SignalDiscoveryResponse
+{
+    [JsonProperty("status")]        public string Status       { get; set; } = string.Empty;
+    [JsonProperty("model_id")]      public string ModelId      { get; set; } = string.Empty;
+    [JsonProperty("profile")]       public string Profile      { get; set; } = string.Empty;
+    [JsonProperty("decoder")]       public string Decoder      { get; set; } = string.Empty;
+    [JsonProperty("dbc_available")] public bool   DbcAvailable { get; set; }
+    [JsonProperty("reason")]        public string Reason       { get; set; } = string.Empty;
+    [JsonProperty("frames")]        public int    Frames       { get; set; }
+    [JsonProperty("duration_s")]    public double DurationS    { get; set; }
+    [JsonProperty("channels")]      public List<DiscoveredChannel> Channels { get; set; } = new();
+}
+
+// POST /api/dataset/describe: measured facts about a capture and its place in the
+// selected model's corpus ("training", "holdout", "outside", or "" when unknown).
+public sealed class DatasetFactsResponse
+{
+    [JsonProperty("status")]              public string Status             { get; set; } = string.Empty;
+    [JsonProperty("file_name")]           public string FileName           { get; set; } = string.Empty;
+    [JsonProperty("folder")]              public string Folder             { get; set; } = string.Empty;
+    [JsonProperty("model_id")]            public string ModelId            { get; set; } = string.Empty;
+    [JsonProperty("vehicle")]             public string Vehicle            { get; set; } = string.Empty;
+    [JsonProperty("frames")]              public int    Frames             { get; set; }
+    [JsonProperty("duration_s")]          public double DurationS          { get; set; }
+    [JsonProperty("can_ids")]             public int    CanIds             { get; set; }
+    [JsonProperty("rate_hz")]             public double RateHz             { get; set; }
+    [JsonProperty("role")]                public string Role               { get; set; } = string.Empty;
+    [JsonProperty("model_version")]       public string ModelVersion       { get; set; } = string.Empty;
+    [JsonProperty("training_recordings")] public int    TrainingRecordings { get; set; }
+    [JsonProperty("training_frames")]     public int    TrainingFrames     { get; set; }
+    [JsonProperty("holdout_recordings")]  public int    HoldoutRecordings  { get; set; }
+}

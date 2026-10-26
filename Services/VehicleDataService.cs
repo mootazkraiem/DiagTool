@@ -64,6 +64,9 @@ public sealed class VehicleDataService : ObservableObject
     public event Action? ReplayRuntimeUpdated;
     public event Action<IReadOnlyList<RuntimeAlertEvent>>? AlertHistoryUpdated;
     public event Action<IReadOnlyList<LiveSignalItem>>? LiveFramesUpdated;
+    // A frame a capture playback put on screen (the backend's live buffer knows nothing of
+    // a replay played in the app, so the CAN monitor takes these while one is playing).
+    public event Action<PlaybackPacket>? PlaybackFramePublished;
     public event Action? ReplayLoaded;
     public event Action<AppState>? AppStateChanged;
 
@@ -156,10 +159,12 @@ public sealed class VehicleDataService : ObservableObject
         }
     }
 
-    public void SetAnalysisFrameCounts(int rows, int flagged, int scored, int unresolved, IReadOnlyDictionary<string, int>? reasons = null)
+    public void SetAnalysisFrameCounts(int rows, int flagged, int scored, int unresolved, IReadOnlyDictionary<string, int>? reasons = null,
+                                       string? modelKind = null)
     {
         lock (sync)
         {
+            analysisModelKind = modelKind ?? string.Empty;
             analyzedRows     = Math.Max(0, rows);
             scoredFrames     = Math.Max(0, Math.Min(scored, analyzedRows));
             unresolvedFrames = Math.Max(0, Math.Min(unresolved, analyzedRows));
@@ -167,6 +172,11 @@ public sealed class VehicleDataService : ObservableObject
             flaggedFrames    = scoredFrames > 0 ? Math.Max(0, Math.Min(flagged, scoredFrames)) : -1;
         }
     }
+
+    // "vehicle" (a trained vehicle model: flags a frame when its 0-1 score is above 0.50),
+    // "general" (the general engine's own rule), or "" before an analysis.
+    private string analysisModelKind = string.Empty;
+    public string AnalysisModelKind { get { lock (sync) { return analysisModelKind; } } }
 
     // Full path of the loaded log (null when unknown); used to find its ground-truth labels.
     public string? ReplaySourcePath { get { lock (sync) { return replaySourcePath; } } }
@@ -364,17 +374,27 @@ public sealed class VehicleDataService : ObservableObject
         var anomalies = packet.Anomalies;
         var signals = packet.Signals;
 
+        // One frame carrying no decoded signal is not evidence that the stream has
+        // none: most frames decode nothing, and only the ones matching the vehicle's
+        // DBC produce values. Publishing the empty list wiped the signal monitor,
+        // which the next frame or the backend poll then refilled - on screen the
+        // table filled and emptied several times a second. The last known readings
+        // stand until something real replaces them.
+        var haveSignals = signals.Count > 0;
+
         lock (sync)
         {
             currentSnapshot  = snap;
             currentAnomalies = anomalies;
-            currentSignals   = signals;
+            if (haveSignals) currentSignals = signals;
         }
 
         dispatcher.BeginInvoke(() =>
         {
             DataUpdated?.Invoke(snap);
-            SignalsUpdated?.Invoke(signals);
+            PlaybackFramePublished?.Invoke(packet);
+            if (haveSignals)
+                SignalsUpdated?.Invoke(signals);
             if (anomalies.Count > 0)
                 AnomaliesUpdated?.Invoke(anomalies);
         });
@@ -498,7 +518,44 @@ public sealed class VehicleDataService : ObservableObject
         }
 
         SetAppState(AppState.AnalysisComplete);
+        FinishAnalysis("analysis returned its results");
         dispatcher.BeginInvoke(() => AlertHistoryUpdated?.Invoke(finalHistory));
+    }
+
+    /// <summary>
+    /// Ends an offline analysis for good.
+    ///
+    /// A recorded capture is finite, so its analysis has a last frame and its
+    /// results are final from that moment on. The background poll is therefore
+    /// stopped rather than left running: with nothing further to read, every
+    /// later tick could only re-read, re-apply and re-report the same run, which
+    /// is what kept the counters moving and the events repeating after the log
+    /// had been read to its end. Starting another analysis restarts the poll
+    /// (<see cref="TriggerBackendReplayAsync"/>), as does starting a live
+    /// session (<see cref="Start"/>).
+    /// </summary>
+    private void FinishAnalysis(string reason)
+    {
+        lock (sync)
+        {
+            mlAnalysisState = "COMPLETE";
+
+            // The whole capture was read, so say so exactly rather than leaving
+            // the count wherever the last poll happened to land.
+            if (totalReplayFrames > 0)
+            {
+                processedReplayFrames = totalReplayFrames;
+                replayProgressPercent = 100.0;
+            }
+        }
+
+        if (refreshTimer.IsEnabled)
+        {
+            refreshTimer.Stop();
+            IsRunning = false;
+        }
+
+        logger.Info($"[VDS] Offline analysis finished ({reason}); polling stopped, results are final.");
     }
 
     // ── External push (from Python API) ──────────────────────────────────────
@@ -528,13 +585,33 @@ public sealed class VehicleDataService : ObservableObject
             sw.Stop();
             if (snap is null) return;
 
-            lock (sync) { currentSnapshot = snap; }
-            DataUpdated?.Invoke(snap);
+            // Who owns the session's readings?
+            //
+            // This poll reports the backend's own live view of the bus. A recorded
+            // log, once loaded, reports its own: the replay publishes real frame
+            // counts and snapshots as it walks the capture. Both used to write the
+            // same fields every half second, so every reading on every screen
+            // oscillated between the two - the frame count fell back to the tick
+            // counter below and climbed again, the ribbon alternated between LIVE
+            // and OFFLINE with SYNC PENDING, and the clock swapped between wall
+            // time and session elapsed. While a capture is loaded the capture owns
+            // these readings and the poll leaves them alone.
+            bool replayOwnsSession;
+            lock (sync) { replayOwnsSession = totalReplayFrames > 0; }
+
+            if (!replayOwnsSession)
+            {
+                lock (sync) { currentSnapshot = snap; }
+                DataUpdated?.Invoke(snap);
+            }
 
             fallbackFrameCounter++;
 
             // Drive live runtime stats so Dashboard score/FPS show real values.
-            if (snap.AnomalyScore > 0 || snap.LiveFps > 0)
+            // Not while a capture is loaded: fallbackFrameCounter counts refresh
+            // ticks, not frames, and writing it over the replay's real count is
+            // what made the frame total jump backwards.
+            if (!replayOwnsSession && (snap.AnomalyScore > 0 || snap.LiveFps > 0))
             {
                 double fps = snap.LiveFps > 0 ? snap.LiveFps : 2.0;
                 // Real measured round-trip time for this /vehicle poll, not the old
@@ -583,7 +660,7 @@ public sealed class VehicleDataService : ObservableObject
                         {
                             topSuspiciousCanId  = mapped[0].CanId;
                             detectionConfidence = Math.Min(100.0, mapped[0].Score * 100.0);
-                            detectedAttackType  = criticalAlerts > 0 ? "INTRUSION DETECTED"
+                            detectedAttackType  = criticalAlerts > 0 ? "ANOMALIES FLAGGED"
                                                 : warningAlerts > 0  ? "ELEVATED RISK"
                                                 : "MONITORING";
                         }
@@ -606,15 +683,38 @@ public sealed class VehicleDataService : ObservableObject
                 {
                     if (replayStatus.State == "completed")
                     {
-                        lock (sync) { mlAnalysisState = "COMPLETE"; }
+                        // Read the finished run's alerts once, then stop: the backend
+                        // has reached the end of the file and nothing it reports can
+                        // change again.
                         var replayAlerts = await pythonApiClient.GetReplayAlertsAsync(CancellationToken.None);
                         if (replayAlerts?.Items is { Count: > 0 } replayItems)
                         {
                             ApplyReplayAlerts(replayItems);
                         }
+
+                        SetAppState(AppState.AnalysisComplete);
+                        FinishAnalysis("backend reached the end of the capture");
+                        return;
                     }
                     else if (replayStatus.State == "running")
                     {
+                        // The backend reports how far it has actually read. The session's
+                        // frame count follows that, so the frames analysed, the alerts
+                        // found and the detection rate all describe the same moment of
+                        // the same run. The client's progress animation used to write
+                        // this instead, which is how a dashboard came to show 1,237
+                        // alerts against 1,281 frames analysed.
+                        if (replayStatus.FramesProcessed > 0)
+                        {
+                            lock (sync)
+                            {
+                                processedReplayFrames = replayStatus.FramesProcessed;
+                                replayProgressPercent = totalReplayFrames > 0
+                                    ? Math.Min(100.0, processedReplayFrames * 100.0 / totalReplayFrames)
+                                    : 0;
+                            }
+                        }
+
                         // Partial update every 10 ticks (~5 s) during analysis
                         if (signalPollCounter % 10 == 0)
                         {
@@ -708,7 +808,7 @@ public sealed class VehicleDataService : ObservableObject
             {
                 topSuspiciousCanId  = mapped.OrderByDescending(a => a.Score).First().CanId;
                 detectionConfidence = Math.Min(100.0, mapped.Max(a => a.Score) * 100.0);
-                detectedAttackType  = criticalAlerts > 0 ? "INTRUSION DETECTED"
+                detectedAttackType  = criticalAlerts > 0 ? "ANOMALIES FLAGGED"
                                     : warningAlerts  > 0 ? "ELEVATED RISK"
                                     : "MONITORING";
             }

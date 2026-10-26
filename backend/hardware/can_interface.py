@@ -52,6 +52,29 @@ _STALE_AFTER_SECONDS = 5.0
 
 _FUSION_LAYER_KEYS = {"timing", "payload", "ml", "persistence"}
 
+# An identifier outside a complete DBC gets the score the offline whitelist
+# gives an unknown identifier (server.py), at most once per second per
+# identifier, like the cooldown of the runtime alerts.
+_UNKNOWN_ID_SCORE = 0.95
+_UNKNOWN_ID_COOLDOWN_S = 1.0
+
+
+def _complete_dbc_ids(vehicle_id: str) -> Optional[frozenset[int]]:
+    """The identifiers of the profile's DBC when the profile declares it complete.
+
+    None means "no such check": the profile is unknown, its DBC is partial (every
+    real vehicle profile here), or the DBC did not load. An empty set would flag
+    every frame, so a DBC that loads nothing never enables the check.
+    """
+    from backend.decoding.vehicle_profiles import get as get_profile
+    from backend.decoding.dbc_manager import get_manager
+
+    profile = get_profile(vehicle_id) if vehicle_id else None
+    if profile is None or not profile.complete_dbc:
+        return None
+    ids = get_manager().known_can_ids(vehicle_id)
+    return frozenset(ids) if ids else None
+
 
 def _dominant_layer(reason: str) -> str:
     # Only compare the four inputs that actually feed ScoringEngine.score()/fusion_score
@@ -117,6 +140,11 @@ class CanHardwareReader:
         self.error: str = ""
         self.connected_at: Optional[float] = None
 
+        # Identifiers the selected profile's complete DBC defines (None: no check),
+        # and when each unknown identifier was last reported.
+        self._allowed_ids: Optional[frozenset[int]] = None
+        self._unknown_alert_at: dict[int, float] = {}
+
     @property
     def is_connected(self) -> bool:
         """True only while the link is up AND frames are still actually arriving.
@@ -149,7 +177,9 @@ class CanHardwareReader:
             channel:   Adapter channel, e.g. 'PCAN_USBBUS1', 'can0', '/dev/ttyUSB0'.
                        If empty, python-can uses the default for that interface.
             bitrate:   CAN bus speed in bps (default 500 000).
-            vehicle_id: Optional vehicle profile for DBC decode in future use.
+            vehicle_id: Vehicle to score with. When it is also a vehicle profile,
+                       its DBC decodes each frame, and a profile whose DBC is
+                       complete flags every identifier the DBC does not define.
         """
         if self._link_up:
             raise RuntimeError("Already connected — call disconnect() first")
@@ -173,6 +203,8 @@ class CanHardwareReader:
         if self._engine_factory is not None:
             self._engine = self._engine_factory(vehicle_id or "general")
         self._vehicle_id = vehicle_id
+        self._allowed_ids = _complete_dbc_ids(vehicle_id)
+        self._unknown_alert_at = {}
         self.error = ""
 
         bus_kwargs: dict[str, Any] = {"interface": bustype, "bitrate": bitrate}
@@ -227,6 +259,8 @@ class CanHardwareReader:
 
         self._link_up = False
         self.last_frame_at = None
+        self._allowed_ids = None
+        self._unknown_alert_at = {}
         # Clear the shared buffers so stale hardware frames can never be
         # served again after this point — previously these buffers were left
         # untouched on disconnect, so /api/live/signals and /api/live/alerts
@@ -267,6 +301,32 @@ class CanHardwareReader:
             "uptime_seconds": round(time.time() - self.connected_at, 1)
                               if self.connected_at else 0.0,
         }
+
+    # ── Unknown identifiers (complete DBC profiles only) ───────────────────────
+
+    def _unknown_id_due(self, ts: float, can_id: int) -> bool:
+        """True when this frame's identifier is outside the complete DBC and was
+        not reported in the last second."""
+        if self._allowed_ids is None or can_id in self._allowed_ids:
+            return False
+        last = self._unknown_alert_at.get(can_id)
+        if last is not None and ts - last < _UNKNOWN_ID_COOLDOWN_S:
+            return False
+        self._unknown_alert_at[can_id] = ts
+        return True
+
+    def _profile_name(self) -> str:
+        from backend.decoding.vehicle_profiles import get as get_profile
+
+        profile = get_profile(self._vehicle_id)
+        return profile.name if profile is not None else self._vehicle_id
+
+    def _risk_level(self, score: float) -> str:
+        """The level the runtime scoring gives this score, so live alerts share one scale."""
+        scoring = getattr(self._engine, "scoring", None)
+        if scoring is not None and hasattr(scoring, "_risk_level"):
+            return str(scoring._risk_level(score))
+        return "HIGH"
 
     # ── Internal read loop ─────────────────────────────────────────────────────
 
@@ -360,12 +420,40 @@ class CanHardwareReader:
             "signals":      signals_list,
         }
 
+        unknown_id = self._unknown_id_due(ts, can_id)
+
         with self._lock:
             self._signals.append(signal_item)
             if len(self._signals) > _BUFFER_MAX:
                 del self._signals[:-_BUFFER_MAX]
 
-            if out["alert"] is not None:
+            if unknown_id:
+                # One alert for this frame: the unknown identifier explains it,
+                # whatever the fused score says.
+                profile_name = self._profile_name()
+                reason = (f"identifier 0x{can_id:03X} is not defined in the DBC of the "
+                          f"{profile_name} profile, which defines every identifier of this bus")
+                fused = max(score, _UNKNOWN_ID_SCORE)
+                level = self._risk_level(fused)
+                self._stats.on_alert({"risk_level": level, "can_id": can_id, "reason": reason})
+                self._alerts.append({
+                    "timestamp":                ts,
+                    "severity":                 level,
+                    "attack_type":              "unknown_identifier",
+                    "can_id":                   f"0x{can_id:03X}",
+                    "score":                    fused,
+                    "dominant_detection_layer": "whitelist",
+                    "reason":                   reason,
+                    "replay_source":            "hardware",
+                    "b0": payload[0], "b1": payload[1],
+                    "b2": payload[2], "b3": payload[3],
+                    "b4": payload[4], "b5": payload[5],
+                    "b6": payload[6], "b7": payload[7],
+                })
+                if len(self._alerts) > _BUFFER_MAX:
+                    del self._alerts[:-_BUFFER_MAX]
+                self.alert_count = len(self._alerts)
+            elif out["alert"] is not None:
                 self._stats.on_alert(out["alert"])
                 alert = out["alert"]
                 self._alerts.append({

@@ -77,7 +77,22 @@ def _decode_signal(raw: bytes, sig: dict[str, Any]) -> float | None:
     return raw_val * scale + offset
 
 
-def check(can_id_hex: str, raw_bytes: list[int]) -> dict[str, Any]:
+def _vehicle_matches(entry: dict[str, Any], vehicle: str) -> bool:
+    """True when every word of the selected model id appears in the entry's vehicle list.
+
+    signal_map.json is keyed by CAN ID alone and gathers many vehicles; without this a
+    Jaguar frame on 0x0AA was decoded as a Toyota/BMW wheel-speed message.
+    """
+    import re
+    tokens = [t for t in re.split(r"[^a-z0-9]+", vehicle.lower())
+              if t and t not in {"clean", "general", "model", "legacy"} and not t.isdigit()]
+    if not tokens:
+        return False
+    vehicles = str(entry.get("vehicles", "")).lower()
+    return all(t in vehicles for t in tokens)
+
+
+def check(can_id_hex: str, raw_bytes: list[int], vehicle: str | None = None) -> dict[str, Any]:
     """
     Check physical plausibility of a CAN frame.
 
@@ -91,6 +106,9 @@ def check(can_id_hex: str, raw_bytes: list[int]) -> dict[str, Any]:
     """
     entry = _find_entry(can_id_hex)
     if entry is None:
+        return {"checked": False, "passed": True, "violations": [], "decoded_signals": []}
+    # With a known vehicle, only an entry for that vehicle may decode the frame.
+    if vehicle is not None and not _vehicle_matches(entry, vehicle):
         return {"checked": False, "passed": True, "violations": [], "decoded_signals": []}
 
     signals = entry.get("signals", [])

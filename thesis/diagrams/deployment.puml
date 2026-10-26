@@ -1,35 +1,27 @@
 @startuml
-skinparam backgroundColor white
-skinparam defaultFontName Helvetica
-skinparam defaultFontSize 12
-skinparam shadowing false
-skinparam roundcorner 6
-skinparam node {
-  BackgroundColor #EAF2FF
-  BorderColor #2C5AA0
-}
-skinparam database {
-  BackgroundColor #FFF3E0
-  BorderColor #C77800
-}
-skinparam artifact {
-  BackgroundColor #E8F5E9
-  BorderColor #2E7D32
+!include style.iuml
+skinparam nodesep 45
+skinparam ranksep 50
+
+node "Analyst workstation (Windows 10/11)" as PC {
+  artifact "CANvisionNative.exe\n(.NET Framework 4.8)" as Exe
+  node "Python process (uvicorn)" as Py {
+    artifact "backend.api.server\n(port 8765)" as Server
+  }
+  database "SQLite file\n(sessions, alerts)" as Db
+  folder "assets/models\n(manifests, models)" as Models
+  node "Ollama (optional)" as Ollama
 }
 
-node "Windows workstation" {
-  artifact "CANvisionNative.exe\n(WPF process)" as WPF
-  artifact "uvicorn / FastAPI\n(Python process, port 8765)" as API
-  database "SQLite DB,\nmodel store,\nDBC files" as DB
-}
+cloud "Google Gemini API" as Gemini
+node "USB CAN adapter\n(slcan bridge, PCAN)" as Adapter
+node "Vehicle or bench rig\n(CAN bus, 500 kbit/s)" as Bus
 
-cloud "LLM API (Gemini)" as Gemini
-node "Ollama\n(localhost, optional)" as Ollama
-node "ELM327 / SocketCAN\nadapter + vehicle" as HW
-
-WPF <--> API : HTTP :8765
-API <--> DB
-API <--> Gemini : HTTPS
-API <--> Ollama : localhost
-API <--> HW : serial / SocketCAN
+Exe -down-> Server : HTTP
+Server -down-> Db
+Server -down-> Models
+Server -down-> Ollama : HTTP
+Server -right-> Gemini : HTTPS
+Server -down-> Adapter : USB (python-can)
+Adapter -down- Bus : CAN
 @enduml

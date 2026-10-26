@@ -171,8 +171,31 @@ def test_a_borrowed_baseline_is_labelled_when_the_state_is_unknown():
     ctx = build_context(ALERT)
     prompt = llm._build_analyst_prompt(ALERT, ctx, "")
     assert "not measured for this alert" in prompt
-    assert "reference profile only" in prompt
+    # The hand-written driving-state profile is no longer offered as this identifier's normal rate.
+    assert "No measured normal rate for this identifier" in prompt
+    assert "40–150" not in prompt and "Normal frequency" not in prompt
     assert "never invent or estimate a number" in prompt
+
+
+def test_a_merged_alert_burst_is_not_presented_as_a_measured_flood():
+    from backend.ml.explainer.context_builder import build_context
+    alert = dict(ALERT, is_burst_summary=True, suppressed_count=12, burst_window_s=2.0,
+                 layer_scores={"timing": 0.55, "payload": 1.0, "ml": 0.828, "temporal": 0.0})
+    ctx = build_context(alert)
+    prompt = llm._build_analyst_prompt(alert, ctx, "")
+    assert "12 flagged frames merged into this alert within 2 s" in prompt
+    assert "not a measured message rate" in prompt
+    assert "temporal 0.000" in prompt and "engine's final score" in prompt
+    assert "Do not call the alert a flood" in prompt
+
+
+def test_dedup_labels_a_merged_burst_as_an_alert_burst_not_a_dos_burst():
+    from backend.ml import dedup
+    ctxs = [{"can_id": "0x0AA", "timestamp": i * 0.1, "anomaly_score": 0.6 + i * 0.01} for i in range(12)]
+    out = dedup.deduplicate(ctxs)
+    assert len(out) == 1
+    assert out[0]["temporal_pattern"] == "alert_burst"
+    assert "12 flagged frames" in out[0]["burst_label"]
 
 
 # ── grounding: figures quoted for values that were never measured ───────────

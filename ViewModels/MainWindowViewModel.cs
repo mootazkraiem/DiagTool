@@ -77,7 +77,10 @@ public sealed class MainWindowViewModel : ViewModelBase
         !Models.DevOptions.SkipDataGate
         && !IsAnalysisComplete
         && CurrentSectionKey != SectionKey.Home
-        && CurrentSectionKey != SectionKey.Settings;
+        && CurrentSectionKey != SectionKey.Settings
+        // Hardware Setup is where the data source is configured; gating it on data
+        // would need an adapter to reach the adapter screen.
+        && CurrentSectionKey != SectionKey.HardwareSetup;
 
     public string EmptyStateTitle => VehicleDataService.AppState == Models.AppState.NoDataset
         ? "Waiting for data source."

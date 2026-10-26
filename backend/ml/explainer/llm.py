@@ -243,7 +243,7 @@ def _build_search_query(alert: dict[str, Any], ctx: dict[str, Any], user_message
 
     # Alert-based query (no user message) — include ECU if known
     can_id = a.get("can_id", "")
-    sig_ctx = _signal_context(can_id)
+    sig_ctx = _signal_context(can_id, a)
     ecu = sig_ctx.split("\n")[0].replace("Message:", "").split("(")[0].strip() if sig_ctx else ""
     if ecu:
         return f"automotive CAN bus {attack} {ecu} cybersecurity CVE vulnerability"
@@ -270,7 +270,24 @@ def _load_signal_map() -> dict[str, Any]:
     return _signal_map
 
 
-def _signal_context(can_id: str) -> str:
+def _signal_context(can_id: str, alert: dict[str, Any] | None = None) -> str:
+    """Signal names for this identifier, only from the DBC decoded in this session.
+
+    The global signal map is keyed by CAN ID alone and mixes vehicles, so it named a
+    Jaguar frame (no DBC) after another vehicle's message. It is used only when the
+    alert names the vehicle and the map entry lists that vehicle.
+    """
+    decoded = (alert or {}).get("decoded_signals")
+    if isinstance(decoded, list) and decoded:
+        parts = []
+        for d in decoded[:8]:
+            if isinstance(d, dict) and d.get("name"):
+                parts.append(f"  • {d.get('name')} = {d.get('value', '?')} {d.get('unit', '')}".rstrip())
+        if parts:
+            return f"Signals decoded with the loaded DBC on CAN-ID {can_id}:\n" + "\n".join(parts)
+    vehicle = str((alert or {}).get("vehicle", "")).strip().lower()
+    if not vehicle:
+        return ""
     smap = _load_signal_map()
     key = can_id.upper().lstrip("0X") if can_id else ""
     entry: dict[str, Any] | None = None
@@ -278,7 +295,7 @@ def _signal_context(can_id: str) -> str:
         if k.upper().lstrip("0X") == key:
             entry = v
             break
-    if entry is None:
+    if entry is None or vehicle not in str(entry.get("vehicles", "")).lower():
         return ""
     system = entry.get("system", "Unknown ECU")
     short = entry.get("short", "")
@@ -318,7 +335,7 @@ def explain_alert(alert: dict[str, Any]) -> dict[str, str]:
     callers in server.py and the CANvision Anomaly Intel panel).
     """
     ctx = build_context(alert)
-    sig_ctx = _signal_context(str(alert.get("can_id", "")))
+    sig_ctx = _signal_context(str(alert.get("can_id", "")), alert)
     web_ctx = _web_search(_build_search_query(alert, ctx))
 
     prompt = _build_analyst_prompt(alert, ctx, sig_ctx)
@@ -370,7 +387,7 @@ def chat_reply(
     generative AI.
     """
     ctx = build_context(alert)
-    sig_ctx = _signal_context(str(alert.get("can_id", "")))
+    sig_ctx = _signal_context(str(alert.get("can_id", "")), alert)
     msg_lower = message.lower()
     # Only search the web for educational/concept questions, not alert-specific queries
     needs_research = (
@@ -414,21 +431,13 @@ def _build_analyst_prompt(alert: dict[str, Any], ctx: dict[str, Any], sig_ctx: s
         f"Severity:        {a['severity']}\n"
         f"Detection layer: {a['layer']}\n"
         f"Raw reason:      {a['reason']}"
+        + _layer_and_burst_lines(a)
     )
 
     # Block 2 — normal baseline. When the detector could not identify the vehicle
     # state, context_builder falls back to the driving profile; say so, so the
     # model does not present it as this alert's own baseline.
-    baseline_block = (
-        f"State: {sn.get('label', a['state'])}"
-        + ("  (reference profile only — the vehicle state of this alert was not identified,\n"
-           "         so these ranges may not apply to it)" if str(a["state"]).lower() in _UNKNOWN_VALUES else "")
-        + "\n"
-        f"  Normal frequency:    {freq_range[0]}–{freq_range[1]} msg/s\n"
-        f"  Normal entropy:      {ent_range[0]}–{ent_range[1]}\n"
-        f"  Normal inter-arrival:{td_range[0]}–{td_range[1]} s\n"
-        f"  Notes: {sn.get('notes', '—')}"
-    )
+    baseline_block = _NO_BASELINE
 
     # Block 3 — KB match
     if kb:
@@ -461,7 +470,11 @@ def _build_analyst_prompt(alert: dict[str, Any], ctx: dict[str, Any], sig_ctx: s
     return (
         "You are the CAN Security Analyst Assistant — a specialized automotive cybersecurity expert.\n"
         "Your role: help engineers investigate CAN bus anomalies. Focus on explainability, "
-        "comparison with normal behavior, and identification of likely attack patterns.\n\n"
+        "comparison with normal behavior, and the possible causes of the anomaly.\n"
+        "The recording has no attack labels: an anomaly is traffic that differs from the "
+        "training recordings, not a confirmed attack. Never state that an attack happened; "
+        "name the causes that fit the evidence (for example a faulty or newly active ECU, a "
+        "configuration change, or injected frames) and say which evidence would tell them apart.\n\n"
         "=== CURRENT ANOMALY ===\n"
         f"{anomaly_block}\n\n"
         "=== NORMAL BEHAVIOR BASELINE ===\n"
@@ -472,14 +485,20 @@ def _build_analyst_prompt(alert: dict[str, Any], ctx: dict[str, Any], sig_ctx: s
         f"{history_block}"
         f"{sig_block}\n\n"
         "Analyze this anomaly. Compare observed behavior with the normal baseline. "
-        "Identify the most likely attack pattern. "
+        "Say which known pattern it resembles, if any, without calling it an attack. "
         "Use only the figures given above: never invent or estimate a number, and where a "
         "value reads \"not measured for this alert\" say that it was not measured instead of "
         "supplying one. A value that was not measured is not zero: do not describe it as 0, and "
-        "do not compare it with the baseline. "
+        "do not compare it with any range. "
+        "Do not call the alert a flood, an injection or a high message rate unless a measured rate "
+        "above a measured normal rate is given above; a merged alert burst is a cluster of flagged "
+        "frames, not a measured rate, and a missing rate can also mean dropped or absent traffic. "
+        "Keep the score and severity of the detection engine; when the layer scores differ from the "
+        "final score, say that the final score is the engine's fusion, not one layer. "
+        "If the evidence does not support the label, say what evidence is missing. "
         "Respond in JSON with exactly three keys: "
         "\"summary\" (one sentence finding), "
-        "\"detail\" (3–4 sentences: observed vs normal, attack vector, real-world impact, forensic indicators), "
+        "\"detail\" (3–4 sentences: observed vs normal, possible causes, possible impact, what to check), "
         "\"recommendation\" (1–2 sentences: immediate mitigation + long-term hardening)."
     )
 
@@ -520,9 +539,8 @@ def _build_analyst_chat_prompt(
         f"CAN-ID {a['can_id']} | state={a['state']} | score={a['score']} | severity={a['severity']}\n"
         f"Frequency:       {dev.get('frequency', str(a['frequency']))}\n"
         f"Entropy:         {dev.get('entropy', str(a['entropy']))}\n"
-        f"Normal freq ({a['state']}): {freq_range[0]}–{freq_range[1]} msg/s\n"
-        f"Normal entropy:  {ent_range[0]}–{ent_range[1]}\n"
-        f"Detection layer: {a['layer']}\n"
+        f"Normal baseline: {_NO_BASELINE}\n"
+        f"Detection layer: {a['layer']}{_layer_and_burst_lines(a)}\n"
         f"Reason: {a['reason'][:200]}\n"
         f"{kb_line}{similar_line}{sig_line}"
         f"{web_block}\n\n"
@@ -532,9 +550,10 @@ def _build_analyst_chat_prompt(
         "- You may discuss: CAN bus security, this anomaly, attack taxonomy, protocol details, "
         "CVEs, real-world incidents, investigation techniques, remediation, or general automotive cybersecurity.\n"
         "- When the web research section above is present, incorporate those findings naturally.\n"
-        "- Compare observed values to the normal baseline when numbers are involved.\n"
+        "- Use only the figures above. Never invent a normal range, a rate or a signal name, and never "
+        "call the alert a flood or an attack without a measured rate above a measured baseline.\n"
         "- If historical cases are relevant, mention them.\n"
-        "- Write as if briefing a colleague — confident, specific, no hedging.\n"
+        "- Write as if briefing a colleague: specific, and clear about what was not measured.\n"
         "Plain text only. No JSON, no markdown headers, no bullet lists."
     )
 
@@ -554,6 +573,26 @@ def _http_post(
 
 
 _UNKNOWN_VALUES = {"", "unknown", "none", "null", "?", "n/a", "nan"}
+
+_NO_BASELINE = ("No measured normal rate for this identifier is available here. The knowledge "
+                "base only holds generic driving-state profiles, which were not measured on this "
+                "vehicle or this identifier, so no comparison with a normal range is possible.")
+
+
+def _layer_and_burst_lines(a: dict[str, Any]) -> str:
+    """Per-layer scores and burst facts measured by the detection engine, as prompt lines."""
+    lines = ""
+    ls = a.get("layer_scores")
+    if ls:
+        lines += "\nLayer scores:    " + ", ".join(f"{k} {v:.3f}" for k, v in ls.items())
+        lines += f" (the anomaly score {a['score']} is the engine's final score)"
+    b = a.get("burst")
+    if b:
+        win = b.get("window_s")
+        lines += (f"\nAlert burst:     {b['merged_frames']} flagged frames merged into this alert"
+                  + (f" within {win:g} s" if isinstance(win, (int, float)) else "")
+                  + "; this is a count of flagged frames, not a measured message rate")
+    return lines
 # Small integers are prose ("3 tests", "one or two"), not claimed measurements.
 _FIGURE_MIN = 10.0
 _NUMBER_RE = re.compile(r"\d+(?:[.,]\d+)?")
@@ -865,9 +904,15 @@ def _template(
         comparison = f" Entropy: {ent_note}."
 
     ecu_note = (
-        f" ECU: {sig_ctx.split(chr(10))[0]}." if sig_ctx
-        else f" CAN-ID {can_id} is not in the vehicle signal map — possible foreign node."
+        f" {sig_ctx.split(chr(10))[0]}" if sig_ctx
+        else f" No DBC signal names are available for {can_id} in this session."
     )
+    if a.get("burst"):
+        comparison += (f" This alert merges {a['burst']['merged_frames']} flagged frames that came close together;"
+                       f" that is a cluster of flagged frames, not a measured message rate.")
+    if a.get("layer_scores"):
+        comparison += (" Layer scores: " + ", ".join(f"{k} {v:.3f}" for k, v in a["layer_scores"].items())
+                       + f"; {score:.3f} is the detection engine's final score.")
 
     similar = ctx.get("similar_history", [])
     sim_note = ""
@@ -882,8 +927,11 @@ def _template(
 
     if kb:
         return {
-            "summary": f"{kb['attack_type']} pattern detected on {can_id} — score {score:.3f} ({severity}).{comparison}{ecu_note}",
-            "detail":  f"{kb['detail'][:500]}{comparison} Fusion score {score:.3f} via {layer_desc}.{sim_note}{web_note}",
+            "summary": (f"Anomaly on {can_id}, score {score:.3f} ({severity}). It resembles the knowledge-base "
+                        f"pattern '{kb['attack_type']}'; that is not a confirmed attack.{comparison}{ecu_note}"),
+            "detail":  (f"What the knowledge base says about that pattern in general (not a finding about this "
+                        f"alert): {kb['detail'][:400]}{comparison} Final score {score:.3f}, dominant layer: "
+                        f"{layer_desc}. Check the measured values above before assuming this pattern.{sim_note}{web_note}"),
             "recommendation": kb["recommendation"],
             "kb_match_label": kb["attack_type"],
         }
@@ -940,11 +988,14 @@ def _template_chat(
     if any(t in q for t in ("cause", "reason", "flagged", "triggered", "why", "how did", "how was", "detect", "what happened")):
         comparison = ""
         if "ABOVE NORMAL" in freq_note:
-            comparison = f" Its frequency ({a['frequency']} msg/s) is far above the expected {freq_range[0]}–{freq_range[1]} msg/s for the {a['state']} vehicle state — a hallmark of flooding attacks."
+            comparison = f" Its frequency ({a['frequency']} msg/s) is far above the expected {freq_range[0]}–{freq_range[1]} msg/s for the {a['state']} vehicle state. A flood of this identifier, from injected frames or a faulty ECU, would look like this."
         elif "BELOW NORMAL" in freq_note:
-            comparison = f" Its frequency ({a['frequency']} msg/s) dropped well below the expected {freq_range[0]}–{freq_range[1]} msg/s range, suggesting a suppression or bus-off attack."
+            comparison = f" Its frequency ({a['frequency']} msg/s) dropped well below the expected {freq_range[0]}–{freq_range[1]} msg/s range. A silenced or disconnected ECU, or a node in bus-off state, would look like this."
         elif "ABOVE NORMAL" in ent_note:
             comparison = f" Its payload entropy ({a['entropy']}) is higher than the expected {ent_range[0]}–{ent_range[1]} range, indicating randomized or fuzzed byte content."
+        if a.get("burst"):
+            comparison += (f" This alert merges {a['burst']['merged_frames']} flagged frames that came close "
+                           f"together; that is a cluster of flagged frames, not a measured message rate.")
         kb_note = f" This matches the '{kb['attack_type']}' pattern in our attack knowledge base: {kb['summary']}" if kb else ""
         sig_note = f" The affected system is {ecu_line}." if ecu_line else ""
         return (
@@ -960,8 +1011,7 @@ def _template_chat(
         state_notes = sn.get("notes", "")
         notes_line = f" Note: {state_notes}" if state_notes else ""
         return (
-            f"In the '{a['state']}' driving state, the CAN bus normally runs at "
-            f"{freq_range[0]}–{freq_range[1]} msg/s with entropy {ent_range[0]}–{ent_range[1]}.{notes_line} "
+            f"{_NO_BASELINE} "
             f"This alert on {can_id} shows: frequency {freq_dev}; entropy {ent_dev}. "
             f"The deviation pushed the fusion score to {score:.3f}, which exceeds the {severity.lower()} threshold. "
             f"{ecu_note.strip()}"

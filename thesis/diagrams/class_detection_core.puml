@@ -1,23 +1,84 @@
 @startuml
-skinparam backgroundColor white
-skinparam defaultFontName Helvetica
-skinparam defaultFontSize 14
-skinparam shadowing false
-skinparam roundcorner 6
-skinparam class {
-  BackgroundColor #EAF2FF
-  BorderColor #2C5AA0
-  ArrowColor #2C5AA0
+!include style.iuml
+skinparam linetype ortho
+hide circle
+skinparam nodesep 60
+
+class CanFrame {
+  +timestamp : float
+  +can_id : int
+  +payload : tuple[int]
 }
 
-class RealtimeEngine
-class ScoringEngine
-class RuntimeModelStore
-class StateModelBundle
-class RunStatistics
+class RealtimeEngine {
+  +vehicle_id : str
+  +cfg : RuntimeConfig
+  -_family : IdModelFamily
+  -_canonical : CanonicalFeatureStream
+  +process_frame(frame : CanFrame) : dict
+}
 
-RealtimeEngine *-- ScoringEngine
-RealtimeEngine *-- RuntimeModelStore
-RuntimeModelStore o-- StateModelBundle : per vehicle profile
-RealtimeEngine ..> RunStatistics : reports to
+class CanonicalFeatureStream {
+  +update(timestamp, can_id, payload) : list[float] | None
+  +reset()
+}
+
+class ScoringEngine {
+  +w_t, w_p, w_m, w_tmp : float
+  +high_threshold : float
+  +score(timing, payload, ml) : dict
+}
+
+class AlertSystem {
+  +cooldown_seconds : float
+  +should_alert(timestamp, can_id, level) : bool
+  +emit(timestamp, can_id, level, score, reason) : dict
+}
+
+class IdModelFamily {
+  +family : str
+  +manifest : dict
+  +models : dict[int, IdModel]
+  +sparse : set[int]
+  +unmodelled : set[int]
+  +status(can_id) : str
+  +score_rows(x, can_ids)
+  +score_one(vec, can_id)
+}
+
+class IdModel {
+  +features : list[str]
+  +model : IsolationForest
+  +threshold : float
+  +median : float
+}
+
+class ModelStatus {
+  +id : str
+  +status : str
+  +offline : str
+  +live : str
+}
+
+class model_status <<module>> {
+  +resolve(model_id) : ModelStatus
+  +live_engine(vehicle_id) : RealtimeEngine
+}
+
+class IDSStatistics {
+  +on_frame()
+  +on_score(fusion_score)
+  +on_alert(alert)
+  +as_dict() : dict
+}
+
+RealtimeEngine .left.> CanFrame
+RealtimeEngine *-right- AlertSystem
+RealtimeEngine *-down- CanonicalFeatureStream
+RealtimeEngine *-down- ScoringEngine
+RealtimeEngine o-down- IdModelFamily
+IdModelFamily *-down- "1..*" IdModel
+model_status .left.> ModelStatus
+model_status .down.> RealtimeEngine : builds
+IDSStatistics .down.> RealtimeEngine : counts results of
 @enduml

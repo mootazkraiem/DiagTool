@@ -1,25 +1,22 @@
 @startuml
-skinparam backgroundColor white
-skinparam defaultFontName Helvetica
-skinparam defaultFontSize 12
-skinparam shadowing false
-skinparam roundcorner 6
-skinparam ArrowColor #2C5AA0
-skinparam ArrowThickness 1.1
-skinparam component {
-  BackgroundColor #EAF2FF
-  BorderColor #2C5AA0
-}
+!include style.iuml
+skinparam linetype ortho
+skinparam nodesep 35
+skinparam ranksep 45
 
-component "Backlog\nrefinement" as Plan
-component "Development\n(increment)" as Dev
-component "Testing /\nevidence check" as Test
-component "Review" as Review
-component "Retrospective" as Retro #FFF3E0
+rectangle "Product backlog\n(prioritised work)" as PB
+rectangle "Sprint planning" as SP
+rectangle "Sprint backlog" as SB
+rectangle "Sprint\n(one to four weeks,\ndaily follow up)" as S
+rectangle "Working increment" as I
+rectangle "Sprint review\n(backlog updated)" as R
+rectangle "Retrospective" as RE
 
-Plan -right-> Dev
-Dev -right-> Test
-Test -right-> Review
-Review -right-> Retro
-Retro -up-> Plan : next iteration
+PB -right-> SP
+SP -right-> SB
+SB -right-> S
+S -down-> I
+I -left-> R
+R -left-> RE
+RE -up-> SP : next sprint
 @enduml

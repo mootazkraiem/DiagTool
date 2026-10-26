@@ -18,8 +18,6 @@ public sealed class SettingsViewModel : SectionViewModel
 {
     private readonly PythonApiClient pythonApiClient;
     private readonly CANvision.Native.Models.AppConfig appConfig;
-    private string detectionModelText  = "IsolationForest + KMeans";
-    private string modelClustersText   = "--";
     private string llmProviderText     = "--";
     private string modelStatusText     = "CHECKING...";
     private string saveStatusText      = string.Empty;
@@ -41,8 +39,15 @@ public sealed class SettingsViewModel : SectionViewModel
         {
             OnPropertyChanged(nameof(SelectedHwVehicleId));
             OnPropertyChanged(nameof(TrainingDateText));
+            OnPropertyChanged(nameof(DetectionModelText));
+            OnPropertyChanged(nameof(ModelClustersText));
         };
-        modelSelection.Models.CollectionChanged += (_, _) => OnPropertyChanged(nameof(TrainingDateText));
+        modelSelection.Models.CollectionChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(TrainingDateText));
+            OnPropertyChanged(nameof(DetectionModelText));
+            OnPropertyChanged(nameof(ModelClustersText));
+        };
 
         SettingsCategories = new ObservableCollection<string>
         {
@@ -186,8 +191,12 @@ public sealed class SettingsViewModel : SectionViewModel
     public string RefreshIntervalText => $"{(int)VehicleDataService.RefreshInterval.TotalMilliseconds} MS";
     public string LatencyText         => $"{VehicleDataService.RuntimeLatencyMs:F1} ms";
 
-    public string DetectionModelText { get => detectionModelText; private set => SetProperty(ref detectionModelText, value); }
-    public string ModelClustersText  { get => modelClustersText;  private set => SetProperty(ref modelClustersText,  value); }
+    // The model the analyst selected, not the general engine: the card used to read
+    // "IsolationForest + KMeans, 5 clusters" (the general model) whatever was selected.
+    public string DetectionModelText => ModelSelection.SelectedModel?.ModelLabel ?? "--";
+    public string ModelClustersText => ModelSelection.SelectedModel is { } m
+        ? (m.Status.StartsWith("clean_", StringComparison.Ordinal) ? "ISOLATION FOREST PER CAN ID" : "ISOLATION FOREST PER STATE")
+        : "--";
     public string LlmProviderText    { get => llmProviderText;    private set => SetProperty(ref llmProviderText,    value); }
     public string ModelStatusText    { get => modelStatusText;    private set => SetProperty(ref modelStatusText,    value); }
     public string SaveStatusText     { get => saveStatusText;     private set => SetProperty(ref saveStatusText,     value); }
@@ -345,8 +354,6 @@ public sealed class SettingsViewModel : SectionViewModel
             {
                 var health = await pythonApiClient.GetSystemHealthDetailAsync(CancellationToken.None).ConfigureAwait(true);
                 if (health is null) { ModelStatusText = "BACKEND OFFLINE"; continue; }
-                DetectionModelText = health.ModelLoaded ? "IsolationForest + KMeans" : "MODEL NOT LOADED";
-                ModelClustersText  = health.ModelLoaded ? $"{health.ModelClusters} clusters" : "--";
                 LlmProviderText    = string.IsNullOrWhiteSpace(health.LlmProvider) ? "NONE" : health.LlmProvider.ToUpperInvariant();
                 ModelStatusText    = health.ModelLoaded ? "ACTIVE" : "OFFLINE";
                 return;

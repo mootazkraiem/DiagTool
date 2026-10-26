@@ -83,9 +83,13 @@ def deduplicate(contexts: list[dict], window_sec: float = WINDOW_SEC) -> list[di
         summary["is_burst_summary"] = True
         summary["suppressed_count"] = bucket["count"]
         summary["anomaly_score"]    = bucket["peak_score"]
-        summary["temporal_pattern"] = "dos_burst"
+        # A cluster of flagged frames merged for display. It is NOT a measured
+        # message rate, so it must not carry the "dos_burst" label that
+        # temporal.py gives to a measured flood (an explainer read it as one).
+        summary["temporal_pattern"] = "alert_burst"
+        summary["burst_window_s"] = window_sec
         summary["burst_label"] = (
-            f"DoS burst on {can_id} — {bucket['count']} frames in {window_sec:.0f}s"
+            f"Alert burst on {can_id}: {bucket['count']} flagged frames within {window_sec:.0f} s, merged into one alert"
         )
         result.append(summary)
 

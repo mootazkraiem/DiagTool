@@ -1,0 +1,25 @@
+{
+  "calibration": {
+    "method": "empirical_quantile_strict",
+    "target_contamination": 0.02,
+    "definition": "threshold = (k+1)-th smallest training score_samples value, k = floor(target_contamination x rows); flagged iff score < threshold; ties at the threshold are not flagged"
+  },
+  "per_can_id": {
+    "0x6A": {
+      "threshold": -0.6686447735410418,
+      "median": -0.3917251302480699,
+      "rows": 18047,
+      "k": 360,
+      "flagged_count": 360,
+      "ties_at_threshold": 1
+    },
+    "0x6B": {
+      "threshold": -0.6758839251439138,
+      "median": -0.407098487120442,
+      "rows": 33461,
+      "k": 669,
+      "flagged_count": 669,
+      "ties_at_threshold": 1
+    }
+  }
+}

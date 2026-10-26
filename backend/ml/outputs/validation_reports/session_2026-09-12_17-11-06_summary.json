@@ -1,0 +1,33 @@
+{
+  "replay_source": "backend\\ml\\outputs\\sessions\\session_2026-09-12_17-11-06.csv",
+  "total_frames_processed": 75,
+  "total_alerts": 1,
+  "alerts_per_1000_frames": 13.333333333333334,
+  "critical_alert_rate": 0.0,
+  "high_alert_rate": 0.0,
+  "alerts_per_severity": {
+    "LOW": 1
+  },
+  "alerts_per_reason": {
+    "continuity_break": 1
+  },
+  "alerts_per_can_id": {
+    "0x5D2": 1
+  },
+  "alerts_per_risk_level": {
+    "LOW": 1
+  },
+  "max_fusion_score_observed": 0.40065216500038175,
+  "average_fusion_score_observed": 0.23696839706939898,
+  "runtime_duration_sec": 0.2160124000220094,
+  "fps": 347.20229020351746,
+  "alert_records": [
+    {
+      "timestamp": 1789229472.7811823,
+      "can_id": 1490,
+      "risk_level": "LOW",
+      "score": 0.40065216500038175,
+      "reason": "timing=0.129, payload=0.676, ml=0.594, persistence=0.000, freq=3Hz, can_id_entropy=1.385"
+    }
+  ]
+}

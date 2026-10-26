@@ -1,0 +1,32 @@
+{
+  "training": {
+    "fingerprint": "a14e85d66f5592d4b514a4b374fa2a90b236e3c51f2f968c551acbc26fc2c0c5",
+    "recordings": [
+      {
+        "path": "EV-CANlogs-main/Nissan LEAF/62kWh/Nissan leaf 62kwh fast charging from 80ish soc , car is off and charger wakes car up, charging , then charger ends session v2.csv",
+        "sha256": "7d7e3b3495dc97fa45a6e61646560f8d38e5e1f0f98eceb749e3b9e649985499",
+        "content_sha256": "2753130e3304cd8843ab79d299b457b47502ffe9b98f628b2960a2c0f43a0389",
+        "frames": 245708,
+        "frame_cap": null
+      },
+      {
+        "path": "EV-CANlogs-main/Nissan LEAF/Special Logs from battery upgraded LEAFs/QC_ZE0_30kWhABB_FAIL.txt",
+        "sha256": "798c0fb6e3ccc0ee02aac3d2abf62af7f25ee45e7a828c3853ce01e54dea4328",
+        "content_sha256": "bee29cd17ebb031d5ad9a1d8b133aa4f0f66c9658c0392e638dccbb87d8b86b0",
+        "frames": 3099,
+        "frame_cap": null
+      }
+    ]
+  },
+  "holdout": {
+    "recordings": [
+      {
+        "path": "EV-CANlogs-main/Nissan LEAF/Special Logs from battery upgraded LEAFs/QC_ZE0_30kWhABB_SUCCESS_PER.txt",
+        "sha256": "4fa8fd255f4115594fc3539cc33bf27873b7d481fe1cfb871bcf083974ab12ad",
+        "content_sha256": "ad6312f2da6224ee4454ae66283ac1151ef9f855aa65ed72961cba04084e072c",
+        "frames": 6529,
+        "frame_cap": null
+      }
+    ]
+  }
+}

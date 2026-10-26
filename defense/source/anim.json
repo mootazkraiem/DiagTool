@@ -1,0 +1,3158 @@
+{
+ "6": [
+  {
+   "trigger": "auto",
+   "effects": [
+    {
+     "type": "wipe",
+     "name": "!!busH",
+     "dir": "right",
+     "dur": 700,
+     "delay": 0
+    },
+    {
+     "type": "wipe",
+     "name": "!!busL",
+     "dir": "right",
+     "dur": 700,
+     "delay": 120
+    },
+    {
+     "type": "fade",
+     "name": "!!busH-l",
+     "dur": 300,
+     "delay": 500
+    },
+    {
+     "type": "fade",
+     "name": "!!busL-l",
+     "dur": 300,
+     "delay": 500
+    },
+    {
+     "type": "fade",
+     "name": "!!term-l",
+     "dur": 300,
+     "delay": 500
+    },
+    {
+     "type": "fade",
+     "name": "!!term-r",
+     "dur": 300,
+     "delay": 500
+    },
+    {
+     "type": "fade",
+     "name": "!!term-lt",
+     "dur": 300,
+     "delay": 500
+    },
+    {
+     "type": "fade",
+     "name": "!!ecu0",
+     "dur": 350,
+     "delay": 1120
+    },
+    {
+     "type": "fade",
+     "name": "!!ecu0-ic",
+     "dur": 350,
+     "delay": 1120
+    },
+    {
+     "type": "fade",
+     "name": "!!ecu0-t",
+     "dur": 350,
+     "delay": 1120
+    },
+    {
+     "type": "wipe",
+     "name": "!!ecu0-stub",
+     "dir": "down",
+     "dur": 300,
+     "delay": 1270
+    },
+    {
+     "type": "fade",
+     "name": "!!ecu1",
+     "dur": 350,
+     "delay": 900
+    },
+    {
+     "type": "fade",
+     "name": "!!ecu1-ic",
+     "dur": 350,
+     "delay": 900
+    },
+    {
+     "type": "fade",
+     "name": "!!ecu1-t",
+     "dur": 350,
+     "delay": 900
+    },
+    {
+     "type": "wipe",
+     "name": "!!ecu1-stub",
+     "dir": "down",
+     "dur": 300,
+     "delay": 1050
+    },
+    {
+     "type": "fade",
+     "name": "!!ecu2",
+     "dur": 350,
+     "delay": 1340
+    },
+    {
+     "type": "fade",
+     "name": "!!ecu2-ic",
+     "dur": 350,
+     "delay": 1340
+    },
+    {
+     "type": "fade",
+     "name": "!!ecu2-t",
+     "dur": 350,
+     "delay": 1340
+    },
+    {
+     "type": "wipe",
+     "name": "!!ecu2-stub",
+     "dir": "down",
+     "dur": 300,
+     "delay": 1490
+    },
+    {
+     "type": "fade",
+     "name": "!!ecu3",
+     "dur": 350,
+     "delay": 1560
+    },
+    {
+     "type": "fade",
+     "name": "!!ecu3-ic",
+     "dur": 350,
+     "delay": 1560
+    },
+    {
+     "type": "fade",
+     "name": "!!ecu3-t",
+     "dur": 350,
+     "delay": 1560
+    },
+    {
+     "type": "wipe",
+     "name": "!!ecu3-stub",
+     "dir": "up",
+     "dur": 300,
+     "delay": 1710
+    },
+    {
+     "type": "fade",
+     "name": "!!ecu4",
+     "dur": 350,
+     "delay": 1780
+    },
+    {
+     "type": "fade",
+     "name": "!!ecu4-ic",
+     "dur": 350,
+     "delay": 1780
+    },
+    {
+     "type": "fade",
+     "name": "!!ecu4-t",
+     "dur": 350,
+     "delay": 1780
+    },
+    {
+     "type": "wipe",
+     "name": "!!ecu4-stub",
+     "dir": "up",
+     "dur": 300,
+     "delay": 1930
+    },
+    {
+     "type": "fade",
+     "name": "!!ecu5",
+     "dur": 350,
+     "delay": 2000
+    },
+    {
+     "type": "fade",
+     "name": "!!ecu5-ic",
+     "dur": 350,
+     "delay": 2000
+    },
+    {
+     "type": "fade",
+     "name": "!!ecu5-t",
+     "dur": 350,
+     "delay": 2000
+    },
+    {
+     "type": "wipe",
+     "name": "!!ecu5-stub",
+     "dir": "up",
+     "dur": 300,
+     "delay": 2150
+    },
+    {
+     "type": "pop",
+     "name": "!!frame",
+     "dur": 350,
+     "delay": 2620
+    },
+    {
+     "type": "fade",
+     "name": "!!frame-l",
+     "dur": 100,
+     "delay": 3120
+    },
+    {
+     "type": "fade",
+     "name": "!!frame-r",
+     "dur": 100,
+     "delay": 3120
+    },
+    {
+     "type": "motion",
+     "name": "!!frame-l",
+     "dx": -4.85,
+     "dy": 0,
+     "dur": 4000,
+     "repeat": true,
+     "delay": 3120
+    },
+    {
+     "type": "motion",
+     "name": "!!frame-r",
+     "dx": 4.85,
+     "dy": 0,
+     "dur": 4000,
+     "repeat": true,
+     "delay": 3120
+    },
+    {
+     "type": "fade",
+     "name": "!!can-cap",
+     "dur": 500,
+     "delay": 3520
+    }
+   ]
+  }
+ ],
+ "7": [
+  {
+   "trigger": "auto",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!snd0",
+     "dur": 300,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!snd0-ic",
+     "dur": 300,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!snd0-t",
+     "dur": 300,
+     "delay": 0
+    },
+    {
+     "type": "wipe",
+     "name": "!!snd0-a",
+     "dir": "right",
+     "dur": 300,
+     "delay": 300
+    },
+    {
+     "type": "wipe",
+     "name": "!!fr0",
+     "dir": "right",
+     "dur": 550,
+     "delay": 550
+    }
+   ]
+  },
+  {
+   "trigger": "click",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!snd1",
+     "dur": 300,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!snd1-ic",
+     "dur": 300,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!snd1-t",
+     "dur": 300,
+     "delay": 0
+    },
+    {
+     "type": "wipe",
+     "name": "!!snd1-a",
+     "dir": "right",
+     "dur": 300,
+     "delay": 300
+    },
+    {
+     "type": "wipe",
+     "name": "!!fr1",
+     "dir": "right",
+     "dur": 550,
+     "delay": 550
+    },
+    {
+     "type": "pop",
+     "name": "!!same",
+     "dur": 350,
+     "delay": 1150
+    },
+    {
+     "type": "fade",
+     "name": "!!same-t",
+     "dur": 450,
+     "delay": 1350
+    }
+   ]
+  },
+  {
+   "trigger": "click",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!miss0",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!miss0-ic",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!miss0-t",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!miss0-d",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!miss1",
+     "dur": 350,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!miss1-ic",
+     "dur": 350,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!miss1-t",
+     "dur": 350,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!miss1-d",
+     "dur": 350,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!miss2",
+     "dur": 350,
+     "delay": 900
+    },
+    {
+     "type": "fade",
+     "name": "!!miss2-ic",
+     "dur": 350,
+     "delay": 900
+    },
+    {
+     "type": "fade",
+     "name": "!!miss2-t",
+     "dur": 350,
+     "delay": 900
+    },
+    {
+     "type": "fade",
+     "name": "!!miss2-d",
+     "dur": 350,
+     "delay": 900
+    },
+    {
+     "type": "fade",
+     "name": "!!can-concl",
+     "dur": 500,
+     "delay": 1500
+    },
+    {
+     "type": "fade",
+     "name": "!!can-src",
+     "dur": 400,
+     "delay": 1800
+    }
+   ]
+  }
+ ],
+ "9": [
+  {
+   "trigger": "click",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!al0-t",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!al0-s",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!al0-p",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!al0-d",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!al0-hr",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "pulse",
+     "name": "!!al0-s",
+     "scale": 1.12,
+     "dur": 220,
+     "delay": 350
+    },
+    {
+     "type": "fadeout",
+     "name": "!!al-n0",
+     "dur": 150,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!al-n1",
+     "dur": 200,
+     "delay": 120
+    }
+   ]
+  },
+  {
+   "trigger": "click",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!al1-t",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!al1-s",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!al1-p",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!al1-d",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!al1-hr",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "pulse",
+     "name": "!!al1-s",
+     "scale": 1.12,
+     "dur": 220,
+     "delay": 350
+    },
+    {
+     "type": "fadeout",
+     "name": "!!al-n1",
+     "dur": 150,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!al-n2",
+     "dur": 200,
+     "delay": 120
+    }
+   ]
+  },
+  {
+   "trigger": "click",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!al2-t",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!al2-s",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!al2-p",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!al2-d",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!al2-hr",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "pulse",
+     "name": "!!al2-s",
+     "scale": 1.12,
+     "dur": 220,
+     "delay": 350
+    },
+    {
+     "type": "fadeout",
+     "name": "!!al-n2",
+     "dur": 150,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!al-n3",
+     "dur": 200,
+     "delay": 120
+    }
+   ]
+  },
+  {
+   "trigger": "click",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!al3-t",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!al3-s",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!al3-p",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!al3-d",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!al3-hr",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "pulse",
+     "name": "!!al3-s",
+     "scale": 1.12,
+     "dur": 220,
+     "delay": 350
+    },
+    {
+     "type": "fadeout",
+     "name": "!!al-n3",
+     "dur": 150,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!al-n4",
+     "dur": 200,
+     "delay": 120
+    }
+   ]
+  },
+  {
+   "trigger": "click",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!al4-t",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!al4-s",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!al4-p",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!al4-d",
+     "dur": 350,
+     "delay": 0
+    },
+    {
+     "type": "pulse",
+     "name": "!!al4-s",
+     "scale": 1.12,
+     "dur": 220,
+     "delay": 350
+    },
+    {
+     "type": "fadeout",
+     "name": "!!al-n4",
+     "dur": 150,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!al-n5",
+     "dur": 200,
+     "delay": 120
+    }
+   ]
+  }
+ ],
+ "11": [
+  {
+   "trigger": "auto",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!ex0",
+     "dur": 400,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!ex0-lg-bg",
+     "dur": 400,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!ex0-lg-l0",
+     "dur": 400,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!ex0-t",
+     "dur": 400,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!ex0-gl",
+     "dur": 400,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!ex0-g",
+     "dur": 400,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!ex0-ml",
+     "dur": 400,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!ex0-m",
+     "dur": 400,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!ex1",
+     "dur": 400,
+     "delay": 300
+    },
+    {
+     "type": "fade",
+     "name": "!!ex1-lg-bg",
+     "dur": 400,
+     "delay": 300
+    },
+    {
+     "type": "fade",
+     "name": "!!ex1-lg-ic",
+     "dur": 400,
+     "delay": 300
+    },
+    {
+     "type": "fade",
+     "name": "!!ex1-t",
+     "dur": 400,
+     "delay": 300
+    },
+    {
+     "type": "fade",
+     "name": "!!ex1-gl",
+     "dur": 400,
+     "delay": 300
+    },
+    {
+     "type": "fade",
+     "name": "!!ex1-g",
+     "dur": 400,
+     "delay": 300
+    },
+    {
+     "type": "fade",
+     "name": "!!ex1-ml",
+     "dur": 400,
+     "delay": 300
+    },
+    {
+     "type": "fade",
+     "name": "!!ex1-m",
+     "dur": 400,
+     "delay": 300
+    },
+    {
+     "type": "fade",
+     "name": "!!ex2",
+     "dur": 400,
+     "delay": 600
+    },
+    {
+     "type": "fade",
+     "name": "!!ex2-lg-bg",
+     "dur": 400,
+     "delay": 600
+    },
+    {
+     "type": "fade",
+     "name": "!!ex2-lg-l0",
+     "dur": 400,
+     "delay": 600
+    },
+    {
+     "type": "fade",
+     "name": "!!ex2-lg-l1",
+     "dur": 400,
+     "delay": 600
+    },
+    {
+     "type": "fade",
+     "name": "!!ex2-t",
+     "dur": 400,
+     "delay": 600
+    },
+    {
+     "type": "fade",
+     "name": "!!ex2-gl",
+     "dur": 400,
+     "delay": 600
+    },
+    {
+     "type": "fade",
+     "name": "!!ex2-g",
+     "dur": 400,
+     "delay": 600
+    },
+    {
+     "type": "fade",
+     "name": "!!ex2-ml",
+     "dur": 400,
+     "delay": 600
+    },
+    {
+     "type": "fade",
+     "name": "!!ex2-m",
+     "dur": 400,
+     "delay": 600
+    },
+    {
+     "type": "fade",
+     "name": "!!ex3",
+     "dur": 400,
+     "delay": 900
+    },
+    {
+     "type": "fade",
+     "name": "!!ex3-lg-bg",
+     "dur": 400,
+     "delay": 900
+    },
+    {
+     "type": "fade",
+     "name": "!!ex3-lg-l0",
+     "dur": 400,
+     "delay": 900
+    },
+    {
+     "type": "fade",
+     "name": "!!ex3-lg-l1",
+     "dur": 400,
+     "delay": 900
+    },
+    {
+     "type": "fade",
+     "name": "!!ex3-t",
+     "dur": 400,
+     "delay": 900
+    },
+    {
+     "type": "fade",
+     "name": "!!ex3-gl",
+     "dur": 400,
+     "delay": 900
+    },
+    {
+     "type": "fade",
+     "name": "!!ex3-g",
+     "dur": 400,
+     "delay": 900
+    },
+    {
+     "type": "fade",
+     "name": "!!ex3-ml",
+     "dur": 400,
+     "delay": 900
+    },
+    {
+     "type": "fade",
+     "name": "!!ex3-m",
+     "dur": 400,
+     "delay": 900
+    },
+    {
+     "type": "fade",
+     "name": "!!ex-us",
+     "dur": 450,
+     "delay": 1600
+    },
+    {
+     "type": "fade",
+     "name": "!!ex-us-i",
+     "dur": 450,
+     "delay": 1600
+    },
+    {
+     "type": "fade",
+     "name": "!!ex-us-t",
+     "dur": 450,
+     "delay": 1600
+    }
+   ]
+  }
+ ],
+ "13": [
+  {
+   "trigger": "auto",
+   "effects": [
+    {
+     "type": "flyfrom",
+     "name": "!!ps-c0",
+     "dx": 0,
+     "dy": 0.35,
+     "dur": 500,
+     "delay": 300
+    },
+    {
+     "type": "flyfrom",
+     "name": "!!ps-c0-h",
+     "dx": 0,
+     "dy": 0.35,
+     "dur": 500,
+     "delay": 300
+    },
+    {
+     "type": "flyfrom",
+     "name": "!!ps-c0-a",
+     "dx": 0,
+     "dy": 0.35,
+     "dur": 500,
+     "delay": 300
+    },
+    {
+     "type": "flyfrom",
+     "name": "!!ps-c0-k0",
+     "dx": 0,
+     "dy": 0.35,
+     "dur": 500,
+     "delay": 300
+    },
+    {
+     "type": "flyfrom",
+     "name": "!!ps-c0-k1",
+     "dx": 0,
+     "dy": 0.35,
+     "dur": 500,
+     "delay": 300
+    },
+    {
+     "type": "flyfrom",
+     "name": "!!ps-c0-k2",
+     "dx": 0,
+     "dy": 0.35,
+     "dur": 500,
+     "delay": 300
+    },
+    {
+     "type": "flyfrom",
+     "name": "!!ps-c1",
+     "dx": 0,
+     "dy": 0.35,
+     "dur": 500,
+     "delay": 650
+    },
+    {
+     "type": "flyfrom",
+     "name": "!!ps-c1-h",
+     "dx": 0,
+     "dy": 0.35,
+     "dur": 500,
+     "delay": 650
+    },
+    {
+     "type": "flyfrom",
+     "name": "!!ps-c1-a",
+     "dx": 0,
+     "dy": 0.35,
+     "dur": 500,
+     "delay": 650
+    },
+    {
+     "type": "flyfrom",
+     "name": "!!ps-c1-k0",
+     "dx": 0,
+     "dy": 0.35,
+     "dur": 500,
+     "delay": 650
+    },
+    {
+     "type": "flyfrom",
+     "name": "!!ps-c1-n",
+     "dx": 0,
+     "dy": 0.35,
+     "dur": 500,
+     "delay": 650
+    },
+    {
+     "type": "flyfrom",
+     "name": "!!ps-c2",
+     "dx": 0,
+     "dy": 0.35,
+     "dur": 500,
+     "delay": 1000
+    },
+    {
+     "type": "flyfrom",
+     "name": "!!ps-c2-h",
+     "dx": 0,
+     "dy": 0.35,
+     "dur": 500,
+     "delay": 1000
+    },
+    {
+     "type": "flyfrom",
+     "name": "!!ps-c2-a",
+     "dx": 0,
+     "dy": 0.35,
+     "dur": 500,
+     "delay": 1000
+    },
+    {
+     "type": "flyfrom",
+     "name": "!!ps-c2-k0",
+     "dx": 0,
+     "dy": 0.35,
+     "dur": 500,
+     "delay": 1000
+    },
+    {
+     "type": "flyfrom",
+     "name": "!!ps-c2-n",
+     "dx": 0,
+     "dy": 0.35,
+     "dur": 500,
+     "delay": 1000
+    }
+   ]
+  }
+ ],
+ "14": [
+  {
+   "trigger": "auto",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!idea-k",
+     "dur": 500,
+     "delay": 600
+    },
+    {
+     "type": "fade",
+     "name": "!!idea-name",
+     "dur": 500,
+     "delay": 600
+    },
+    {
+     "type": "fade",
+     "name": "!!idea-def",
+     "dur": 500,
+     "delay": 900
+    },
+    {
+     "type": "fade",
+     "name": "!!idea0-bg",
+     "dur": 400,
+     "delay": 1300
+    },
+    {
+     "type": "fade",
+     "name": "!!idea0-ic",
+     "dur": 400,
+     "delay": 1300
+    },
+    {
+     "type": "fade",
+     "name": "!!idea0-t",
+     "dur": 400,
+     "delay": 1300
+    },
+    {
+     "type": "fade",
+     "name": "!!idea1-bg",
+     "dur": 400,
+     "delay": 1600
+    },
+    {
+     "type": "fade",
+     "name": "!!idea1-ic",
+     "dur": 400,
+     "delay": 1600
+    },
+    {
+     "type": "fade",
+     "name": "!!idea1-t",
+     "dur": 400,
+     "delay": 1600
+    },
+    {
+     "type": "fade",
+     "name": "!!idea2-bg",
+     "dur": 400,
+     "delay": 1900
+    },
+    {
+     "type": "fade",
+     "name": "!!idea2-ic",
+     "dur": 400,
+     "delay": 1900
+    },
+    {
+     "type": "fade",
+     "name": "!!idea2-t",
+     "dur": 400,
+     "delay": 1900
+    }
+   ]
+  }
+ ],
+ "16": [
+  {
+   "trigger": "auto",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!ob-gen",
+     "dur": 450,
+     "delay": 300
+    },
+    {
+     "type": "fade",
+     "name": "!!ob-gen-k",
+     "dur": 450,
+     "delay": 300
+    },
+    {
+     "type": "fade",
+     "name": "!!ob-gen-t",
+     "dur": 450,
+     "delay": 300
+    },
+    {
+     "type": "fade",
+     "name": "!!ob-spec-k",
+     "dur": 400,
+     "delay": 900
+    },
+    {
+     "type": "fade",
+     "name": "!!ob0-n",
+     "dur": 400,
+     "delay": 1100
+    },
+    {
+     "type": "fade",
+     "name": "!!ob0",
+     "dur": 400,
+     "delay": 1100
+    },
+    {
+     "type": "fade",
+     "name": "!!ob0-r",
+     "dur": 400,
+     "delay": 1100
+    },
+    {
+     "type": "fade",
+     "name": "!!ob1-n",
+     "dur": 400,
+     "delay": 1300
+    },
+    {
+     "type": "fade",
+     "name": "!!ob1",
+     "dur": 400,
+     "delay": 1300
+    },
+    {
+     "type": "fade",
+     "name": "!!ob1-r",
+     "dur": 400,
+     "delay": 1300
+    },
+    {
+     "type": "fade",
+     "name": "!!ob2-n",
+     "dur": 400,
+     "delay": 1500
+    },
+    {
+     "type": "fade",
+     "name": "!!ob2",
+     "dur": 400,
+     "delay": 1500
+    },
+    {
+     "type": "fade",
+     "name": "!!ob3-n",
+     "dur": 400,
+     "delay": 1700
+    },
+    {
+     "type": "fade",
+     "name": "!!ob3",
+     "dur": 400,
+     "delay": 1700
+    },
+    {
+     "type": "fade",
+     "name": "!!ob3-r",
+     "dur": 400,
+     "delay": 1700
+    },
+    {
+     "type": "fade",
+     "name": "!!ob4-n",
+     "dur": 400,
+     "delay": 1900
+    },
+    {
+     "type": "fade",
+     "name": "!!ob4",
+     "dur": 400,
+     "delay": 1900
+    },
+    {
+     "type": "fade",
+     "name": "!!ob4-r",
+     "dur": 400,
+     "delay": 1900
+    },
+    {
+     "type": "fade",
+     "name": "!!ob5-n",
+     "dur": 400,
+     "delay": 2100
+    },
+    {
+     "type": "fade",
+     "name": "!!ob5",
+     "dur": 400,
+     "delay": 2100
+    }
+   ]
+  }
+ ],
+ "17": [
+  {
+   "trigger": "auto",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!ph0",
+     "dur": 400,
+     "delay": 200
+    },
+    {
+     "type": "fade",
+     "name": "!!ph0-w",
+     "dur": 400,
+     "delay": 200
+    },
+    {
+     "type": "fade",
+     "name": "!!ph0-bar",
+     "dur": 400,
+     "delay": 200
+    },
+    {
+     "type": "fade",
+     "name": "!!ph0-d",
+     "dur": 400,
+     "delay": 200
+    },
+    {
+     "type": "fade",
+     "name": "!!ph1",
+     "dur": 400,
+     "delay": 650
+    },
+    {
+     "type": "fade",
+     "name": "!!ph1-w",
+     "dur": 400,
+     "delay": 650
+    },
+    {
+     "type": "fade",
+     "name": "!!ph1-bar",
+     "dur": 400,
+     "delay": 650
+    },
+    {
+     "type": "fade",
+     "name": "!!ph1-d",
+     "dur": 400,
+     "delay": 650
+    },
+    {
+     "type": "fade",
+     "name": "!!ph2",
+     "dur": 400,
+     "delay": 1100
+    },
+    {
+     "type": "fade",
+     "name": "!!ph2-w",
+     "dur": 400,
+     "delay": 1100
+    },
+    {
+     "type": "fade",
+     "name": "!!ph2-bar",
+     "dur": 400,
+     "delay": 1100
+    },
+    {
+     "type": "fade",
+     "name": "!!it0",
+     "dur": 350,
+     "delay": 1300
+    },
+    {
+     "type": "fade",
+     "name": "!!it0-t",
+     "dur": 350,
+     "delay": 1300
+    },
+    {
+     "type": "fade",
+     "name": "!!it1",
+     "dur": 350,
+     "delay": 1550
+    },
+    {
+     "type": "fade",
+     "name": "!!it1-t",
+     "dur": 350,
+     "delay": 1550
+    },
+    {
+     "type": "fade",
+     "name": "!!it2",
+     "dur": 350,
+     "delay": 1800
+    },
+    {
+     "type": "fade",
+     "name": "!!it2-t",
+     "dur": 350,
+     "delay": 1800
+    },
+    {
+     "type": "fade",
+     "name": "!!it3",
+     "dur": 350,
+     "delay": 2050
+    },
+    {
+     "type": "fade",
+     "name": "!!it3-t",
+     "dur": 350,
+     "delay": 2050
+    },
+    {
+     "type": "fade",
+     "name": "!!ph3",
+     "dur": 400,
+     "delay": 1550
+    },
+    {
+     "type": "fade",
+     "name": "!!ph3-w",
+     "dur": 400,
+     "delay": 1550
+    },
+    {
+     "type": "fade",
+     "name": "!!ph3-bar",
+     "dur": 400,
+     "delay": 1550
+    },
+    {
+     "type": "fade",
+     "name": "!!ph3-d",
+     "dur": 400,
+     "delay": 1550
+    },
+    {
+     "type": "fade",
+     "name": "!!m-why",
+     "dur": 450,
+     "delay": 2600
+    },
+    {
+     "type": "fade",
+     "name": "!!m-why2",
+     "dur": 450,
+     "delay": 2600
+    }
+   ]
+  }
+ ],
+ "23": [
+  {
+   "trigger": "click",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!dim0",
+     "dur": 400,
+     "delay": 0
+    },
+    {
+     "type": "fadeout",
+     "name": "!!cap0",
+     "dur": 250,
+     "delay": 0
+    },
+    {
+     "type": "motion",
+     "name": "!!flow",
+     "path": "M 0.00000 0 L 0.15450 0 E",
+     "dur": 700,
+     "delay": 0
+    },
+    {
+     "type": "wipe",
+     "name": "!!st-a0",
+     "dir": "right",
+     "dur": 300,
+     "delay": 250
+    },
+    {
+     "type": "fade",
+     "name": "!!st1",
+     "dur": 400,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!st1-i-bg",
+     "dur": 400,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!st1-i-ic",
+     "dur": 400,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!st1-t",
+     "dur": 400,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!st1-d",
+     "dur": 400,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!cap1",
+     "dur": 400,
+     "delay": 500
+    }
+   ]
+  },
+  {
+   "trigger": "click",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!dim1",
+     "dur": 400,
+     "delay": 0
+    },
+    {
+     "type": "fadeout",
+     "name": "!!cap1",
+     "dur": 250,
+     "delay": 0
+    },
+    {
+     "type": "motion",
+     "name": "!!flow",
+     "path": "M 0.15450 0 L 0.30901 0 E",
+     "dur": 700,
+     "delay": 0
+    },
+    {
+     "type": "wipe",
+     "name": "!!st-a1",
+     "dir": "right",
+     "dur": 300,
+     "delay": 250
+    },
+    {
+     "type": "fade",
+     "name": "!!st2",
+     "dur": 400,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!st2-i-bg",
+     "dur": 400,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!st2-i-ic",
+     "dur": 400,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!st2-t",
+     "dur": 400,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!st2-d",
+     "dur": 400,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!cap2",
+     "dur": 400,
+     "delay": 500
+    }
+   ]
+  },
+  {
+   "trigger": "click",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!dim2",
+     "dur": 400,
+     "delay": 0
+    },
+    {
+     "type": "fadeout",
+     "name": "!!cap2",
+     "dur": 250,
+     "delay": 0
+    },
+    {
+     "type": "motion",
+     "name": "!!flow",
+     "path": "M 0.30901 0 L 0.46351 0 E",
+     "dur": 700,
+     "delay": 0
+    },
+    {
+     "type": "wipe",
+     "name": "!!st-a2",
+     "dir": "right",
+     "dur": 300,
+     "delay": 250
+    },
+    {
+     "type": "fade",
+     "name": "!!zoom",
+     "dur": 400,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!zoom-i-bg",
+     "dur": 400,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!zoom-i-ic",
+     "dur": 400,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!zoom-t",
+     "dur": 400,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!zoom-d",
+     "dur": 400,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!cap3",
+     "dur": 400,
+     "delay": 500
+    }
+   ]
+  },
+  {
+   "trigger": "click",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!dim3",
+     "dur": 400,
+     "delay": 0
+    },
+    {
+     "type": "fadeout",
+     "name": "!!cap3",
+     "dur": 250,
+     "delay": 0
+    },
+    {
+     "type": "motion",
+     "name": "!!flow",
+     "path": "M 0.46351 0 L 0.61802 0 E",
+     "dur": 700,
+     "delay": 0
+    },
+    {
+     "type": "wipe",
+     "name": "!!st-a3",
+     "dir": "right",
+     "dur": 300,
+     "delay": 250
+    },
+    {
+     "type": "fade",
+     "name": "!!st4",
+     "dur": 400,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!st4-i-bg",
+     "dur": 400,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!st4-i-ic",
+     "dur": 400,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!st4-t",
+     "dur": 400,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!st4-d",
+     "dur": 400,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!cap4",
+     "dur": 400,
+     "delay": 500
+    }
+   ]
+  },
+  {
+   "trigger": "click",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!dim4",
+     "dur": 400,
+     "delay": 0
+    },
+    {
+     "type": "fadeout",
+     "name": "!!cap4",
+     "dur": 250,
+     "delay": 0
+    },
+    {
+     "type": "motion",
+     "name": "!!flow",
+     "path": "M 0.61802 0 L 0.77252 0 E",
+     "dur": 700,
+     "delay": 0
+    },
+    {
+     "type": "wipe",
+     "name": "!!st-a4",
+     "dir": "right",
+     "dur": 300,
+     "delay": 250
+    },
+    {
+     "type": "fade",
+     "name": "!!st5",
+     "dur": 400,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!st5-i-bg",
+     "dur": 400,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!st5-i-ic",
+     "dur": 400,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!st5-t",
+     "dur": 400,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!st5-d",
+     "dur": 400,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!cap5",
+     "dur": 400,
+     "delay": 500
+    }
+   ]
+  },
+  {
+   "trigger": "click",
+   "effects": [
+    {
+     "type": "fadeout",
+     "name": "!!dim0",
+     "dur": 500,
+     "delay": 0
+    },
+    {
+     "type": "fadeout",
+     "name": "!!dim1",
+     "dur": 500,
+     "delay": 0
+    },
+    {
+     "type": "fadeout",
+     "name": "!!dim2",
+     "dur": 500,
+     "delay": 0
+    },
+    {
+     "type": "fadeout",
+     "name": "!!dim3",
+     "dur": 500,
+     "delay": 0
+    },
+    {
+     "type": "fadeout",
+     "name": "!!dim4",
+     "dur": 500,
+     "delay": 0
+    },
+    {
+     "type": "fadeout",
+     "name": "!!cap5",
+     "dur": 250,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!be-box",
+     "dur": 600,
+     "delay": 300
+    },
+    {
+     "type": "fade",
+     "name": "!!be-box-t",
+     "dur": 600,
+     "delay": 300
+    },
+    {
+     "type": "fade",
+     "name": "!!cap6",
+     "dur": 500,
+     "delay": 500
+    }
+   ]
+  }
+ ],
+ "24": [
+  {
+   "trigger": "click",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!fa",
+     "dur": 200,
+     "delay": 0
+    },
+    {
+     "type": "motion",
+     "name": "!!fa",
+     "dx": 9.95,
+     "dy": 0,
+     "dur": 2600,
+     "delay": 100
+    },
+    {
+     "type": "fade",
+     "name": "!!sc-ex",
+     "dur": 300,
+     "delay": 2000
+    },
+    {
+     "type": "pop",
+     "name": "!!sc-a",
+     "dur": 350,
+     "delay": 2000
+    },
+    {
+     "type": "pop",
+     "name": "!!dec-a",
+     "dur": 350,
+     "delay": 2500
+    },
+    {
+     "type": "fadeout",
+     "name": "!!fa",
+     "dur": 300,
+     "delay": 2800
+    }
+   ]
+  },
+  {
+   "trigger": "click",
+   "effects": [
+    {
+     "type": "fadeout",
+     "name": "!!sc-a",
+     "dur": 250,
+     "delay": 0
+    },
+    {
+     "type": "fadeout",
+     "name": "!!dec-a",
+     "dur": 250,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!fb",
+     "dur": 200,
+     "delay": 0
+    },
+    {
+     "type": "motion",
+     "name": "!!fb",
+     "dx": 9.95,
+     "dy": 0,
+     "dur": 2600,
+     "delay": 100
+    },
+    {
+     "type": "pop",
+     "name": "!!sc-b",
+     "dur": 350,
+     "delay": 2000
+    },
+    {
+     "type": "pop",
+     "name": "!!dec-b",
+     "dur": 350,
+     "delay": 2500
+    },
+    {
+     "type": "pulse",
+     "name": "!!dec-b",
+     "scale": 1.15,
+     "dur": 300,
+     "delay": 2900,
+     "repeat": 2
+    },
+    {
+     "type": "fadeout",
+     "name": "!!fb",
+     "dur": 300,
+     "delay": 2800
+    }
+   ]
+  }
+ ],
+ "25": [
+  {
+   "trigger": "click",
+   "effects": [
+    {
+     "type": "pop",
+     "name": "!!iso-p0",
+     "dur": 250,
+     "delay": 0
+    },
+    {
+     "type": "pop",
+     "name": "!!iso-p1",
+     "dur": 250,
+     "delay": 120
+    },
+    {
+     "type": "pop",
+     "name": "!!iso-p2",
+     "dur": 250,
+     "delay": 240
+    },
+    {
+     "type": "pop",
+     "name": "!!iso-p3",
+     "dur": 250,
+     "delay": 360
+    },
+    {
+     "type": "pop",
+     "name": "!!iso-p4",
+     "dur": 250,
+     "delay": 480
+    },
+    {
+     "type": "pop",
+     "name": "!!iso-p5",
+     "dur": 250,
+     "delay": 600
+    },
+    {
+     "type": "pop",
+     "name": "!!iso-p6",
+     "dur": 250,
+     "delay": 720
+    },
+    {
+     "type": "pop",
+     "name": "!!iso-p7",
+     "dur": 250,
+     "delay": 840
+    },
+    {
+     "type": "pop",
+     "name": "!!iso-p8",
+     "dur": 250,
+     "delay": 960
+    },
+    {
+     "type": "pop",
+     "name": "!!iso-p9",
+     "dur": 250,
+     "delay": 1080
+    },
+    {
+     "type": "pop",
+     "name": "!!iso-p10",
+     "dur": 250,
+     "delay": 1200
+    },
+    {
+     "type": "pop",
+     "name": "!!iso-p11",
+     "dur": 250,
+     "delay": 1320
+    },
+    {
+     "type": "pop",
+     "name": "!!iso-p12",
+     "dur": 250,
+     "delay": 1440
+    },
+    {
+     "type": "pop",
+     "name": "!!iso-p13",
+     "dur": 250,
+     "delay": 1560
+    },
+    {
+     "type": "pop",
+     "name": "!!iso-odd",
+     "dur": 300,
+     "delay": 1930
+    },
+    {
+     "type": "wipe",
+     "name": "!!iso-v",
+     "dir": "down",
+     "dur": 450,
+     "delay": 2480
+    },
+    {
+     "type": "fade",
+     "name": "!!iso-v-n",
+     "dur": 300,
+     "delay": 2680
+    },
+    {
+     "type": "wipe",
+     "name": "!!iso-h",
+     "dir": "right",
+     "dur": 350,
+     "delay": 3130
+    },
+    {
+     "type": "fade",
+     "name": "!!iso-h-n",
+     "dur": 300,
+     "delay": 3280
+    },
+    {
+     "type": "pulse",
+     "name": "!!iso-odd",
+     "scale": 1.9,
+     "dur": 300,
+     "delay": 3680,
+     "repeat": 2
+    }
+   ]
+  }
+ ],
+ "26": [
+  {
+   "trigger": "auto",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!kia-ic",
+     "dur": 400,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!kia-n",
+     "dur": 400,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!kia-m",
+     "dur": 400,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!kia0-id",
+     "dur": 300,
+     "delay": 400
+    },
+    {
+     "type": "fade",
+     "name": "!!kia0-a",
+     "dur": 300,
+     "delay": 400
+    },
+    {
+     "type": "fade",
+     "name": "!!kia0-m",
+     "dur": 300,
+     "delay": 400
+    },
+    {
+     "type": "fade",
+     "name": "!!kia1-id",
+     "dur": 300,
+     "delay": 580
+    },
+    {
+     "type": "fade",
+     "name": "!!kia1-a",
+     "dur": 300,
+     "delay": 580
+    },
+    {
+     "type": "fade",
+     "name": "!!kia1-m",
+     "dur": 300,
+     "delay": 580
+    },
+    {
+     "type": "fade",
+     "name": "!!kia2-id",
+     "dur": 300,
+     "delay": 760
+    },
+    {
+     "type": "fade",
+     "name": "!!kia2-a",
+     "dur": 300,
+     "delay": 760
+    },
+    {
+     "type": "fade",
+     "name": "!!kia2-m",
+     "dur": 300,
+     "delay": 760
+    },
+    {
+     "type": "fade",
+     "name": "!!kia3-id",
+     "dur": 300,
+     "delay": 940
+    },
+    {
+     "type": "fade",
+     "name": "!!kia3-a",
+     "dur": 300,
+     "delay": 940
+    },
+    {
+     "type": "fade",
+     "name": "!!kia3-m",
+     "dur": 300,
+     "delay": 940
+    },
+    {
+     "type": "fade",
+     "name": "!!kia4-id",
+     "dur": 300,
+     "delay": 1120
+    },
+    {
+     "type": "fade",
+     "name": "!!kia4-a",
+     "dur": 300,
+     "delay": 1120
+    },
+    {
+     "type": "fade",
+     "name": "!!kia4-m",
+     "dur": 300,
+     "delay": 1120
+    },
+    {
+     "type": "fade",
+     "name": "!!kia-more",
+     "dur": 300,
+     "delay": 1400
+    }
+   ]
+  },
+  {
+   "trigger": "click",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!jag-ic",
+     "dur": 400,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!jag-n",
+     "dur": 400,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!jag-m",
+     "dur": 400,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!jag0-id",
+     "dur": 300,
+     "delay": 400
+    },
+    {
+     "type": "fade",
+     "name": "!!jag0-a",
+     "dur": 300,
+     "delay": 400
+    },
+    {
+     "type": "fade",
+     "name": "!!jag0-m",
+     "dur": 300,
+     "delay": 400
+    },
+    {
+     "type": "fade",
+     "name": "!!jag1-id",
+     "dur": 300,
+     "delay": 580
+    },
+    {
+     "type": "fade",
+     "name": "!!jag1-a",
+     "dur": 300,
+     "delay": 580
+    },
+    {
+     "type": "fade",
+     "name": "!!jag1-m",
+     "dur": 300,
+     "delay": 580
+    },
+    {
+     "type": "fade",
+     "name": "!!jag2-id",
+     "dur": 300,
+     "delay": 760
+    },
+    {
+     "type": "fade",
+     "name": "!!jag2-a",
+     "dur": 300,
+     "delay": 760
+    },
+    {
+     "type": "fade",
+     "name": "!!jag2-m",
+     "dur": 300,
+     "delay": 760
+    },
+    {
+     "type": "fade",
+     "name": "!!jag3-id",
+     "dur": 300,
+     "delay": 940
+    },
+    {
+     "type": "fade",
+     "name": "!!jag3-a",
+     "dur": 300,
+     "delay": 940
+    },
+    {
+     "type": "fade",
+     "name": "!!jag3-m",
+     "dur": 300,
+     "delay": 940
+    },
+    {
+     "type": "fade",
+     "name": "!!jag4-id",
+     "dur": 300,
+     "delay": 1120
+    },
+    {
+     "type": "fade",
+     "name": "!!jag4-a",
+     "dur": 300,
+     "delay": 1120
+    },
+    {
+     "type": "fade",
+     "name": "!!jag4-m",
+     "dur": 300,
+     "delay": 1120
+    },
+    {
+     "type": "fade",
+     "name": "!!jag-more",
+     "dur": 300,
+     "delay": 1400
+    }
+   ]
+  },
+  {
+   "trigger": "click",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!kia-hl",
+     "dur": 300,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!jag-hl",
+     "dur": 300,
+     "delay": 0
+    },
+    {
+     "type": "wipe",
+     "name": "!!hl-link",
+     "dir": "right",
+     "dur": 500,
+     "delay": 300
+    },
+    {
+     "type": "fade",
+     "name": "!!hl-box",
+     "dur": 400,
+     "delay": 700
+    },
+    {
+     "type": "fade",
+     "name": "!!hl-box-t",
+     "dur": 400,
+     "delay": 700
+    }
+   ]
+  },
+  {
+   "trigger": "click",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!veh-msg",
+     "dur": 500,
+     "delay": 0
+    }
+   ]
+  }
+ ],
+ "27": [
+  {
+   "trigger": "click",
+   "effects": [
+    {
+     "type": "wipe",
+     "name": "!!xf-a0",
+     "dir": "right",
+     "dur": 300,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!xf1",
+     "dur": 400,
+     "delay": 250
+    },
+    {
+     "type": "fade",
+     "name": "!!xf1-t",
+     "dur": 400,
+     "delay": 250
+    },
+    {
+     "type": "fade",
+     "name": "!!xf1-d",
+     "dur": 400,
+     "delay": 250
+    },
+    {
+     "type": "wipe",
+     "name": "!!xf-a1",
+     "dir": "right",
+     "dur": 300,
+     "delay": 800
+    },
+    {
+     "type": "fade",
+     "name": "!!xf2",
+     "dur": 400,
+     "delay": 1050
+    },
+    {
+     "type": "fade",
+     "name": "!!xf2-t",
+     "dur": 400,
+     "delay": 1050
+    },
+    {
+     "type": "fade",
+     "name": "!!xc0-bg",
+     "dur": 300,
+     "delay": 1300
+    },
+    {
+     "type": "fade",
+     "name": "!!xc0-l0",
+     "dur": 300,
+     "delay": 1300
+    },
+    {
+     "type": "fade",
+     "name": "!!xc0-t",
+     "dur": 300,
+     "delay": 1300
+    },
+    {
+     "type": "fade",
+     "name": "!!xc1-bg",
+     "dur": 300,
+     "delay": 1600
+    },
+    {
+     "type": "fade",
+     "name": "!!xc1-l0",
+     "dur": 300,
+     "delay": 1600
+    },
+    {
+     "type": "fade",
+     "name": "!!xc1-t",
+     "dur": 300,
+     "delay": 1600
+    },
+    {
+     "type": "fade",
+     "name": "!!xc2-bg",
+     "dur": 300,
+     "delay": 1900
+    },
+    {
+     "type": "fade",
+     "name": "!!xc2-ic",
+     "dur": 300,
+     "delay": 1900
+    },
+    {
+     "type": "fade",
+     "name": "!!xc2-t",
+     "dur": 300,
+     "delay": 1900
+    },
+    {
+     "type": "wipe",
+     "name": "!!xf-a2",
+     "dir": "right",
+     "dur": 300,
+     "delay": 2300
+    },
+    {
+     "type": "fade",
+     "name": "!!xf3",
+     "dur": 400,
+     "delay": 2550
+    },
+    {
+     "type": "fade",
+     "name": "!!xf3-t",
+     "dur": 400,
+     "delay": 2550
+    },
+    {
+     "type": "fade",
+     "name": "!!xf3-d",
+     "dur": 400,
+     "delay": 2550
+    }
+   ]
+  },
+  {
+   "trigger": "click",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!x-shot-fr",
+     "dur": 600,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!x-shot",
+     "dur": 600,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!x-shot-c",
+     "dur": 600,
+     "delay": 0
+    }
+   ]
+  },
+  {
+   "trigger": "click",
+   "effects": [
+    {
+     "type": "pop",
+     "name": "!!x-r1",
+     "dur": 400,
+     "delay": 0
+    },
+    {
+     "type": "pop",
+     "name": "!!x-r2",
+     "dur": 400,
+     "delay": 600
+    },
+    {
+     "type": "fade",
+     "name": "!!x-r3",
+     "dur": 500,
+     "delay": 1200
+    }
+   ]
+  }
+ ],
+ "31": [
+  {
+   "trigger": "auto",
+   "effects": [
+    {
+     "type": "pop",
+     "name": "!!v-count",
+     "dur": 450,
+     "delay": 0
+    },
+    {
+     "type": "wipe",
+     "name": "!!v-bar",
+     "dir": "right",
+     "dur": 900,
+     "delay": 250
+    },
+    {
+     "type": "fade",
+     "name": "!!v-lbl",
+     "dur": 400,
+     "delay": 400
+    },
+    {
+     "type": "fade",
+     "name": "!!v-why",
+     "dur": 400,
+     "delay": 1200
+    },
+    {
+     "type": "wipe",
+     "name": "!!v1-b0",
+     "dir": "right",
+     "dur": 350,
+     "delay": 1500
+    },
+    {
+     "type": "wipe",
+     "name": "!!v1-b1",
+     "dir": "right",
+     "dur": 350,
+     "delay": 1800
+    },
+    {
+     "type": "wipe",
+     "name": "!!v1-b2",
+     "dir": "right",
+     "dur": 350,
+     "delay": 2100
+    },
+    {
+     "type": "fade",
+     "name": "!!v1-k0",
+     "dur": 350,
+     "delay": 1600
+    },
+    {
+     "type": "fade",
+     "name": "!!v1-t0",
+     "dur": 350,
+     "delay": 1600
+    },
+    {
+     "type": "fade",
+     "name": "!!v1-k1",
+     "dur": 350,
+     "delay": 1900
+    },
+    {
+     "type": "fade",
+     "name": "!!v1-t1",
+     "dur": 350,
+     "delay": 1900
+    },
+    {
+     "type": "fade",
+     "name": "!!v1-k2",
+     "dur": 350,
+     "delay": 2200
+    },
+    {
+     "type": "fade",
+     "name": "!!v1-t2",
+     "dur": 350,
+     "delay": 2200
+    }
+   ]
+  },
+  {
+   "trigger": "click",
+   "effects": [
+    {
+     "type": "pop",
+     "name": "!!v-f0-n",
+     "dur": 300,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!v-f0-t",
+     "dur": 350,
+     "delay": 80
+    },
+    {
+     "type": "pop",
+     "name": "!!v-f1-n",
+     "dur": 300,
+     "delay": 380
+    },
+    {
+     "type": "fade",
+     "name": "!!v-f1-t",
+     "dur": 350,
+     "delay": 460
+    },
+    {
+     "type": "pop",
+     "name": "!!v-f2-n",
+     "dur": 300,
+     "delay": 760
+    },
+    {
+     "type": "fade",
+     "name": "!!v-f2-t",
+     "dur": 350,
+     "delay": 840
+    },
+    {
+     "type": "pop",
+     "name": "!!v-f3-n",
+     "dur": 300,
+     "delay": 1140
+    },
+    {
+     "type": "fade",
+     "name": "!!v-f3-t",
+     "dur": 350,
+     "delay": 1220
+    },
+    {
+     "type": "pop",
+     "name": "!!v-f4-n",
+     "dur": 300,
+     "delay": 1520
+    },
+    {
+     "type": "fade",
+     "name": "!!v-f4-t",
+     "dur": 350,
+     "delay": 1600
+    },
+    {
+     "type": "pop",
+     "name": "!!v-f5-n",
+     "dur": 300,
+     "delay": 1900
+    },
+    {
+     "type": "fade",
+     "name": "!!v-f5-t",
+     "dur": 350,
+     "delay": 1980
+    },
+    {
+     "type": "fade",
+     "name": "!!v-note",
+     "dur": 500,
+     "delay": 2580
+    }
+   ]
+  }
+ ],
+ "32": [
+  {
+   "trigger": "auto",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!v-bar0",
+     "dur": 400,
+     "delay": 200
+    },
+    {
+     "type": "pop",
+     "name": "!!v-pct",
+     "dur": 350,
+     "delay": 900
+    },
+    {
+     "type": "fade",
+     "name": "!!v-ba0-t",
+     "dur": 400,
+     "delay": 1200
+    },
+    {
+     "type": "fade",
+     "name": "!!v-ba0-v",
+     "dur": 400,
+     "delay": 1200
+    },
+    {
+     "type": "fade",
+     "name": "!!v-ba1-t",
+     "dur": 400,
+     "delay": 1450
+    },
+    {
+     "type": "fade",
+     "name": "!!v-ba1-v",
+     "dur": 400,
+     "delay": 1450
+    },
+    {
+     "type": "fade",
+     "name": "!!v-ba2-t",
+     "dur": 400,
+     "delay": 1700
+    },
+    {
+     "type": "fade",
+     "name": "!!v-ba2-v",
+     "dur": 400,
+     "delay": 1700
+    },
+    {
+     "type": "fade",
+     "name": "!!v-concl",
+     "dur": 500,
+     "delay": 2100
+    },
+    {
+     "type": "fade",
+     "name": "!!v-concl-t",
+     "dur": 500,
+     "delay": 2100
+    },
+    {
+     "type": "fade",
+     "name": "!!v-foot",
+     "dur": 400,
+     "delay": 2400
+    }
+   ]
+  }
+ ],
+ "35": [
+  {
+   "trigger": "auto",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!lm0-l",
+     "dur": 700,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!lm0-a",
+     "dur": 700,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!lm0-t",
+     "dur": 700,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!lm1-l",
+     "dur": 700,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!lm1-a",
+     "dur": 700,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!lm1-t",
+     "dur": 700,
+     "delay": 450
+    },
+    {
+     "type": "fade",
+     "name": "!!lm2-l",
+     "dur": 700,
+     "delay": 900
+    },
+    {
+     "type": "fade",
+     "name": "!!lm2-a",
+     "dur": 700,
+     "delay": 900
+    },
+    {
+     "type": "fade",
+     "name": "!!lm2-t",
+     "dur": 700,
+     "delay": 900
+    },
+    {
+     "type": "fade",
+     "name": "!!lm3-l",
+     "dur": 700,
+     "delay": 1350
+    },
+    {
+     "type": "fade",
+     "name": "!!lm3-a",
+     "dur": 700,
+     "delay": 1350
+    },
+    {
+     "type": "fade",
+     "name": "!!lm3-t",
+     "dur": 700,
+     "delay": 1350
+    },
+    {
+     "type": "fade",
+     "name": "!!lm-foot",
+     "dur": 700,
+     "delay": 2000
+    }
+   ]
+  }
+ ],
+ "37": [
+  {
+   "trigger": "auto",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!cc-d0-i",
+     "dur": 400,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!cc-d0-t",
+     "dur": 400,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!cc-d1-i",
+     "dur": 400,
+     "delay": 250
+    },
+    {
+     "type": "fade",
+     "name": "!!cc-d1-t",
+     "dur": 400,
+     "delay": 250
+    },
+    {
+     "type": "fade",
+     "name": "!!cc-d2-i",
+     "dur": 400,
+     "delay": 500
+    },
+    {
+     "type": "fade",
+     "name": "!!cc-d2-t",
+     "dur": 400,
+     "delay": 500
+    },
+    {
+     "type": "fade",
+     "name": "!!cc-d3-i",
+     "dur": 400,
+     "delay": 750
+    },
+    {
+     "type": "fade",
+     "name": "!!cc-d3-t",
+     "dur": 400,
+     "delay": 750
+    },
+    {
+     "type": "fade",
+     "name": "!!cc-d4-i",
+     "dur": 400,
+     "delay": 1000
+    },
+    {
+     "type": "fade",
+     "name": "!!cc-d4-t",
+     "dur": 400,
+     "delay": 1000
+    },
+    {
+     "type": "fade",
+     "name": "!!cc-l0-i",
+     "dur": 400,
+     "delay": 1400
+    },
+    {
+     "type": "fade",
+     "name": "!!cc-l0-t",
+     "dur": 400,
+     "delay": 1400
+    },
+    {
+     "type": "fade",
+     "name": "!!cc-l1-i",
+     "dur": 400,
+     "delay": 1650
+    },
+    {
+     "type": "fade",
+     "name": "!!cc-l1-t",
+     "dur": 400,
+     "delay": 1650
+    },
+    {
+     "type": "fade",
+     "name": "!!cc-l2-i",
+     "dur": 400,
+     "delay": 1900
+    },
+    {
+     "type": "fade",
+     "name": "!!cc-l2-t",
+     "dur": 400,
+     "delay": 1900
+    },
+    {
+     "type": "fade",
+     "name": "!!cc-q",
+     "dur": 700,
+     "delay": 2400
+    }
+   ]
+  }
+ ],
+ "38": [
+  {
+   "trigger": "auto",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!pp0",
+     "dur": 450,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!pp0-n",
+     "dur": 450,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!pp0-t",
+     "dur": 450,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!pp0-d",
+     "dur": 450,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!pp1",
+     "dur": 450,
+     "delay": 300
+    },
+    {
+     "type": "fade",
+     "name": "!!pp1-n",
+     "dur": 450,
+     "delay": 300
+    },
+    {
+     "type": "fade",
+     "name": "!!pp1-t",
+     "dur": 450,
+     "delay": 300
+    },
+    {
+     "type": "fade",
+     "name": "!!pp1-d",
+     "dur": 450,
+     "delay": 300
+    },
+    {
+     "type": "fade",
+     "name": "!!pp2",
+     "dur": 450,
+     "delay": 600
+    },
+    {
+     "type": "fade",
+     "name": "!!pp2-n",
+     "dur": 450,
+     "delay": 600
+    },
+    {
+     "type": "fade",
+     "name": "!!pp2-t",
+     "dur": 450,
+     "delay": 600
+    },
+    {
+     "type": "fade",
+     "name": "!!pp2-d",
+     "dur": 450,
+     "delay": 600
+    },
+    {
+     "type": "fade",
+     "name": "!!pp3",
+     "dur": 450,
+     "delay": 900
+    },
+    {
+     "type": "fade",
+     "name": "!!pp3-n",
+     "dur": 450,
+     "delay": 900
+    },
+    {
+     "type": "fade",
+     "name": "!!pp3-t",
+     "dur": 450,
+     "delay": 900
+    },
+    {
+     "type": "fade",
+     "name": "!!pp3-d",
+     "dur": 450,
+     "delay": 900
+    }
+   ]
+  }
+ ],
+ "39": [
+  {
+   "trigger": "auto",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!title",
+     "dur": 800,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!fw0",
+     "dur": 450,
+     "delay": 900
+    },
+    {
+     "type": "fade",
+     "name": "!!fw0-s",
+     "dur": 300,
+     "delay": 1100
+    },
+    {
+     "type": "fade",
+     "name": "!!fw1",
+     "dur": 450,
+     "delay": 1320
+    },
+    {
+     "type": "fade",
+     "name": "!!fw1-s",
+     "dur": 300,
+     "delay": 1520
+    },
+    {
+     "type": "fade",
+     "name": "!!fw2",
+     "dur": 450,
+     "delay": 1740
+    },
+    {
+     "type": "fade",
+     "name": "!!fw2-s",
+     "dur": 300,
+     "delay": 1940
+    },
+    {
+     "type": "fade",
+     "name": "!!fw3",
+     "dur": 450,
+     "delay": 2160
+    },
+    {
+     "type": "fade",
+     "name": "!!fw3-s",
+     "dur": 300,
+     "delay": 2360
+    },
+    {
+     "type": "fade",
+     "name": "!!fw4",
+     "dur": 450,
+     "delay": 2580
+    },
+    {
+     "type": "fade",
+     "name": "!!tagline",
+     "dur": 900,
+     "delay": 3200
+    }
+   ]
+  },
+  {
+   "trigger": "click",
+   "effects": [
+    {
+     "type": "fade",
+     "name": "!!thx",
+     "dur": 700,
+     "delay": 0
+    },
+    {
+     "type": "fade",
+     "name": "!!logo-esprit",
+     "dur": 700,
+     "delay": 300
+    },
+    {
+     "type": "fade",
+     "name": "!!logo-sep",
+     "dur": 700,
+     "delay": 300
+    },
+    {
+     "type": "fade",
+     "name": "!!logo-capg",
+     "dur": 700,
+     "delay": 300
+    }
+   ]
+  }
+ ],
+ "_hidden": [
+  40,
+  41,
+  42,
+  43,
+  44
+ ]
+}

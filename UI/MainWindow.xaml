@@ -104,6 +104,7 @@
                                     <Button Style="{StaticResource CvNavTab}"
                                             Content="{Binding Title}"
                                             IsEnabled="{Binding IsUnlocked}"
+                                            Visibility="{Binding IsAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"
                                             Tag="{Binding IsActive}"
                                             Command="{Binding DataContext.NavigationService.NavigateCommand,
                                                               RelativeSource={RelativeSource AncestorType=Window}}"

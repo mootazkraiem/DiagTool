@@ -1,0 +1,76 @@
+{
+  "schema_version": 2,
+  "model_family": "kaggle_normal",
+  "model_version": "clean-1-001",
+  "created_at": "2026-09-24T11:48:50+00:00",
+  "training_pipeline": {
+    "name": "backend.ml.training.clean_pipeline",
+    "version": "clean-1",
+    "git_commit": "bbdb84b3f830ec7a970c29f86cf8129031d33c34",
+    "git_dirty": false
+  },
+  "feature_pipeline": {
+    "name": "backend.ml.features.canonical",
+    "version": "canonical-1",
+    "window": 10
+  },
+  "features": [
+    "time_diff",
+    "rolling_mean_time_diff",
+    "rolling_std_time_diff",
+    "byte_diff",
+    "rolling_mean_byte_diff",
+    "rolling_std_byte_diff",
+    "rolling_max_byte_diff",
+    "changed_bytes_count",
+    "payload_entropy"
+  ],
+  "dropped_features": {},
+  "scaler": {
+    "path": "scaler.joblib",
+    "sha256": "3a870fb695dfb46f22773804b4da9b834821b3e4b1bd447cb0b12081e57e765d"
+  },
+  "model": {
+    "path": "model.joblib",
+    "sha256": "3c65da08dfe9c8914aa7fbda9ceba354d21bbd332e87d398d0537f9d2f9b9272"
+  },
+  "model_params": {
+    "scaler": "RobustScaler",
+    "model": "IsolationForest",
+    "n_estimators": 200,
+    "contamination": 0.02,
+    "random_state": 42,
+    "n_jobs": 1
+  },
+  "threshold": {
+    "value": 0.06603371049853668,
+    "method": "median_minus_kmad",
+    "k": 3.0,
+    "median": 0.14745211415210713,
+    "mad": 0.027139467884523483,
+    "score_min": -0.09676584111275,
+    "score_max": 0.22075746676670593,
+    "fit_rows": 988601
+  },
+  "training_corpus": {
+    "fingerprint": "d6358db41b2afb35548815d5ef0087f8862a585933dc84dfa33b9b12789f0613",
+    "recordings": [
+      {
+        "path": "archive/normal_run_data.txt",
+        "sha256": "27a076832b0b9aa051d804b8c996a5dd14b312210c721676b5a9ebc58113aa7d",
+        "content_sha256": "5b1eb8d1a4f851825b22a78496bdadcdbf8828d91703ebe6882f428fc02d047b",
+        "frames": 988871,
+        "frame_cap": null
+      }
+    ]
+  },
+  "holdout": {
+    "recordings": []
+  },
+  "environment": {
+    "python": "3.14.4",
+    "sklearn": "1.9.0",
+    "numpy": "2.4.4",
+    "pandas": "3.0.3"
+  }
+}

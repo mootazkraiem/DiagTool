@@ -35,7 +35,7 @@
         </Style>
         <Style x:Key="StLede" TargetType="TextBlock">
             <Setter Property="FontFamily" Value="{StaticResource CvUiFont}"/>
-            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="FontSize" Value="12.5"/>
             <Setter Property="Foreground" Value="{DynamicResource CvTextMutedBrush}"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
             <Setter Property="Margin" Value="0,5,0,14"/>
@@ -70,16 +70,16 @@
                                 <Rectangle Style="{StaticResource CvSectionMarker}" Height="16"/>
                                 <cv:CvTrackedText Label="HARDWARE INTERFACE" Style="{StaticResource StHeading}"/>
                             </StackPanel>
-                            <TextBlock Text="Quick connect / disconnect for testing — full setup lives under Hardware Setup."
+                            <TextBlock Text="Quick connect and disconnect for testing. The full setup opens from the Home screen when a live session starts."
                                        Style="{StaticResource StLede}"/>
                             <StackPanel Orientation="Horizontal">
                                 <Button Style="{StaticResource CvButtonPrimary}" Command="{Binding ConnectHardwareCommand}"
                                         Height="36" MinWidth="130" Padding="18,0">
-                                    <cv:CvTrackedText Label="CONNECT" FontFamily="{StaticResource CvDisplayFont}" FontSize="11.5" FontWeight="SemiBold"/>
+                                    <cv:CvTrackedText Label="CONNECT" FontFamily="{StaticResource CvDisplayFont}" FontSize="12.5" FontWeight="SemiBold"/>
                                 </Button>
                                 <Button Style="{StaticResource CvButtonGhost}" Command="{Binding DisconnectHardwareCommand}"
                                         Height="36" MinWidth="130" Padding="18,0" Margin="10,0,0,0">
-                                    <cv:CvTrackedText Label="DISCONNECT" FontFamily="{StaticResource CvDisplayFont}" FontSize="11.5" FontWeight="SemiBold"/>
+                                    <cv:CvTrackedText Label="DISCONNECT" FontFamily="{StaticResource CvDisplayFont}" FontSize="12.5" FontWeight="SemiBold"/>
                                 </Button>
                                 <Border Style="{StaticResource CvBadge}" Margin="16,0,0,0" Padding="12,6" VerticalAlignment="Center">
                                     <StackPanel Orientation="Horizontal">
@@ -96,7 +96,7 @@
                                             </Ellipse.Style>
                                         </Ellipse>
                                         <cv:CvTrackedText Label="{Binding HwStatusText}" Margin="8,0,0,0"
-                                                          FontFamily="{StaticResource CvMonoFont}" FontSize="10">
+                                                          FontFamily="{StaticResource CvMonoFont}" FontSize="11.5">
                                             <cv:CvTrackedText.Style>
                                                 <Style TargetType="cv:CvTrackedText">
                                                     <Setter Property="Foreground" Value="{DynamicResource CvAccentDimBrush}"/>
@@ -122,7 +122,7 @@
                                            Fill="{DynamicResource CvVioletBrush}" Effect="{DynamicResource CvVioletGlow}"/>
                                 <cv:CvTrackedText Label="NEURAL CORE CONFIG" Style="{StaticResource StHeading}"/>
                             </StackPanel>
-                            <TextBlock Text="Autonomous anomaly detection · real-time telemetry pattern matching and fault prediction."
+                            <TextBlock Text="Anomaly detection with one model per CAN identifier for each vehicle, explained by Gemini or a local language model."
                                        Style="{StaticResource StLede}"/>
 
                             <Grid>
@@ -141,7 +141,7 @@
                                                        Foreground="{DynamicResource CvAccentBrush}"/>
                                         </DockPanel>
                                         <DockPanel Style="{StaticResource CvKvRow}">
-                                            <cv:CvTrackedText Label="CLUSTERS" Style="{StaticResource CvKvKey}"/>
+                                            <cv:CvTrackedText Label="MODEL TYPE" Style="{StaticResource CvKvKey}"/>
                                             <TextBlock Text="{Binding ModelClustersText}" Style="{StaticResource CvKvValue}"/>
                                         </DockPanel>
                                         <DockPanel Style="{StaticResource CvKvRow}">
@@ -172,7 +172,7 @@
                                     <DockPanel Margin="0,16,0,0">
                                         <cv:CvTrackedText DockPanel.Dock="Left" Label="ALERT THRESHOLD" Style="{StaticResource CvCaps}"/>
                                         <TextBlock DockPanel.Dock="Right" Text="{Binding AlertThresholdText}" HorizontalAlignment="Right"
-                                                   FontFamily="{StaticResource CvMonoFont}" FontSize="12" FontWeight="SemiBold"
+                                                   FontFamily="{StaticResource CvMonoFont}" FontSize="12.5" FontWeight="SemiBold"
                                                    Foreground="{DynamicResource CvAccentBrush}"/>
                                     </DockPanel>
                                     <Slider Style="{StaticResource CvSlider}" Margin="0,8,0,0"
@@ -183,10 +183,10 @@
                                             Height="36" Margin="0,18,0,0"
                                             ToolTip="Start the attack simulator; watch it on Telemetry">
                                         <cv:CvTrackedText Label="LAUNCH ATTACK TEST" FontFamily="{StaticResource CvDisplayFont}"
-                                                          FontSize="11.5" FontWeight="SemiBold"/>
+                                                          FontSize="12.5" FontWeight="SemiBold"/>
                                     </Button>
                                     <TextBlock Text="{Binding SaveStatusText}" Margin="0,8,0,0" MinHeight="14"
-                                               FontFamily="{StaticResource CvMonoFont}" FontSize="10"
+                                               FontFamily="{StaticResource CvMonoFont}" FontSize="11.5"
                                                Foreground="{DynamicResource CvOkBrush}"/>
                                 </StackPanel>
                             </Grid>
@@ -199,8 +199,8 @@
                             <DockPanel Margin="0,0,0,12">
                                 <cv:CvTrackedText DockPanel.Dock="Left" Label="VEHICLE PROFILES" Style="{StaticResource CvCaps}"/>
                                 <TextBlock DockPanel.Dock="Right" HorizontalAlignment="Right"
-                                           FontFamily="{StaticResource CvMonoFont}" FontSize="10" Foreground="{DynamicResource CvTextSoftBrush}">
-                                    <Run Text="{Binding HardwareVehicleItems.Count, Mode=OneWay}"/><Run Text=" DBC PROFILES"/>
+                                           FontFamily="{StaticResource CvMonoFont}" FontSize="11.5" Foreground="{DynamicResource CvTextSoftBrush}">
+                                    <Run Text="{Binding HardwareVehicleItems.Count, Mode=OneWay}"/><Run Text=" VEHICLE PROFILES"/>
                                 </TextBlock>
                             </DockPanel>
 
@@ -215,24 +215,24 @@
                                                 <DockPanel>
                                                     <Border x:Name="Badge" DockPanel.Dock="Right" Style="{StaticResource CvBadge}"
                                                             Padding="8,2" Visibility="Collapsed" VerticalAlignment="Top">
-                                                        <cv:CvTrackedText Label="ACTIVE" FontFamily="{StaticResource CvMonoFont}" FontSize="9"
+                                                        <cv:CvTrackedText Label="ACTIVE" FontFamily="{StaticResource CvMonoFont}" FontSize="11"
                                                                           Foreground="{DynamicResource CvAccentBrush}"/>
                                                     </Border>
                                                     <TextBlock Text="{Binding Name}" FontFamily="{StaticResource CvUiFont}" FontSize="12.5"
                                                                FontWeight="SemiBold" Foreground="{DynamicResource CvTextBrightBrush}"
                                                                TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/>
                                                 </DockPanel>
-                                                <TextBlock Margin="0,5,0,0" FontFamily="{StaticResource CvMonoFont}" FontSize="10"
+                                                <TextBlock Margin="0,5,0,0" FontFamily="{StaticResource CvMonoFont}" FontSize="11.5"
                                                            Foreground="{DynamicResource CvTextSoftBrush}">
                                                     <Run Text="{Binding Bitrate, Mode=OneWay, StringFormat={}{0:N0}}"/><Run Text=" bps"/>
                                                 </TextBlock>
                                                 <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
                                                     <cv:CvTrackedText x:Name="RawDbc" Label="RAW DBC" Style="{StaticResource CvCaps}"
-                                                                      FontSize="8.5" Margin="0,0,10,0" Opacity="0.35"/>
+                                                                      FontSize="10.5" Margin="0,0,10,0" Opacity="0.35"/>
                                                     <cv:CvTrackedText x:Name="UdsDbc" Label="UDS DBC" Style="{StaticResource CvCaps}"
-                                                                      FontSize="8.5" Margin="0,0,10,0" Opacity="0.35"/>
+                                                                      FontSize="10.5" Margin="0,0,10,0" Opacity="0.35"/>
                                                     <cv:CvTrackedText x:Name="TxList" Label="TX LIST" Style="{StaticResource CvCaps}"
-                                                                      FontSize="8.5" Opacity="0.35"/>
+                                                                      FontSize="10.5" Opacity="0.35"/>
                                                 </StackPanel>
                                             </StackPanel>
                                         </Border>
@@ -316,12 +316,12 @@
                             </StackPanel>
                             <Button Style="{StaticResource CvButtonDanger}" Command="{Binding RestoreDefaultsCommand}" Height="36">
                                 <cv:CvTrackedText Label="RESTORE DEFAULTS" FontFamily="{StaticResource CvDisplayFont}"
-                                                  FontSize="11.5" FontWeight="SemiBold"/>
+                                                  FontSize="12.5" FontWeight="SemiBold"/>
                             </Button>
                             <Button Style="{StaticResource CvButtonPrimary}" Command="{Binding SaveSettingsCommand}"
                                     Height="36" Margin="0,8,0,0">
                                 <cv:CvTrackedText Label="SAVE SETTINGS" FontFamily="{StaticResource CvDisplayFont}"
-                                                  FontSize="11.5" FontWeight="SemiBold"/>
+                                                  FontSize="12.5" FontWeight="SemiBold"/>
                             </Button>
                         </StackPanel>
                     </Border>

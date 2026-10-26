@@ -65,6 +65,11 @@ public sealed class NavigationService : ObservableObject
             tab.IsUnlocked = unlocked
                 || tab.Section.Key == SectionKey.Settings
                 || tab.Section.Key == SectionKey.HardwareSetup;
+
+            // Hardware Setup is never on the bar: it is reached from Home only
+            // (START LIVE SESSION lands on it), since a recorded log needs no adapter.
+            if (tab.Section.Key == SectionKey.HardwareSetup)
+                tab.IsAvailable = false;
         }
         OnPropertyChanged(nameof(IsAnalysisComplete));
     }
@@ -134,6 +139,8 @@ public sealed class NavigationService : ObservableObject
         SettingsViewModel settings,
         AnomalyIntelViewModel anomalyIntel)
     {
+        // Tab order, left to right. Settings is last: it configures the
+        // workstation rather than analysing anything, so nothing follows it.
         var sections = new SectionViewModel[]
         {
             hardwareSetup,
@@ -141,8 +148,8 @@ public sealed class NavigationService : ObservableObject
             telemetry,
             diagnostics,
             playback,
-            settings,
             anomalyIntel,
+            settings,
         };
 
         foreach (var section in sections)

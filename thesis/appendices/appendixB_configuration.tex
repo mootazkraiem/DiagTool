@@ -3,7 +3,7 @@
 
 \section{Requirements}
 
-Table~\ref{tab:app-requirements} lists the software requirements to build and run CANvisionNative, as documented in the project's own setup guide. Table~\ref{tab:app-hardware} lists the hardware requirements; only the last row is needed for the live hardware capture mode (Section~\ref{sec:design-replay}) — every other feature, including the full validation in Chapter~\ref{chap:validation}, runs on the desktop machine alone.
+Table~\ref{tab:app-requirements} lists the software needed to build and run CANvisionNative, as documented in the setup guide of the project. Table~\ref{tab:app-hardware} lists the hardware. Only the last two rows are needed for live capture (Section~\ref{sec:design-hardware}); every other feature, including all the validation of Chapter~\ref{chap:validation}, runs on the computer alone.
 
 \begin{table}[H]
 \centering
@@ -13,13 +13,13 @@ Table~\ref{tab:app-requirements} lists the software requirements to build and ru
 \hline
 \textbf{Component} & \textbf{Version} \\
 \hline
-Windows              & 10 or 11, 64-bit \\
+Windows              & 10 or 11, 64 bit \\
 \hline
-.NET Runtime         & 4.8 \\
+.NET Framework       & 4.8 \\
 \hline
-Python               & 3.11 -- 3.14 \\
+Python               & 3.11 to 3.14 \\
 \hline
-Git                  & Any (for cloning the repository) \\
+Git and Git LFS      & Any recent version (to clone the repository and its model files) \\
 \hline
 \end{tabular}
 \end{table}
@@ -28,57 +28,97 @@ Git                  & Any (for cloning the repository) \\
 \centering
 \caption{Hardware requirements.}
 \label{tab:app-hardware}
-\begin{tabular}{|p{2.6cm}|p{5.3cm}|p{6.4cm}|}
+\begin{tabular}{|P{2.6cm}|P{5.3cm}|P{6.4cm}|}
 \hline
 \textbf{Component} & \textbf{Requirement} & \textbf{Notes} \\
 \hline
-Desktop / laptop & Any machine able to run Windows 10/11 and Python 3.11+ & Used for every mode (replay, simulation, hardware capture) \\
+Computer & Any machine able to run Windows 10 or 11 and Python 3.11 or later & Used in every mode (replay, simulation, live capture) \\
 \hline
-Disk space & A few GB free & Trained model store, DBC files, and recorded logs \\
+Disk space & A few GB free & Trained models, \gls{dbc} files and recorded logs \\
 \hline
-USB port & 1 free port & Only for the ELM327 / USB-CAN adapter below \\
+USB port & One free port & Only for the adapter below; the live session unlocks when a USB device is detected \\
 \hline
-CAN adapter & ELM327 USB (slcan), PEAK PCAN-USB, or a SocketCAN-compatible interface & Required only for live hardware capture (FR9); not needed for replay or simulation \\
+\gls{can} adapter & A serial adapter using the slcan protocol (such as our Arduino Uno and MCP2515 bridge), a PEAK PCAN USB adapter, or a SocketCAN interface & Only for live capture (FR9); not needed for replay or simulation \\
 \hline
 \end{tabular}
 \end{table}
 
-\section{Key Python dependencies}
+\section{Frame by frame scoring}
 
-\begin{itemize}
-    \item fastapi, uvicorn — REST API server
-    \item scikit-learn, joblib — Isolation Forest and K-Means pipeline
-    \item pandas, numpy — feature engineering
-    \item asammdf — MF4 decoding
-    \item cantools — DBC-based signal decoding
-    \item python-can — hardware CAN adapter access
-\end{itemize}
-
-\section{Backend startup}
-
-The backend runs as a local \gls{rest} server on 127.0.0.1:8765. The desktop client automatically starts and stops this process when a compatible Python interpreter is found, and exposes the same functionality if the backend is instead started manually beforehand.
-
-\section{Persisted configuration}
-
-Client-side settings (alert threshold, LLM provider key, hardware interface parameters) are persisted locally in a per-user configuration file and reloaded on startup. The LLM provider key, if configured, is applied automatically so the backend can pick it up without a separate configuration step.
-
-\section{Fusion score configuration}
+Table~\ref{tab:app-fusion-config} gives the values used by the runtime engine for replay, simulation and live capture (Section~\ref{sec:design-pipeline}).
 
 \begin{table}[H]
 \centering
-\caption{Default fusion and severity configuration.}
+\caption{Configuration of the fused score and of the severity levels in the runtime engine.}
 \label{tab:app-fusion-config}
-\begin{tabular}{|l|l|}
+\begin{tabularx}{\textwidth}{|P{4.2cm}|Y|}
 \hline
 \textbf{Parameter} & \textbf{Value} \\
 \hline
-Fusion score range     & 0.0 -- 2.0 \\
+Range of each layer score & 0 to 2 \\
 \hline
-Layer weights          & timing 0.35, payload 0.35, ML 0.20, persistence 0.10 \\
+Layer weights & timing 0.35, payload 0.35, model 0.20, persistence 0.10 \\
 \hline
-Severity thresholds    & LOW $\geq$ 0.30, MEDIUM $\geq$ 0.55, HIGH $\geq$ 0.80, CRITICAL $\geq$ 1.00 \\
+Alert threshold & 0.40 \\
 \hline
-Backend port           & 8765 \\
+Severity thresholds & LOW $\geq$ 0.30, MEDIUM $\geq$ 0.55, HIGH $\geq$ 0.80, CRITICAL $\geq$ 1.00 \\
 \hline
-\end{tabular}
+Cooldown per identifier & 1.0 s \\
+\hline
+Model call & every fifth frame of each identifier \\
+\hline
+Rolling windows & 50 frames (intervals, payload, scores) \\
+\hline
+Persistence windows & short 20, medium 50, long 100 frames \\
+\hline
+Backend port & 8765 \\
+\hline
+\end{tabularx}
 \end{table}
+
+The alert threshold and the severity thresholds are two different things, and the difference matters when reading Chapter~\ref{chap:validation}. The alert threshold decides whether a scored frame becomes an alert at all; the severity thresholds then place that alert in a level. A frame with a fused score of 0.45 therefore becomes a LOW alert, while a frame with 0.35 is scored but never reported.
+
+\section{Parameters of the final models}
+
+Table~\ref{tab:app-model-params} gives the parameters of the final models (Section~\ref{sec:impl-feature-eng}). They are recorded in the manifest of every model.
+
+\begin{table}[H]
+\centering
+\caption{Parameters of the final models.}
+\label{tab:app-model-params}
+\begin{tabularx}{\textwidth}{|P{4.2cm}|Y|}
+\hline
+\textbf{Parameter} & \textbf{Value} \\
+\hline
+Algorithm & scikit-learn Isolation Forest, one per \gls{can} identifier and per vehicle \\
+\hline
+Number of trees & 200 \\
+\hline
+Random seed & 42 \\
+\hline
+Feature scaling & None \\
+\hline
+Feature window & The last 10 frames of the identifier \\
+\hline
+Warmup & The first 10 frames of each identifier are not scored \\
+\hline
+Minimum data & 1{,}000 training rows per identifier \\
+\hline
+Threshold & With $n$ training rows and $k = \lfloor 0.02\,n \rfloor$, the threshold is the $(k+1)$th smallest raw score; a frame is flagged when its raw score is strictly below it \\
+\hline
+Normalised score & 0 at the median raw score of the training rows, 0.5 at the threshold \\
+\hline
+\end{tabularx}
+\end{table}
+
+\section{Offline analysis}
+
+The offline analysis, used when the analyst imports a log from the Home screen, does not use the fused score for a vehicle model. It flags a frame when its score passes the threshold of the model of its identifier, that is, when its normalised score is above 0.5. Each of these thresholds flags 2\% of the training rows of its identifier (Section~\ref{sec:impl-feature-eng}). The timing fingerprint and the whitelist of identifiers are built from the first 30 seconds of the recording, and an identifier outside the whitelist is given a score of at least 0.95. Alerts are merged when at least eight of them fall on the same identifier within two seconds. The severity of an offline alert follows its score: CRITICAL from 0.80, HIGH from 0.55, and WARNING below. The alert lists of the desktop client display these three levels as CRITICAL, WARNING and INFO respectively.
+
+The code also contains a second fused configuration, in which the timing weight is raised to 0.60, the payload weight lowered to 0.10, and the alert and LOW thresholds raised to 0.55. Only the validation scoring endpoint (\texttt{/api/validation/score\_file}) uses it today.
+
+Because the offline analysis and the runtime engine do not judge frames in the same way, the same recording can give a different number of alerts on the two paths. In Chapter~\ref{chap:validation}, the measurements of the first iteration come from the runtime engine (replay), and the holdout results of the second iteration come from the thresholds of the models. Each comparison in that chapter is made on one path only.
+
+\section{Explanation engine}
+
+The explanation engine (Section~\ref{sec:design-ai}) builds the context of an alert from six sources: the features and layer scores of the alert; the expected statistics of its identifier; the closest entry of a small knowledge base of known anomaly patterns, found by keyword matching; the most similar anomaly explained in the past, found by cosine similarity in the history store; the signals of the identifier and their normal ranges, from the signal map; and the result of a short web search on Wikipedia and on the \gls{nvd}, which is sent to Gemini only. The providers are tried in the order Gemini, then Ollama, then the rule based template. Explanations are cached during a run, so that the same alert is not explained twice.

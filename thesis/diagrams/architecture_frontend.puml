@@ -1,19 +1,64 @@
 @startuml
-skinparam backgroundColor white
-skinparam defaultFontName Helvetica
-skinparam defaultFontSize 14
-skinparam shadowing false
-skinparam roundcorner 6
-skinparam component {
-  BackgroundColor #EAF2FF
-  BorderColor #2C5AA0
-  ArrowColor #2C5AA0
+!include style.iuml
+hide circle
+hide empty members
+skinparam nodesep 25
+skinparam ranksep 35
+
+package "Views (XAML)" {
+  class HomeView
+  class DashboardView
+  class TelemetryView
+  class LogPlaybackView
+  class AnomalyIntelView
 }
 
-component "Screens\n(Home, Dashboard, Telemetry,\nDiagnostics, Log Playback,\nAnomaly Intel, Settings)" as Screens
-component "Shared Client Services\n(API client + live state)" as Services
-component "Backend REST API" as Backend
+package "ViewModels" {
+  class HomeViewModel
+  class DashboardViewModel
+  class TelemetryViewModel
+  class LogPlaybackViewModel
+  class AnomalyIntelViewModel
+  abstract class SectionViewModel {
+    #Snapshot : VehicleSnapshot
+    #ShowsCapture : bool
+    #OnDataUpdated(snapshot)
+  }
+}
 
-Screens --> Services
-Services --> Backend
+package "Services" {
+  class VehicleDataService {
+    +AlertHistory
+    +LoadedReplayPackets
+    +DataUpdated : event
+    +ReplayLoaded : event
+  }
+  class PythonApiClient {
+    +AnalyzeLogsAsync()
+    +StartReplayAsync()
+    +GetAlertExplanationAsync()
+    +DiscoverSignalsAsync()
+    +DescribeDatasetAsync()
+  }
+  class ModelSelectionService {
+    +SelectedModel
+    +SelectionChanged : event
+  }
+}
+
+HomeView -down-> HomeViewModel : binds
+DashboardView -down-> DashboardViewModel : binds
+TelemetryView -down-> TelemetryViewModel : binds
+LogPlaybackView -down-> LogPlaybackViewModel : binds
+AnomalyIntelView -down-> AnomalyIntelViewModel : binds
+
+HomeViewModel -down-|> SectionViewModel
+DashboardViewModel -down-|> SectionViewModel
+TelemetryViewModel -down-|> SectionViewModel
+LogPlaybackViewModel -down-|> SectionViewModel
+AnomalyIntelViewModel -down-|> SectionViewModel
+
+SectionViewModel -down-> VehicleDataService : subscribes to events
+VehicleDataService -right-> PythonApiClient : polls every 500 ms
+SectionViewModel -down-> ModelSelectionService
 @enduml

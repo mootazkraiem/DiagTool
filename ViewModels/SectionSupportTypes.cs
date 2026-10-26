@@ -56,7 +56,17 @@ public sealed class AlertItem
     public string State { get; }
 }
 
-public sealed class SignalItem
+/// <summary>
+/// One row of the live signal monitor.
+///
+/// The identity of a row is its CAN id and signal name; everything else is a
+/// reading that changes while the stream runs and is therefore settable and
+/// observable. The rows used to be immutable and the whole collection was
+/// cleared and rebuilt on every refresh, which tore the list down and built it
+/// again twice a second - on screen the values flashed and the table blanked
+/// between ticks.
+/// </summary>
+public sealed class SignalItem : ViewModelBase
 {
     public SignalItem(
         string canId,
@@ -72,28 +82,80 @@ public sealed class SignalItem
     {
         CanId = canId;
         Name = name;
-        Value = value;
         Unit = unit;
-        State = state;
-        Frequency = freq;
-        TimeDiff = tdiff;
-        TrendPoints = trendPoints ?? new System.Windows.Media.PointCollection();
-        StateBrush = stateBrush;
         CanIdBrush = canIdBrush;
+        this.value = value;
+        this.state = state;
+        frequency = freq;
+        timeDiff = tdiff;
+        this.trendPoints = trendPoints ?? new System.Windows.Media.PointCollection();
+        this.stateBrush = stateBrush;
     }
 
+    // Identity: which signal this row is.
     public string CanId { get; }
     public string Name { get; }
-    public string Value { get; }
     public string Unit { get; }
-    public string State { get; }
-    public double Frequency { get; }
-    public double TimeDiff { get; }
-    public System.Windows.Media.PointCollection TrendPoints { get; }
-    public string StateBrush { get; }
     public string CanIdBrush { get; }
+
+    // Readings: replaced in place on every refresh.
+    private string value;
+    private string state;
+    private double frequency;
+    private double timeDiff;
+    private System.Windows.Media.PointCollection trendPoints;
+    private string stateBrush;
+
+    public string Value
+    {
+        get => value;
+        set => SetProperty(ref this.value, value);
+    }
+
+    public string State
+    {
+        get => state;
+        set => SetProperty(ref state, value);
+    }
+
+    public double Frequency
+    {
+        get => frequency;
+        set { if (SetProperty(ref frequency, value)) OnPropertyChanged(nameof(FrequencyText)); }
+    }
+
+    public double TimeDiff
+    {
+        get => timeDiff;
+        set { if (SetProperty(ref timeDiff, value)) OnPropertyChanged(nameof(TimeDiffText)); }
+    }
+
+    public System.Windows.Media.PointCollection TrendPoints
+    {
+        get => trendPoints;
+        set => SetProperty(ref trendPoints, value);
+    }
+
+    public string StateBrush
+    {
+        get => stateBrush;
+        set => SetProperty(ref stateBrush, value);
+    }
+
     public string FrequencyText => $"{Frequency:F1} Hz";
     public string TimeDiffText => $"{TimeDiff:F4}s";
+
+    /// <summary>Takes the new reading for this same signal, leaving the row itself in place.</summary>
+    public void Update(string value, string state, double frequency, double timeDiff,
+                       System.Windows.Media.PointCollection trendPoints, string stateBrush)
+    {
+        Value = value;
+        State = state;
+        Frequency = frequency;
+        TimeDiff = timeDiff;
+        TrendPoints = trendPoints;
+        StateBrush = stateBrush;
+    }
 }
 
 public sealed class AttackTypeBarItem

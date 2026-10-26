@@ -1,0 +1,118 @@
+{
+  "schema_version": 3,
+  "model_family": "hyundai_ioniq5",
+  "model_version": "clean-2-002",
+  "created_at": "2026-09-24T13:12:40+00:00",
+  "training_pipeline": {
+    "name": "backend.ml.training.clean_pipeline",
+    "version": "clean-2",
+    "git_commit": "c5ef38eca4bd178bbcd1085c88794f6c6afde40e",
+    "git_dirty": false
+  },
+  "feature_pipeline": {
+    "name": "backend.ml.features.canonical",
+    "version": "canonical-1",
+    "window": 10
+  },
+  "model_type": "isolation_forest_per_can_id",
+  "model_params": {
+    "model": "IsolationForest",
+    "scaler": null,
+    "n_estimators": 200,
+    "max_samples": "auto",
+    "contamination": "auto",
+    "random_state": 42,
+    "n_jobs": 1
+  },
+  "calibration": {
+    "method": "empirical_quantile_strict",
+    "target_contamination": 0.02,
+    "definition": "threshold = (k+1)-th smallest training score_samples value, k = floor(target_contamination x rows); flagged iff score < threshold; ties at the threshold are not flagged"
+  },
+  "min_id_rows": 1000,
+  "models_file": {
+    "path": "models.joblib",
+    "sha256": "fe7a2479ce2af7ed53a0fa57a8015b3743d523ce17648777359696cdd645f96b"
+  },
+  "id_models": {
+    "0x6A": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.6686447735410418,
+      "median": -0.3917251302480699,
+      "rows": 18047,
+      "k": 360,
+      "flagged_count": 360,
+      "ties_at_threshold": 1
+    },
+    "0x6B": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.6758839251439138,
+      "median": -0.407098487120442,
+      "rows": 33461,
+      "k": 669,
+      "flagged_count": 669,
+      "ties_at_threshold": 1
+    }
+  },
+  "sparse_ids": {
+    "0x67": {
+      "rows": 745,
+      "recordings": 1
+    },
+    "0x68": {
+      "rows": 744,
+      "recordings": 1
+    }
+  },
+  "unmodelled_ids": {},
+  "training_corpus": {
+    "fingerprint": "1eff4d537f453558da383f7003f0f46145754f0240856bee0138870fb6970fcc",
+    "recordings": [
+      {
+        "path": "Train/Hyundai Ioniq5/LOG/BE3BF653/00000038/00000006.MF4",
+        "sha256": "940ff656cefcdd92bd11a5b5a61e7f0387a87d5c5123bc7fa4379e3def16aae6",
+        "content_sha256": "f00fbf7843b6736fc02eb8f4bd04ed5e9c39416d3dc270d45ae560ddaa5d06eb",
+        "frames": 53037,
+        "frame_cap": null
+      }
+    ]
+  },
+  "holdout": {
+    "recordings": []
+  },
+  "validation": {
+    "status": "unvalidated_no_holdout",
+    "has_holdout": false,
+    "reason": "no independent holdout recording exists for this vehicle; the model has only been measured against its own training data and is not evidence of generalisation"
+  },
+  "environment": {
+    "python": "3.14.4",
+    "sklearn": "1.9.0",
+    "numpy": "2.4.4",
+    "pandas": "3.0.3"
+  }
+}

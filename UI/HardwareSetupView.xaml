@@ -40,7 +40,7 @@
                     <ControlTemplate TargetType="ListBoxItem">
                         <Border x:Name="Chip" Background="{DynamicResource CvTileBrush}" BorderBrush="{DynamicResource CvBorderBrush}"
                                 BorderThickness="1" CornerRadius="2" Padding="10,5">
-                            <TextBlock x:Name="ChipText" Text="{Binding}" FontFamily="{StaticResource CvMonoFont}" FontSize="10.5"
+                            <TextBlock x:Name="ChipText" Text="{Binding}" FontFamily="{StaticResource CvMonoFont}" FontSize="12"
                                        Foreground="{DynamicResource CvTextSoftBrush}"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -132,7 +132,7 @@
                                     </Ellipse.Style>
                                 </Ellipse>
                                 <TextBlock Text="{Binding Settings.PythonCanWarning}" Margin="8,0,0,0"
-                                           FontFamily="{StaticResource CvMonoFont}" FontSize="10"
+                                           FontFamily="{StaticResource CvMonoFont}" FontSize="11.5"
                                            Foreground="{DynamicResource CvTextSoftBrush}"
                                            MaxWidth="560" TextTrimming="CharacterEllipsis"
                                            ToolTip="{Binding Settings.PythonCanWarning}"/>
@@ -156,7 +156,7 @@
                                 <cvctl:CvTrackedText Label="ADAPTER LINK" Style="{StaticResource CvPanelTitle}"/>
                             </StackPanel>
                             <TextBlock Margin="0,0,0,14" TextWrapping="Wrap"
-                                       FontFamily="{StaticResource CvUiFont}" FontSize="11.5"
+                                       FontFamily="{StaticResource CvUiFont}" FontSize="12.5"
                                        Foreground="{DynamicResource CvTextMutedBrush}"
                                        Text="Connect a CAN adapter before starting a live session. Settings' quick Connect/Disconnect uses this same link."/>
 
@@ -201,7 +201,7 @@
                                         <Button DockPanel.Dock="Right" Style="{StaticResource CvButtonGhost}" HorizontalAlignment="Right"
                                                 Height="20" Padding="10,0" Command="{Binding Settings.RefreshPortsCommand}"
                                                 ToolTip="Scan for available serial / COM ports">
-                                            <cvctl:CvTrackedText Label="SCAN" FontFamily="{StaticResource CvDisplayFont}" FontSize="9" FontWeight="SemiBold"/>
+                                            <cvctl:CvTrackedText Label="SCAN" FontFamily="{StaticResource CvDisplayFont}" FontSize="11" FontWeight="SemiBold"/>
                                         </Button>
                                     </DockPanel>
                                     <ListBox ItemsSource="{Binding Settings.HardwareChannelItems}"
@@ -222,12 +222,12 @@
                                 <Button Style="{StaticResource CvButtonPrimary}" Height="38" MinWidth="150" Padding="20,0"
                                         Command="{Binding Settings.ConnectHardwareCommand}"
                                         ToolTip="Connect with the settings above and the selected vehicle / AI model">
-                                    <cvctl:CvTrackedText Label="CONNECT" FontFamily="{StaticResource CvDisplayFont}" FontSize="12" FontWeight="SemiBold"/>
+                                    <cvctl:CvTrackedText Label="CONNECT" FontFamily="{StaticResource CvDisplayFont}" FontSize="12.5" FontWeight="SemiBold"/>
                                 </Button>
                                 <Button Style="{StaticResource CvButtonGhost}" Height="38" MinWidth="150" Padding="20,0" Margin="10,0,0,0"
                                         Command="{Binding Settings.DisconnectHardwareCommand}"
                                         ToolTip="Disconnect the adapter">
-                                    <cvctl:CvTrackedText Label="DISCONNECT" FontFamily="{StaticResource CvDisplayFont}" FontSize="12" FontWeight="SemiBold"/>
+                                    <cvctl:CvTrackedText Label="DISCONNECT" FontFamily="{StaticResource CvDisplayFont}" FontSize="12.5" FontWeight="SemiBold"/>
                                 </Button>
                             </StackPanel>
 
@@ -246,7 +246,7 @@
                                         </Ellipse.Style>
                                     </Ellipse>
                                     <TextBlock Text="{Binding Settings.HwStatusText}" Margin="9,0,0,0" TextWrapping="Wrap"
-                                               FontFamily="{StaticResource CvMonoFont}" FontSize="10.5"
+                                               FontFamily="{StaticResource CvMonoFont}" FontSize="12"
                                                Foreground="{DynamicResource CvTextBrush}"/>
                                 </StackPanel>
                             </Border>
@@ -289,7 +289,7 @@
                             </DockPanel>
 
                             <TextBlock Margin="0,14,0,0" TextWrapping="Wrap"
-                                       FontFamily="{StaticResource CvUiFont}" FontSize="11"
+                                       FontFamily="{StaticResource CvUiFont}" FontSize="12"
                                        Foreground="{DynamicResource CvTextMutedBrush}"
                                        Text="Sent on CONNECT as the vehicle id: it selects the live scoring model and the DBC decode."/>
                         </StackPanel>
@@ -305,11 +305,11 @@
                                 <cvctl:CvTrackedText Label="VEHICLE / AI MODEL" Style="{StaticResource CvPanelTitle}"/>
                             </StackPanel>
                             <TextBlock DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center"
-                                       FontFamily="{StaticResource CvMonoFont}" FontSize="10" Foreground="{DynamicResource CvTextSoftBrush}">
+                                       FontFamily="{StaticResource CvMonoFont}" FontSize="11.5" Foreground="{DynamicResource CvTextSoftBrush}">
                                 <Run Text="{Binding Settings.ModelSelection.TrainedModelCount, Mode=OneWay}"/><Run Text=" TRAINED VEHICLE MODELS · GENERAL = FALLBACK"/>
                             </TextBlock>
                         </DockPanel>
-                        <TextBlock Margin="0,0,0,12" FontFamily="{StaticResource CvUiFont}" FontSize="11.5" TextWrapping="Wrap"
+                        <TextBlock Margin="0,0,0,12" FontFamily="{StaticResource CvUiFont}" FontSize="12.5" TextWrapping="Wrap"
                                    Foreground="{DynamicResource CvTextMutedBrush}"
                                    Text="The selected model scores live sessions and offline imports. It is saved and shared with the offline import on Home."/>
 
@@ -329,19 +329,19 @@
                                         <DockPanel>
                                             <Border x:Name="Active" DockPanel.Dock="Right" Style="{StaticResource CvBadge}" Padding="7,1"
                                                     VerticalAlignment="Top" Visibility="Collapsed">
-                                                <cvctl:CvTrackedText Label="ACTIVE" FontFamily="{StaticResource CvMonoFont}" FontSize="8.5"
+                                                <cvctl:CvTrackedText Label="ACTIVE" FontFamily="{StaticResource CvMonoFont}" FontSize="10.5"
                                                                      Foreground="{DynamicResource CvAccentBrush}"/>
                                             </Border>
-                                            <TextBlock Text="{Binding Name}" FontFamily="{StaticResource CvUiFont}" FontSize="12"
+                                            <TextBlock Text="{Binding Name}" FontFamily="{StaticResource CvUiFont}" FontSize="12.5"
                                                        FontWeight="SemiBold" Foreground="{DynamicResource CvTextBrightBrush}"
                                                        TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/>
                                         </DockPanel>
-                                        <cvctl:CvTrackedText Label="{Binding KindText}" Style="{StaticResource CvCaps}" FontSize="8.5" Margin="0,4,0,0"/>
-                                        <TextBlock Margin="0,5,0,0" FontFamily="{StaticResource CvMonoFont}" FontSize="9.5"
+                                        <cvctl:CvTrackedText Label="{Binding KindText}" Style="{StaticResource CvCaps}" FontSize="10.5" Margin="0,4,0,0"/>
+                                        <TextBlock Margin="0,5,0,0" FontFamily="{StaticResource CvMonoFont}" FontSize="11"
                                                    Foreground="{DynamicResource CvTextSoftBrush}" TextTrimming="CharacterEllipsis">
                                             <Run Text="MODEL "/><Run Text="{Binding ModelLabel, Mode=OneWay}" Foreground="{DynamicResource CvAccentBrush}"/>
                                         </TextBlock>
-                                        <TextBlock FontFamily="{StaticResource CvMonoFont}" FontSize="9.5" Foreground="{DynamicResource CvTextSoftBrush}"
+                                        <TextBlock FontFamily="{StaticResource CvMonoFont}" FontSize="11" Foreground="{DynamicResource CvTextSoftBrush}"
                                                    TextTrimming="CharacterEllipsis">
                                             <Run Text="{Binding StatesText, Mode=OneWay}"/><Run Text="  ·  "/><Run x:Name="Status" Text="{Binding StatusText, Mode=OneWay}" Foreground="{DynamicResource CvOkBrush}"/>
                                         </TextBlock>

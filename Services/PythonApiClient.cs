@@ -318,6 +318,60 @@ public sealed class PythonApiClient
         }
     }
 
+    public async Task<SignalDiscoveryResponse?> DiscoverSignalsAsync(string filePath, string vehicleId, int maxChannels, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var payload = new JObject
+            {
+                ["file_path"] = filePath,
+                ["vehicle_id"] = vehicleId ?? string.Empty,
+                ["max_channels"] = maxChannels,
+                ["points"] = 80,
+            };
+            using var content = new StringContent(payload.ToString(Formatting.None), Encoding.UTF8, "application/json");
+            using var response = await httpClient.PostAsync(BuildUrl("api/signals/discover"), content, cancellationToken);
+            var json = await response.Content.ReadAsStringAsync();
+            if (!response.IsSuccessStatusCode)
+            {
+                logger.Info($"Signal discovery failed ({(int)response.StatusCode}): {json}");
+                return null;
+            }
+            return JsonConvert.DeserializeObject<SignalDiscoveryResponse>(json);
+        }
+        catch (Exception exception)
+        {
+            logger.Error("DiscoverSignalsAsync failed.", exception);
+            return null;
+        }
+    }
+
+    public async Task<DatasetFactsResponse?> DescribeDatasetAsync(string filePath, string vehicleId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var payload = new JObject
+            {
+                ["file_path"] = filePath,
+                ["vehicle_id"] = vehicleId ?? string.Empty,
+            };
+            using var content = new StringContent(payload.ToString(Formatting.None), Encoding.UTF8, "application/json");
+            using var response = await httpClient.PostAsync(BuildUrl("api/dataset/describe"), content, cancellationToken);
+            var json = await response.Content.ReadAsStringAsync();
+            if (!response.IsSuccessStatusCode)
+            {
+                logger.Info($"Dataset description failed ({(int)response.StatusCode}): {json}");
+                return null;
+            }
+            return JsonConvert.DeserializeObject<DatasetFactsResponse>(json);
+        }
+        catch (Exception exception)
+        {
+            logger.Error("DescribeDatasetAsync failed.", exception);
+            return null;
+        }
+    }
+
     public async Task<ReplayStatusResponse?> GetReplayStatusAsync(CancellationToken cancellationToken)
     {
         return await GetJsonAsync<ReplayStatusResponse>("api/replay/status", cancellationToken);

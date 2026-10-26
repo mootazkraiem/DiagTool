@@ -127,7 +127,7 @@ public sealed class AlertDetailItem : ObservableObject
     {
         "gemini"  => "GEMINI AI",
         "ollama"  => "LOCAL AI (OLLAMA)",
-        _         => "RULE-BASED (NO LLM CONFIGURED)",
+        _         => "RULE-BASED (NO LLM ANSWERED)",
     };
 
     public bool IsGenerativeAi => explanationMode is "gemini" or "ollama";

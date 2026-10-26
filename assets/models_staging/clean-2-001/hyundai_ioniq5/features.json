@@ -1,0 +1,34 @@
+{
+  "feature_pipeline": "canonical-1",
+  "window": 10,
+  "per_can_id": {
+    "0x6A": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {}
+    },
+    "0x6B": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {}
+    }
+  }
+}

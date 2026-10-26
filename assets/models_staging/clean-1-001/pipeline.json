@@ -1,0 +1,27 @@
+{
+  "name": "backend.ml.training.clean_pipeline",
+  "version": "clean-1",
+  "feature_pipeline": "canonical-1",
+  "window": 10,
+  "features": [
+    "time_diff",
+    "rolling_mean_time_diff",
+    "rolling_std_time_diff",
+    "byte_diff",
+    "rolling_mean_byte_diff",
+    "rolling_std_byte_diff",
+    "rolling_max_byte_diff",
+    "changed_bytes_count",
+    "payload_entropy"
+  ],
+  "model_params": {
+    "n_estimators": 200,
+    "contamination": 0.02,
+    "random_state": 42,
+    "n_jobs": 1
+  },
+  "robust_k": 3.0,
+  "min_train_rows": 2000,
+  "git_commit": "bbdb84b3f830ec7a970c29f86cf8129031d33c34",
+  "git_dirty": false
+}

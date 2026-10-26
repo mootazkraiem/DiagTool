@@ -1,0 +1,975 @@
+{
+  "schema_version": 3,
+  "model_family": "mg_zs_ev",
+  "model_version": "clean-2-002",
+  "created_at": "2026-09-24T13:34:32+00:00",
+  "training_pipeline": {
+    "name": "backend.ml.training.clean_pipeline",
+    "version": "clean-2",
+    "git_commit": "c5ef38eca4bd178bbcd1085c88794f6c6afde40e",
+    "git_dirty": false
+  },
+  "feature_pipeline": {
+    "name": "backend.ml.features.canonical",
+    "version": "canonical-1",
+    "window": 10
+  },
+  "model_type": "isolation_forest_per_can_id",
+  "model_params": {
+    "model": "IsolationForest",
+    "scaler": null,
+    "n_estimators": 200,
+    "max_samples": "auto",
+    "contamination": "auto",
+    "random_state": 42,
+    "n_jobs": 1
+  },
+  "calibration": {
+    "method": "empirical_quantile_strict",
+    "target_contamination": 0.02,
+    "definition": "threshold = (k+1)-th smallest training score_samples value, k = floor(target_contamination x rows); flagged iff score < threshold; ties at the threshold are not flagged"
+  },
+  "min_id_rows": 1000,
+  "models_file": {
+    "path": "models.joblib",
+    "sha256": "22a15598eab154e7db18d93a1854f74476e29a39c59d951c082396e2a94b7756"
+  },
+  "id_models": {
+    "0x94": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.6221691091072248,
+      "median": -0.3791893965597447,
+      "rows": 3454,
+      "k": 69,
+      "flagged_count": 69,
+      "ties_at_threshold": 1
+    },
+    "0x9D": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "payload_entropy"
+      ],
+      "constant_features": {
+        "changed_bytes_count": 3.0
+      },
+      "recordings": 1,
+      "threshold": -0.6555259474237378,
+      "median": -0.4199006823110089,
+      "rows": 3452,
+      "k": 69,
+      "flagged_count": 69,
+      "ties_at_threshold": 1
+    },
+    "0xAC": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "payload_entropy"
+      ],
+      "constant_features": {
+        "changed_bytes_count": 2.0
+      },
+      "recordings": 1,
+      "threshold": -0.6367852065061466,
+      "median": -0.44850748648195127,
+      "rows": 3457,
+      "k": 69,
+      "flagged_count": 69,
+      "ties_at_threshold": 1
+    },
+    "0xAF": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "payload_entropy"
+      ],
+      "constant_features": {
+        "changed_bytes_count": 4.0
+      },
+      "recordings": 1,
+      "threshold": -0.6243037706084549,
+      "median": -0.4766593270458829,
+      "rows": 3457,
+      "k": 69,
+      "flagged_count": 69,
+      "ties_at_threshold": 1
+    },
+    "0xC1": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "payload_entropy"
+      ],
+      "constant_features": {
+        "rolling_max_byte_diff": 2.5649493574615367,
+        "changed_bytes_count": 2.0
+      },
+      "recordings": 1,
+      "threshold": -0.6071276400092219,
+      "median": -0.4455215286354958,
+      "rows": 3455,
+      "k": 69,
+      "flagged_count": 69,
+      "ties_at_threshold": 1
+    },
+    "0xC5": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "payload_entropy"
+      ],
+      "constant_features": {
+        "rolling_max_byte_diff": 2.5649493574615367,
+        "changed_bytes_count": 2.0
+      },
+      "recordings": 1,
+      "threshold": -0.6271414329013105,
+      "median": -0.4483687767853445,
+      "rows": 3454,
+      "k": 69,
+      "flagged_count": 69,
+      "ties_at_threshold": 1
+    },
+    "0xC7": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.0
+      },
+      "recordings": 1,
+      "threshold": -0.6194588182966849,
+      "median": -0.43659524320412807,
+      "rows": 3457,
+      "k": 69,
+      "flagged_count": 69,
+      "ties_at_threshold": 1
+    },
+    "0xF1": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.5435644431995964
+      },
+      "recordings": 1,
+      "threshold": -0.64022979870382,
+      "median": -0.42473156933303685,
+      "rows": 3449,
+      "k": 68,
+      "flagged_count": 68,
+      "ties_at_threshold": 1
+    },
+    "0xFB": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.6169430650857376,
+      "median": -0.46956809328883065,
+      "rows": 3457,
+      "k": 69,
+      "flagged_count": 69,
+      "ties_at_threshold": 1
+    },
+    "0x163": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.640900784996884,
+      "median": -0.39541664304225144,
+      "rows": 1730,
+      "k": 34,
+      "flagged_count": 34,
+      "ties_at_threshold": 1
+    },
+    "0x165": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.0
+      },
+      "recordings": 1,
+      "threshold": -0.6403602484943496,
+      "median": -0.4178106112367863,
+      "rows": 3449,
+      "k": 68,
+      "flagged_count": 68,
+      "ties_at_threshold": 1
+    },
+    "0x167": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.5435644431995964
+      },
+      "recordings": 1,
+      "threshold": -0.6401206594147766,
+      "median": -0.41714437790363884,
+      "rows": 3449,
+      "k": 68,
+      "flagged_count": 67,
+      "ties_at_threshold": 2
+    },
+    "0x169": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 2.4056390622295662
+      },
+      "recordings": 1,
+      "threshold": -0.6640873283505104,
+      "median": -0.40075428897055176,
+      "rows": 1719,
+      "k": 34,
+      "flagged_count": 34,
+      "ties_at_threshold": 1
+    },
+    "0x185": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.5762679426202582,
+      "median": -0.45057112473085215,
+      "rows": 1722,
+      "k": 34,
+      "flagged_count": 34,
+      "ties_at_threshold": 1
+    },
+    "0x194": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 1.2987949406953985
+      },
+      "recordings": 1,
+      "threshold": -0.6369122357862075,
+      "median": -0.40835132965604126,
+      "rows": 1723,
+      "k": 34,
+      "flagged_count": 34,
+      "ties_at_threshold": 1
+    },
+    "0x196": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 1.811278124459133
+      },
+      "recordings": 1,
+      "threshold": -0.6331117210143614,
+      "median": -0.40938152956344387,
+      "rows": 1723,
+      "k": 34,
+      "flagged_count": 34,
+      "ties_at_threshold": 1
+    },
+    "0x19C": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.5952539979951874,
+      "median": -0.42443738860034913,
+      "rows": 3457,
+      "k": 69,
+      "flagged_count": 69,
+      "ties_at_threshold": 1
+    },
+    "0x19F": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.0
+      },
+      "recordings": 1,
+      "threshold": -0.6260283420376648,
+      "median": -0.40790394588114415,
+      "rows": 1723,
+      "k": 34,
+      "flagged_count": 33,
+      "ties_at_threshold": 2
+    },
+    "0x1A9": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.0
+      },
+      "recordings": 1,
+      "threshold": -0.6648708254252111,
+      "median": -0.4052416629832931,
+      "rows": 1719,
+      "k": 34,
+      "flagged_count": 34,
+      "ties_at_threshold": 1
+    },
+    "0x1AF": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.0
+      },
+      "recordings": 1,
+      "threshold": -0.6402946157983028,
+      "median": -0.39943474480666435,
+      "rows": 1723,
+      "k": 34,
+      "flagged_count": 34,
+      "ties_at_threshold": 1
+    },
+    "0x1C7": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "payload_entropy"
+      ],
+      "constant_features": {
+        "changed_bytes_count": 3.0
+      },
+      "recordings": 1,
+      "threshold": -0.6209015301346575,
+      "median": -0.472285698673966,
+      "rows": 3454,
+      "k": 69,
+      "flagged_count": 69,
+      "ties_at_threshold": 1
+    },
+    "0x1E1": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "payload_entropy"
+      ],
+      "constant_features": {
+        "rolling_max_byte_diff": 0.5596157879354227,
+        "changed_bytes_count": 2.0
+      },
+      "recordings": 1,
+      "threshold": -0.6266829135839649,
+      "median": -0.46370413928339965,
+      "rows": 1143,
+      "k": 22,
+      "flagged_count": 22,
+      "ties_at_threshold": 1
+    },
+    "0x1E5": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.6279638635165,
+      "median": -0.43202877289982583,
+      "rows": 3449,
+      "k": 68,
+      "flagged_count": 68,
+      "ties_at_threshold": 1
+    },
+    "0x1E9": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.0
+      },
+      "recordings": 1,
+      "threshold": -0.635054741809678,
+      "median": -0.38879692875762634,
+      "rows": 1721,
+      "k": 34,
+      "flagged_count": 34,
+      "ties_at_threshold": 1
+    },
+    "0x1F1": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count"
+      ],
+      "constant_features": {
+        "payload_entropy": 1.061278124459133
+      },
+      "recordings": 1,
+      "threshold": -0.680142413655716,
+      "median": -0.420648341170667,
+      "rows": 1719,
+      "k": 34,
+      "flagged_count": 34,
+      "ties_at_threshold": 1
+    },
+    "0x1F2": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.0
+      },
+      "recordings": 1,
+      "threshold": -0.6001179834939966,
+      "median": -0.4538640918777127,
+      "rows": 1718,
+      "k": 34,
+      "flagged_count": 34,
+      "ties_at_threshold": 1
+    },
+    "0x227": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.6357834057896639,
+      "median": -0.45895090964738616,
+      "rows": 1722,
+      "k": 34,
+      "flagged_count": 34,
+      "ties_at_threshold": 1
+    },
+    "0x22A": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.5435644431995964
+      },
+      "recordings": 1,
+      "threshold": -0.6648668373917833,
+      "median": -0.43787953482187447,
+      "rows": 1708,
+      "k": 34,
+      "flagged_count": 34,
+      "ties_at_threshold": 1
+    },
+    "0x230": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.0
+      },
+      "recordings": 1,
+      "threshold": -0.6355851589019491,
+      "median": -0.41291206753633564,
+      "rows": 1719,
+      "k": 34,
+      "flagged_count": 34,
+      "ties_at_threshold": 1
+    },
+    "0x242": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.0
+      },
+      "recordings": 1,
+      "threshold": -0.6147540494421077,
+      "median": -0.45507997496223185,
+      "rows": 1720,
+      "k": 34,
+      "flagged_count": 34,
+      "ties_at_threshold": 1
+    },
+    "0x244": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.5435644431995964
+      },
+      "recordings": 1,
+      "threshold": -0.6044596057663146,
+      "median": -0.4492065097322308,
+      "rows": 1720,
+      "k": 34,
+      "flagged_count": 34,
+      "ties_at_threshold": 1
+    },
+    "0x246": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.0
+      },
+      "recordings": 1,
+      "threshold": -0.6243670791483509,
+      "median": -0.4401927397120663,
+      "rows": 1720,
+      "k": 34,
+      "flagged_count": 34,
+      "ties_at_threshold": 1
+    },
+    "0x2F6": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 1.061278124459133
+      },
+      "recordings": 1,
+      "threshold": -0.6430991503437136,
+      "median": -0.42701061473105695,
+      "rows": 3450,
+      "k": 69,
+      "flagged_count": 69,
+      "ties_at_threshold": 1
+    }
+  },
+  "sparse_ids": {
+    "0x17D": {
+      "rows": 337,
+      "recordings": 1
+    },
+    "0x1FC": {
+      "rows": 683,
+      "recordings": 1
+    },
+    "0x214": {
+      "rows": 683,
+      "recordings": 1
+    },
+    "0x21C": {
+      "rows": 681,
+      "recordings": 1
+    },
+    "0x23D": {
+      "rows": 681,
+      "recordings": 1
+    },
+    "0x297": {
+      "rows": 686,
+      "recordings": 1
+    },
+    "0x29B": {
+      "rows": 686,
+      "recordings": 1
+    },
+    "0x2A2": {
+      "rows": 338,
+      "recordings": 1
+    },
+    "0x2FD": {
+      "rows": 682,
+      "recordings": 1
+    },
+    "0x30B": {
+      "rows": 336,
+      "recordings": 1
+    },
+    "0x30C": {
+      "rows": 337,
+      "recordings": 1
+    },
+    "0x31A": {
+      "rows": 336,
+      "recordings": 1
+    },
+    "0x31B": {
+      "rows": 336,
+      "recordings": 1
+    },
+    "0x32E": {
+      "rows": 336,
+      "recordings": 1
+    },
+    "0x336": {
+      "rows": 336,
+      "recordings": 1
+    },
+    "0x343": {
+      "rows": 336,
+      "recordings": 1
+    },
+    "0x348": {
+      "rows": 683,
+      "recordings": 1
+    },
+    "0x34A": {
+      "rows": 683,
+      "recordings": 1
+    },
+    "0x34C": {
+      "rows": 336,
+      "recordings": 1
+    },
+    "0x353": {
+      "rows": 337,
+      "recordings": 1
+    },
+    "0x361": {
+      "rows": 336,
+      "recordings": 1
+    },
+    "0x364": {
+      "rows": 336,
+      "recordings": 1
+    },
+    "0x372": {
+      "rows": 336,
+      "recordings": 1
+    },
+    "0x373": {
+      "rows": 336,
+      "recordings": 1
+    },
+    "0x376": {
+      "rows": 336,
+      "recordings": 1
+    },
+    "0x379": {
+      "rows": 336,
+      "recordings": 1
+    },
+    "0x389": {
+      "rows": 337,
+      "recordings": 1
+    },
+    "0x38B": {
+      "rows": 337,
+      "recordings": 1
+    },
+    "0x39B": {
+      "rows": 336,
+      "recordings": 1
+    },
+    "0x39F": {
+      "rows": 337,
+      "recordings": 1
+    },
+    "0x3A2": {
+      "rows": 337,
+      "recordings": 1
+    },
+    "0x3A3": {
+      "rows": 337,
+      "recordings": 1
+    },
+    "0x3A4": {
+      "rows": 337,
+      "recordings": 1
+    },
+    "0x3A8": {
+      "rows": 338,
+      "recordings": 1
+    },
+    "0x3AB": {
+      "rows": 338,
+      "recordings": 1
+    },
+    "0x3AC": {
+      "rows": 338,
+      "recordings": 1
+    },
+    "0x3F1": {
+      "rows": 128,
+      "recordings": 1
+    },
+    "0x41F": {
+      "rows": 442,
+      "recordings": 1
+    },
+    "0x44C": {
+      "rows": 338,
+      "recordings": 1
+    },
+    "0x46A": {
+      "rows": 682,
+      "recordings": 1
+    },
+    "0x517": {
+      "rows": 24,
+      "recordings": 1
+    },
+    "0x540": {
+      "rows": 24,
+      "recordings": 1
+    },
+    "0x541": {
+      "rows": 163,
+      "recordings": 1
+    },
+    "0x172": {
+      "rows": 0,
+      "recordings": 1
+    },
+    "0x2B5": {
+      "rows": 0,
+      "recordings": 1
+    }
+  },
+  "unmodelled_ids": {},
+  "training_corpus": {
+    "fingerprint": "1c65d455900b8fa0daf52e6ccc26343c2af162bf3c49eee6b039f719f8cb3849",
+    "recordings": [
+      {
+        "path": "EV-CANlogs-main/MG ZS EV/Charging_2kW_CAN1_Test1.asc",
+        "sha256": "055ca3c21e70be0ea15779e659c15379728e83e00448d0d7ad765b0763078e17",
+        "content_sha256": "efe5d829d26e1b253b431b698d081a03d58aaf138172b6fe504144240dbb3f03",
+        "frames": 100000,
+        "frame_cap": null
+      }
+    ]
+  },
+  "holdout": {
+    "recordings": [
+      {
+        "path": "EV-CANlogs-main/MG ZS EV/Charging_6kW_CAN1_Test2.asc",
+        "sha256": "bf9026469e16d05d7081c69ab4815f50808ca931ea6e920bfe0ebbed533412ff",
+        "content_sha256": "b7cfabdb816e7c18c75570653494ac5cb5e63d0913c47289efa9cdf788fc17da",
+        "frames": 100000,
+        "frame_cap": null
+      }
+    ]
+  },
+  "validation": {
+    "status": "held_back",
+    "reason": "about 82% of the holdout traffic (clean-2-001) is on CAN IDs absent from its single training recording; the model does not cover this vehicle's traffic",
+    "has_holdout": true
+  },
+  "environment": {
+    "python": "3.14.4",
+    "sklearn": "1.9.0",
+    "numpy": "2.4.4",
+    "pandas": "3.0.3"
+  }
+}

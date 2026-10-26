@@ -1,0 +1,25 @@
+{
+  "training": {
+    "fingerprint": "1c65d455900b8fa0daf52e6ccc26343c2af162bf3c49eee6b039f719f8cb3849",
+    "recordings": [
+      {
+        "path": "EV-CANlogs-main/MG ZS EV/Charging_2kW_CAN1_Test1.asc",
+        "sha256": "055ca3c21e70be0ea15779e659c15379728e83e00448d0d7ad765b0763078e17",
+        "content_sha256": "efe5d829d26e1b253b431b698d081a03d58aaf138172b6fe504144240dbb3f03",
+        "frames": 100000,
+        "frame_cap": null
+      }
+    ]
+  },
+  "holdout": {
+    "recordings": [
+      {
+        "path": "EV-CANlogs-main/MG ZS EV/Charging_6kW_CAN1_Test2.asc",
+        "sha256": "bf9026469e16d05d7081c69ab4815f50808ca931ea6e920bfe0ebbed533412ff",
+        "content_sha256": "b7cfabdb816e7c18c75570653494ac5cb5e63d0913c47289efa9cdf788fc17da",
+        "frames": 100000,
+        "frame_cap": null
+      }
+    ]
+  }
+}

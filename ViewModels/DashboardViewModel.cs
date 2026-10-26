@@ -18,10 +18,22 @@ public sealed class DashboardViewModel : SectionViewModel
 {
     private readonly List<double> rollingScores = new();
     private const int RollingScoreCapacity = 120; // 60 s at 500 ms per tick
+    private double captureCursorSeconds = double.NaN;
 
-    public DashboardViewModel(VehicleDataService vehicleDataService)
+    private readonly PythonApiClient? pythonApiClient;
+
+    public DashboardViewModel(VehicleDataService vehicleDataService, ModelSelectionService? modelSelection = null,
+                              PythonApiClient? pythonApiClient = null)
         : base(vehicleDataService, SectionKey.Dashboard)
     {
+        this.modelSelection = modelSelection;
+        this.pythonApiClient = pythonApiClient;
+        DatasetFacts = new ObservableCollection<DatasetFactItem>();
+        DatasetParagraphs = new ObservableCollection<string>();
+        OpenDatasetCardCommand = new AsyncRelayCommand(OpenDatasetCardAsync);
+        CloseDatasetCardCommand = new RelayCommand(() => IsDatasetCardOpen = false);
+        if (modelSelection is not null)
+            modelSelection.SelectionChanged += _ => OnPropertyChanged(nameof(ActiveModelName));
         QuickDiagnostics = new ObservableCollection<FaultCodeItem>();
         AnomalyAlerts = new ObservableCollection<AlertItem>();
         SubsystemHealth = new ObservableCollection<MetricCardItem>();
@@ -35,7 +47,14 @@ public sealed class DashboardViewModel : SectionViewModel
         DashboardEventRows = new ObservableCollection<ReplayEventRowItem>();
         DashboardDetectionMarkers = new ObservableCollection<ForensicTimelineMarker>();
         vehicleDataService.AlertHistoryUpdated += OnAlertHistoryUpdated;
+        vehicleDataService.ReplayLoaded += () =>
+        {
+            rollingScores.Clear();
+            captureCursorSeconds = double.NaN;
+            LiveFrames.Clear();
+        };
         vehicleDataService.LiveFramesUpdated += OnLiveFramesUpdated;
+        vehicleDataService.PlaybackFramePublished += OnPlaybackFrame;
 
         StartSessionCommand = new RelayCommand(() => VehicleDataService.Start());
         StopSessionCommand = new RelayCommand(() => VehicleDataService.Stop());
@@ -62,7 +81,7 @@ public sealed class DashboardViewModel : SectionViewModel
     public string SessionStateText => IsSessionRunning ? "SESSION LIVE" : "SESSION PAUSED";
     public string ReplayName => VehicleDataService.ReplayName;
     public string DetectedAttackType => VehicleDataService.DetectedAttackType;
-    public string DetectionConfidenceText => $"{VehicleDataService.DetectionConfidence:F1}%";
+    public string DetectionConfidenceText => VehicleDataService.DetectionConfidence > 0 ? $"{VehicleDataService.DetectionConfidence:F1}%" : "--";
     public string TotalAlertsText => VehicleDataService.TotalAlerts.ToString();
     public string CriticalAlertsText => VehicleDataService.CriticalAlerts.ToString();
     public string WarningAlertsText => VehicleDataService.WarningAlerts.ToString();
@@ -82,7 +101,9 @@ public sealed class DashboardViewModel : SectionViewModel
     public string LastAnomalyMessage => AnomalyStatusText;
     public string PacketsPerSecondText => RuntimeFpsText;
     public string FramesProcessedText => ReplayFramesText;
-    public string ActiveModelName => "IDS-STATE-MODEL";
+    // The selected vehicle / AI model and its status (was the fixed text "IDS-STATE-MODEL").
+    public string ActiveModelName => modelSelection?.SelectedModel is { } m ? $"{m.ModelLabel} · {m.KindText}" : "--";
+    private readonly ModelSelectionService? modelSelection;
     public string ReplayProgressPercentText => ReplayProgressText;
     public string ReplayStatusText => VehicleDataService.ReplayProgressPercent >= 100 ? "COMPLETE" : VehicleDataService.ReplayProgressPercent > 0 ? "RUNNING" : "IDLE";
     public string ActiveReplayFile => VehicleDataService.ReplayName;
@@ -113,15 +134,28 @@ public sealed class DashboardViewModel : SectionViewModel
     public string ConnectionStateText => string.Equals(Snapshot.Source, "python-api", StringComparison.OrdinalIgnoreCase) ? "CONNECTED" : "LOCAL FALLBACK";
 
     // ── Properties required by DashboardView.xaml (39258c6 restore) ──────────
-    public string LiveStateText => ConnectionStateText == "CONNECTED" ? "LIVE" : "OFFLINE";
+    // LIVE: backend stream; CAPTURE: a loaded log is on screen (the backend may well be
+    // connected - "OFFLINE" read as if it were not); OFFLINE: neither.
+    public string LiveStateText => ConnectionStateText == "CONNECTED" ? "LIVE" : ShowsCapture ? "CAPTURE" : "OFFLINE";
     public string SystemNameText => UnitNameText;
-    public string LastSyncSummaryText => ConnectionStateText == "CONNECTED" ? "ALL SYSTEMS SYNCED" : "SYNC PENDING";
+    public string LastSyncSummaryText => ConnectionStateText == "CONNECTED" ? "ALL SYSTEMS SYNCED" : ShowsCapture ? "CAPTURE LOADED" : "SYNC PENDING";
+    // Alerts of a loaded recording are session alerts, not live ones; "LIVE" only while a bus is connected.
+    public string AlertsPanelTitle => ConnectionStateText == "CONNECTED" ? "LIVE ALERTS" : "SESSION ALERTS";
     public System.Windows.Media.Brush StatusGlowBrush =>
         ConnectionStateText == "CONNECTED"
             ? new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 200, 200))
             : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(80, 100, 100));
     public string LastEventTimestamp => Snapshot.UpdatedAt.ToLocalTime().ToString("HH:mm:ss");
-    public string AnomalyScoreText => VehicleDataService.CurrentAnomalyScore > 0 ? $"{VehicleDataService.CurrentAnomalyScore:F1}" : "0.0";
+    // Capture: replayed frames carry no score of their own and the fusion score only moves
+    // in a live session (it read 0.0 beside CRITICAL), so the score fields show the highest
+    // score among the frames the analysis flagged - the score behind the state shown.
+    private double DisplayScore => ShowsCapture && VehicleDataService.AlertHistory.Count > 0
+        ? PeakFlaggedScore
+        : VehicleDataService.CurrentAnomalyScore;
+    public string ScoreTileLabel => ShowsCapture ? "PEAK SCORE" : "FUSION SCORE";
+    public string AnomalyScoreText => ShowsCapture
+        ? (DisplayScore > 0 ? $"{DisplayScore:F2}" : "0.00")
+        : VehicleDataService.CurrentAnomalyScore > 0 ? $"{VehicleDataService.CurrentAnomalyScore:F1}" : "0.0";
     public string TopAnomalousCanId => !string.IsNullOrEmpty(VehicleDataService.TopSuspiciousCanId) ? VehicleDataService.TopSuspiciousCanId : "N/A";
     public int TotalFrames => VehicleDataService.TotalReplayFrames;
     public string ReplayElapsedText => SessionTimerText;
@@ -129,7 +163,7 @@ public sealed class DashboardViewModel : SectionViewModel
     public string StatusSubtitleText => $"SOC {BatteryText}  VOLT {VoltageText}";
     /// <summary>0-100 numeric twin of AnomalyConfidenceText, for the confidence bar.</summary>
     public double DetectionConfidenceValue => VehicleDataService.DetectionConfidence;
-    public string AnomalyConfidenceText => $"{VehicleDataService.DetectionConfidence:F1}%";
+    public string AnomalyConfidenceText => VehicleDataService.DetectionConfidence > 0 ? $"{VehicleDataService.DetectionConfidence:F1}%" : "--";
     public string PacketsAnalyzedText => VehicleDataService.ProcessedReplayFrames.ToString("N0");
     public string DetectionsTodayText => VehicleDataService.TotalAlerts.ToString("N0");
     public string ActiveThreatsText => OperationalStateText is "THREAT DETECTED" or "CRITICAL" ? "1" : "0";
@@ -144,6 +178,12 @@ public sealed class DashboardViewModel : SectionViewModel
     public string DetectionRateText => VehicleDataService.FlaggedFraction is { } fraction
         ? (fraction * 100.0).ToString("F1", System.Globalization.CultureInfo.InvariantCulture) + "%"
         : VehicleDataService.ProcessedReplayFrames <= 0 ? "--" : $"{VehicleDataService.TotalAlerts * 100.0 / Math.Max(1, VehicleDataService.ProcessedReplayFrames):F1}%";
+    // The pair behind DetectionRateText: flagged / scored frames of the analysis, else
+    // (live) alerts / frames processed. It used to show alerts / frames PLAYED during a
+    // replay ("339 / 264"), which is not what the percentage is taken from.
+    public string DetectionRateFractionText => VehicleDataService.FlaggedFraction is not null
+        ? $"{VehicleDataService.FlaggedFrames:N0} / {VehicleDataService.ScoredFrames:N0}"
+        : $"{VehicleDataService.TotalAlerts:N0} / {VehicleDataService.ProcessedReplayFrames:N0}";
     public string ModelHealthText => VehicleDataService.DetectionConfidence > 0 ? "100%" : "Ready";
     public string PipelineHealthText => ConnectionStateText == "CONNECTED" ? "100%" : "Degraded";
     public string ReplayEngineHealthText => ReplayStatusText == "RUNNING" ? "READY" : "STANDBY";
@@ -205,9 +245,9 @@ public sealed class DashboardViewModel : SectionViewModel
 
     public string ThreatSummaryText => OperationalStateText switch
     {
-        "CRITICAL"          => $"CRITICAL — {VehicleDataService.DetectedAttackType} — SCORE {VehicleDataService.CurrentAnomalyScore:F3}",
-        "THREAT DETECTED"   => $"ATTACK PATTERN: {VehicleDataService.DetectedAttackType}",
-        "ELEVATED RISK"     => $"RISK SCORE {VehicleDataService.CurrentAnomalyScore:F3} — WATCH ACTIVE",
+        "CRITICAL"          => $"CRITICAL · {VehicleDataService.DetectedAttackType} · SCORE {DisplayScore:F3}",
+        "THREAT DETECTED"   => $"PATTERN: {VehicleDataService.DetectedAttackType}",
+        "ELEVATED RISK"     => $"RISK SCORE {DisplayScore:F3} · WATCH ACTIVE",
         "ANALYZING"         => $"SCORE {VehicleDataService.CurrentAnomalyScore:F3} — BASELINE COMPARISON",
         "MONITORING"        => "ALL CHANNELS NOMINAL",
         "BASELINING"        => "ESTABLISHING TRAFFIC BASELINE...",
@@ -216,17 +256,121 @@ public sealed class DashboardViewModel : SectionViewModel
     };
     // ─────────────────────────────────────────────────────────────────────────
 
+    private void PushRollingScore(double score)
+    {
+        rollingScores.Add(score);
+        if (rollingScores.Count > RollingScoreCapacity)
+            rollingScores.RemoveAt(0);
+    }
+
+    private double? CaptureTickScore()
+    {
+        // While the analysis runs, the cursor follows the backend reading the file, not
+        // a playback the user started; the trend waits for Play.
+        if (VehicleDataService.AppState == AppState.Analyzing)
+            return null;
+        var packets = VehicleDataService.LoadedReplayPackets;
+        if (packets is null || packets.Count == 0)
+            return null;
+        var index = Math.Min(packets.Count - 1, Math.Max(0, VehicleDataService.ProcessedReplayFrames - 1));
+        var now = packets[index].Frame.RelativeTimestampSeconds;
+        var previous = double.IsNaN(captureCursorSeconds) || now < captureCursorSeconds ? now : captureCursorSeconds;
+        captureCursorSeconds = now;
+        if (now <= previous)
+            return null;
+        return VehicleDataService.AlertHistory
+            .Where(a => a.RelativeSeconds > previous && a.RelativeSeconds <= now)
+            .Select(a => a.Score)
+            .DefaultIfEmpty(0)
+            .Max();
+    }
+
+    // ── Dataset card: what the loaded capture is, in plain words ─────────────
+    private bool isDatasetCardOpen;
+    private string datasetTitleText = string.Empty;
+    private string datasetSourceText = string.Empty;
+
+    public bool IsDatasetCardOpen
+    {
+        get => isDatasetCardOpen;
+        private set => SetProperty(ref isDatasetCardOpen, value);
+    }
+
+    public string DatasetTitleText
+    {
+        get => datasetTitleText;
+        private set => SetProperty(ref datasetTitleText, value);
+    }
+
+    public string DatasetSourceText
+    {
+        get => datasetSourceText;
+        private set => SetProperty(ref datasetSourceText, value);
+    }
+
+    public ObservableCollection<DatasetFactItem> DatasetFacts { get; }
+    public ObservableCollection<string> DatasetParagraphs { get; }
+    public IAsyncRelayCommand OpenDatasetCardCommand { get; }
+    public IRelayCommand CloseDatasetCardCommand { get; }
+
+    private async Task OpenDatasetCardAsync()
+    {
+        DatasetFacts.Clear();
+        DatasetParagraphs.Clear();
+        DatasetSourceText = string.Empty;
+        IsDatasetCardOpen = true;
+
+        var path = VehicleDataService.ReplaySourcePath;
+        if (string.IsNullOrWhiteSpace(path) || VehicleDataService.TotalReplayFrames == 0)
+        {
+            DatasetTitleText = "No dataset loaded";
+            DatasetParagraphs.Add(ConnectionStateText == "CONNECTED"
+                ? "This is a live session: messages come straight from the CAN adapter, so there is no recorded file to describe."
+                : "No recording is loaded yet. Import a CAN log from the Home screen and its description appears here.");
+            return;
+        }
+
+        DatasetTitleText = System.IO.Path.GetFileName(path);
+        DatasetParagraphs.Add("Reading the file…");
+        var model = modelSelection?.SelectedModelId ?? string.Empty;
+        var facts = pythonApiClient is null ? null
+            : await pythonApiClient.DescribeDatasetAsync(path!, model, System.Threading.CancellationToken.None);
+
+        DatasetParagraphs.Clear();
+        if (facts is null)
+        {
+            DatasetParagraphs.Add("The backend could not read this file, so no description is available. Check that the Python backend is running.");
+            return;
+        }
+
+        DatasetTitleText = DatasetCard.Title(facts);
+        foreach (var item in DatasetCard.Facts(facts)) DatasetFacts.Add(item);
+        foreach (var text in DatasetCard.Paragraphs(facts, GroundTruthLabels.FindFor(path) is not null)) DatasetParagraphs.Add(text);
+        var folder = System.IO.Path.GetDirectoryName(path);
+        var parent = folder is null ? null : System.IO.Path.GetFileName(System.IO.Path.GetDirectoryName(folder));
+        DatasetSourceText = "SOURCE  " + string.Join(" / ", new[] { parent, facts.Folder, facts.FileName }
+            .Where(s => !string.IsNullOrWhiteSpace(s)));
+    }
+
+    public string TrendWindowText => ShowsCapture ? "· FLAGGED FRAMES · 60 S" : "· 60 S WINDOW";
+
     protected override void OnDataUpdated(VehicleSnapshot snapshot)
     {
         base.OnDataUpdated(snapshot);
 
-        // Keep a rolling 60-second window of raw fusion scores for the chart.
+        // Keep a rolling 60-second window of scores for the chart. Live: the backend's
+        // fusion score. Capture: replayed frames carry no score of their own, so each
+        // tick plots the highest score among the flagged frames the playback cursor
+        // passed since the last tick (0 = none flagged); a paused cursor adds nothing.
         var currentScore = VehicleDataService.CurrentAnomalyScore;
-        if (VehicleDataService.IsRunning || currentScore > 0)
+        if (ShowsCapture)
         {
-            rollingScores.Add(currentScore);
-            if (rollingScores.Count > RollingScoreCapacity)
-                rollingScores.RemoveAt(0);
+            if (CaptureTickScore() is { } captureScore)
+                PushRollingScore(captureScore);
+        }
+        else if (VehicleDataService.IsRunning || currentScore > 0)
+        {
+            PushRollingScore(currentScore);
         }
 
         RefreshRuntimePanels();
@@ -250,8 +394,10 @@ public sealed class DashboardViewModel : SectionViewModel
         OnPropertyChanged(nameof(ReplayFramesText));
         OnPropertyChanged(nameof(DashboardRibbon));
         OnPropertyChanged(nameof(LiveStateText));
+        OnPropertyChanged(nameof(TrendWindowText));
         OnPropertyChanged(nameof(SystemNameText));
         OnPropertyChanged(nameof(LastSyncSummaryText));
+        OnPropertyChanged(nameof(AlertsPanelTitle));
         OnPropertyChanged(nameof(StatusGlowBrush));
         OnPropertyChanged(nameof(LastEventTimestamp));
         OnPropertyChanged(nameof(AnomalyScoreText));
@@ -271,6 +417,7 @@ public sealed class DashboardViewModel : SectionViewModel
         OnPropertyChanged(nameof(AttackTypeText));
         OnPropertyChanged(nameof(LiveAlertsCountText));
         OnPropertyChanged(nameof(DetectionRateText));
+        OnPropertyChanged(nameof(DetectionRateFractionText));
         OnPropertyChanged(nameof(DetectionRateBasisText));
         OnPropertyChanged(nameof(ModelHealthText));
         OnPropertyChanged(nameof(PipelineHealthText));
@@ -308,6 +455,7 @@ public sealed class DashboardViewModel : SectionViewModel
         OnPropertyChanged(nameof(AttackTypeText));
         OnPropertyChanged(nameof(LiveAlertsCountText));
         OnPropertyChanged(nameof(DetectionRateText));
+        OnPropertyChanged(nameof(DetectionRateFractionText));
         OnPropertyChanged(nameof(DetectionRateBasisText));
         OnPropertyChanged(nameof(ModelHealthText));
         OnPropertyChanged(nameof(PipelineHealthText));
@@ -326,8 +474,42 @@ public sealed class DashboardViewModel : SectionViewModel
         OnPropertyChanged(nameof(DashboardRibbon));
     }
 
+    private DateTime lastPlaybackFrameUtc = DateTime.MinValue;
+
+    // A capture playing in the app: newest frame first, 30 kept. Frames the model did not
+    // flag carry no score ("--"); flagged ones show their score and severity.
+    private void OnPlaybackFrame(PlaybackPacket packet)
+    {
+        lastPlaybackFrameUtc = DateTime.UtcNow;
+        var score = packet.Anomalies.Count == 0 ? 0.0
+            : packet.Anomalies.Max(a => a.SeverityScore > 0 ? a.SeverityScore / 100.0 : Math.Abs(a.AnomalyScore));
+        var severity = packet.Anomalies.Count == 0 ? "NORMAL" : score >= 0.8 ? "CRITICAL" : score >= 0.55 ? "HIGH" : "WARNING";
+        var data = packet.Frame.Data ?? Array.Empty<byte>();
+        LiveFrames.Insert(0, new LiveFrameRow
+        {
+            Time     = packet.Frame.TimestampUtc.ToLocalTime().ToString("HH:mm:ss.fff"),
+            CanId    = $"0x{packet.Frame.CanId:X3}",
+            Bytes    = string.Join(" ", data.Select(b => b.ToString("X2"))),
+            Score    = packet.Anomalies.Count == 0 ? "--" : $"{score:F2}",
+            Severity = severity,
+            SeverityColor = severity switch
+            {
+                "CRITICAL" => "#FF5050",
+                "HIGH"     => "#FF8C3A",
+                "WARNING"  => "#FFD94A",
+                _          => "#56F0AC",
+            },
+        });
+        while (LiveFrames.Count > 30)
+            LiveFrames.RemoveAt(LiveFrames.Count - 1);
+    }
+
     private void OnLiveFramesUpdated(IReadOnlyList<LiveSignalItem> items)
     {
+        // While a capture plays in the app its frames own the monitor; the backend's
+        // buffer would otherwise replace them every 2.5 s with a different stream.
+        if ((DateTime.UtcNow - lastPlaybackFrameUtc).TotalSeconds < 3)
+            return;
         LiveFrames.Clear();
         foreach (var item in items.Reverse().Take(30))
         {
@@ -392,10 +574,10 @@ public sealed class DashboardViewModel : SectionViewModel
         var frameTrend = BuildDashboardTrend(Enumerable.Range(0, 10).Select(i => (double)(VehicleDataService.ProcessedReplayFrames - i)).Where(v => v >= 0).ToList(), 150, 26);
 
         DashboardTopKpis.Clear();
-        DashboardTopKpis.Add(new AnalysisKpiItem("FUSION SCORE", AnomalyScoreText, OperationalStateText, anomalyTrend, "#2FF0D6"));
-        DashboardTopKpis.Add(new AnalysisKpiItem("LIVE FPS", RuntimeFpsText, "FRAMES / SEC", fpsTrend, "#2FF0D6"));
+        DashboardTopKpis.Add(new AnalysisKpiItem(ScoreTileLabel, AnomalyScoreText, OperationalStateText, anomalyTrend, "#2FF0D6"));
+        DashboardTopKpis.Add(new AnalysisKpiItem(ConnectionStateText == "CONNECTED" ? "LIVE FPS" : "PROCESSING FPS", RuntimeFpsText, "FRAMES / SEC", fpsTrend, "#2FF0D6"));
         DashboardTopKpis.Add(new AnalysisKpiItem("ACTIVE THREATS", ActiveThreatsText, "CURRENT", alertTrend, "#FFB245"));
-        DashboardTopKpis.Add(new AnalysisKpiItem("CRITICAL ALERTS", CriticalAlertsText, "LAST 5 MIN", alertTrend, "#FF4D5E"));
+        DashboardTopKpis.Add(new AnalysisKpiItem("CRITICAL ALERTS", CriticalAlertsText, "IN SESSION", alertTrend, "#FF4D5E"));
         DashboardTopKpis.Add(new AnalysisKpiItem("FRAMES", PacketsAnalyzedText, "ANALYZED", frameTrend, "#DBE9E7"));
         DashboardTopKpis.Add(new AnalysisKpiItem("LATENCY", LatencyMsText, "ROUNDTRIP", fpsTrend, "#FFB245"));
 
@@ -405,7 +587,7 @@ public sealed class DashboardViewModel : SectionViewModel
         // don't already appear in DashboardTopKpis above.
         DashboardBottomKpis.Clear();
         DashboardBottomKpis.Add(new AnalysisKpiItem("TOTAL ALERTS", TotalAlertsText, "SESSION", alertTrend, "#FF8C3A"));
-        DashboardBottomKpis.Add(new AnalysisKpiItem("DETECTION RATE", DetectionRateText, "TODAY", alertTrend, "#B46CFF"));
+        DashboardBottomKpis.Add(new AnalysisKpiItem("DETECTION RATE", DetectionRateText, "SESSION", alertTrend, "#B46CFF"));
         DashboardBottomKpis.Add(new AnalysisKpiItem("PIPELINE", PipelineHealthText, "HEALTH", fpsTrend, "#56F0AC"));
 
         DashboardEventRows.Clear();
@@ -436,9 +618,11 @@ public sealed class DashboardViewModel : SectionViewModel
             hasData ? "LOADED" : "NO DATA",
             "INGEST", hasData ? $"{VehicleDataService.TotalReplayFrames:N0} FRAMES" : "EMPTY"));
 
+        // Until the window has two real ticks the chart stays flat. It used to fall back
+        // to the list of every alert score, drawn as if it were the last 60 seconds.
         var chartValues = rollingScores.Count > 1
             ? rollingScores.ToList()
-            : VehicleDataService.AlertHistory.Select(a => a.Score).DefaultIfEmpty(0.0).ToList();
+            : new List<double> { 0.0, 0.0 };
         DashboardAnomalyPoints = BuildScoringChart(chartValues, 540, 116);
         DashboardAnomalyFillPoints = BuildScoringAreaFill(chartValues, 540, 116);
         // Threshold line at score=0.55, range 0–1.5, height=116: y = height*(1 - threshold/maxScore)

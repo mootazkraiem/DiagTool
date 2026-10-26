@@ -2,9 +2,9 @@
 % Cover page (front) — official ESPRIT PFE cover artwork
 % (thesis/images/cover_front_bg.jpg, extracted from the filled
 % official template), with the variable text (year, specialty,
-% title, author, supervisors) overlaid at the exact positions
-% used in that template, and the real Capgemini Engineering
-% logo placed in its designated box.
+% title, author, supervisors) overlaid at the positions used in
+% that template, in the template's sans serif typeface, and the
+% Capgemini Engineering logo (vector) centred in its placeholder box.
 % ============================================================
 \begin{titlepage}
 \newgeometry{margin=0cm}
@@ -17,21 +17,23 @@
 \node[anchor=north west, inner sep=0pt] at (0,0) {\includegraphics[width=21cm,height=29.7cm]{cover_front_bg.jpg}};
 
 % ---- academic year ----
-\node[anchor=north west, font=\fontsize{26}{28}\selectfont\bfseries, text=espritred] at (6.96,4.6) {2025 - 2026};
+\node[anchor=north west, font=\fontfamily{phv}\fontsize{26}{28}\selectfont\bfseries, text=espritred] at (6.96,4.55) {2025 - 2026};
 
 % ---- specialty value (label "SPECIALTY :" is already in the background) ----
-\node[anchor=north west, font=\fontsize{15}{17}\selectfont\bfseries, text=black] at (10.46,11.5) {INFORMATION TECHNOLOGY};
+\node[anchor=north west, font=\fontfamily{phv}\fontsize{15}{17}\selectfont\bfseries, text=black] at (10.46,11.5) {INFORMATION TECHNOLOGY};
 
 % ---- project title ----
-\node[anchor=north west, font=\fontsize{15}{17}\selectfont\bfseries, text=black] at (4.47,12.95) {CANvisionNative};
+% centred on the axis of the template headings (GRADUATION PROJECT, banner, specialty): x = 12.4 cm
+\node[anchor=north, font=\fontfamily{phv}\fontsize{18}{20}\selectfont\bfseries, text=black] at (12.4,12.95) {CANvisionNative};
+\node[anchor=north, align=center, font=\fontfamily{phv}\fontsize{11}{13.5}\selectfont, text=black] at (12.4,13.9) {A diagnostic and validation platform for the CAN traffic\\of Battery Management Systems};
 
 % ---- author / supervisors ----
-\node[anchor=north west, font=\normalsize, text=black] at (6.60,16.2) {By: Mohamed Mootaz Ben Kraiem};
-\node[anchor=north west, font=\normalsize, text=black] at (6.60,18.1) {Academic supervisor: Nadia Boulifa};
-\node[anchor=north west, font=\normalsize, text=black] at (6.60,20.1) {Corporate Internship Supervisor: Hamda Guizani};
+\node[anchor=north west, font=\fontfamily{phv}\fontsize{12}{14}\selectfont, text=black] at (6.60,16.2) {\textbf{Prepared by:} Mohamed Mootaz Ben Kraiem};
+\node[anchor=north west, font=\fontfamily{phv}\fontsize{12}{14}\selectfont, text=black] at (6.60,18.1) {\textbf{Academic Supervisor:} Mrs Nadia Boulifa};
+\node[anchor=north west, font=\fontfamily{phv}\fontsize{12}{14}\selectfont, text=black] at (6.60,20.1) {\textbf{Corporate Supervisor:} Mr Hamda Guizani};
 
-% ---- company logo, in its designated placeholder box ----
-\node[anchor=north west, inner sep=0pt] at (10.59,23.9) {\includegraphics[width=5.66cm]{cover_capgemini_logo.jpg}};
+% ---- company logo, centred in the dotted placeholder box (x 9.83 to 17.01 cm, y 23.47 to 26.13 cm) ----
+\node[anchor=center, inner sep=0pt] at (13.42,24.80) {\includegraphics[width=6.0cm]{cover_capgemini_engineering.pdf}};
 
 \end{scope}
 \end{tikzpicture}

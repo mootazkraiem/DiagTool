@@ -3,128 +3,238 @@
 
 \section{Introduction}
 
-This chapter sets the general framework of the project. It presents the host organization, the context that led to the project, the problem it addresses, the objectives that guided the work, and the development methodology followed. It closes with a short summary that leads into the requirements analysis of Chapter~\ref{chap:requirements}.
+This chapter sets the frame of the project: the host company and team, the context of the work, the existing solutions, the problems the project addresses, the solution we propose, its objectives, and the development process we followed, the Unified Process.
 
 \section{Host organization}
 
 \subsection{Presentation}
 
-This project was carried out at \textbf{Capgemini Engineering}, a global technology and consulting company headquartered in France. Capgemini provides IT consulting, digital transformation, and engineering services to clients across several industries, including automotive and other transportation sectors, where it works on both software systems and embedded engineering projects. As a large, multi-industry technology group, Capgemini regularly hosts end-of-studies internship projects that combine academic engineering training with a concrete technical deliverable.
+This graduation project was carried out within a work and study program (alternance) at \textbf{Capgemini Engineering} (Figure~\ref{fig:capgemini-logo}), the engineering and research and development branch of the Capgemini group. The group, headquartered in France, provides consulting, digital transformation and engineering services to many industries. The automotive sector is one of them, where Capgemini works both on software systems and on embedded engineering.
 
-\subsection{Department and internship context}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.45\textwidth]{cover_capgemini_engineering.pdf}
+\caption{Logo of Capgemini Engineering.}
+\label{fig:capgemini-logo}
+\end{figure}
 
-The internship was carried out within Capgemini Tunisia's Automotive division, in the Battery Management Systems (BMS) team. This team works on embedded software and validation for battery management functions in electric and hybrid vehicles, which places it directly next to the kind of in-vehicle network traffic this project analyses. CANvisionNative is not itself a BMS deliverable, but its role as a \gls{can} diagnostic and validation platform grew directly out of that BMS validation background: the gaps it addresses, fragmented tooling, no real-time visibility, unexplained alerts, are the same gaps a BMS validation engineer runs into day to day, and the internship benefited from being carried out in a team already familiar with automotive \gls{ecu} communication, \gls{can} bus behaviour, and the general constraints of embedded automotive software.
+\subsection{Department and work context}
+
+The program takes place in the Automotive division of Capgemini Tunisia, within the Battery Management Systems (BMS) team, which develops and validates the embedded software of battery management functions for electric and hybrid vehicles. Since September 2024, it has combined a full time position in this team, five days a week from 9 am to 6 pm, as a quality assurance (QA) tester of battery management software for BMW Group, with classes at ESPRIT on Saturdays. A large part of this work consists in checking the messages that the \glspl{ecu} exchange on the \gls{can} bus: whether a cell voltage, a temperature or a state of charge is sent at the expected rate and with a plausible value.
+
+CANvisionNative is not one of the team's deliverables: it was built alongside this position, from February 2026. The idea came from the difficulties met in this daily validation work. Working inside a team that knows \gls{ecu} communication and automotive embedded software helped keep the project close to real needs.
 
 \section{Project context}
 
-The project sits in the broader context of automotive cybersecurity. Modern vehicles, and electric vehicles in particular, are built around internal networks of \gls{ecu}s that communicate over a \gls{can} bus. This bus was designed for reliability, not for security, and it has been repeatedly shown in the security literature to be vulnerable to message injection, flooding, and replay attacks (Chapter~\ref{chap:requirements} reviews this in more detail).
+An electric vehicle relies on its \gls{can} bus to let its \glspl{ecu} exchange data, and the Battery Management System is one of the busiest of them: it sends cell voltages, temperatures, currents and the state of charge many times per second. Validating a BMS therefore means reading a large amount of \gls{can} traffic and deciding, frame after frame, whether it behaves as expected.
 
-The project, \textbf{CANvisionNative}, is an intelligent, \gls{can}-based diagnostic and validation platform for Battery Management Systems. Diagnostics is the core objective. Real-time monitoring, log replay, and machine-learning-based anomaly detection are capabilities the platform combines around that core, not separate purposes competing with it. Concretely, it combines:
+The \gls{can} protocol was designed for reliability on a closed network. It gives no sender identity and no authentication, and the security literature has shown that it can be abused through message injection, flooding or replay~\cite{koscher2010experimental,lokman2019intrusion}. A validation toolchain that does not watch the bus cannot notice a malicious frame any more than a faulty one.
 
-\begin{itemize}
-    \item a Windows desktop client (\gls{wpf}, \gls{mvvm}) for visualization, replay control, and analyst interaction
-    \item a Python backend (FastAPI) that decodes \gls{can} frames, extracts features, scores anomalies, and generates natural-language explanations
-    \item a machine-learning layer trained on more than seven million \gls{can} frames across sixteen vehicle- and dataset-specific sources
-    \item support for three operating modes: replay of recorded logs, live simulation, and live hardware capture.
-\end{itemize}
+In this context, an engineer needs to work on recorded logs as well as on a live bus, to replay a session after a change, to see quickly which frames depart from the usual behaviour of the vehicle, and to understand why.
 
-The system was designed to be usable both as a forensic tool, importing a recorded log and reviewing detected anomalies after the fact, and, once hardware is connected, as a live monitoring tool.
+\section{Study of existing solutions}
+\label{sec:existing}
+
+The existing solutions fall into three categories. Figure~\ref{fig:existing-logos} shows the commercial and open source tools and the diagnostic standards discussed below.
+
+\begin{figure}[H]
+\centering
+\begin{tabular}{ccccc}
+\techlogo[0.62cm]{vector.pdf}{CANoe, CANalyzer} & \techlogo{savvycan.png}{SavvyCAN} & \techlogo{linux.pdf}{candump (can-utils)} & \techlogo[1cm]{sae.pdf}{SAE J1979 (\acrshort{obd})} & \techlogo[1cm]{iso.pdf}{ISO 14229 (\acrshort{uds})} \\
+\end{tabular}
+\caption[Existing tools and diagnostic standards.]{Existing tools and diagnostic standards: Vector CANoe and CANalyzer, SavvyCAN, candump from the Linux can-utils, and the SAE J1979 and ISO 14229 standards used by diagnostic scanners.}
+\label{fig:existing-logos}
+\end{figure}
+
+\subsection{CAN analysers}
+
+Commercial tools such as Vector CANoe~\cite{vector_canoe} and CANalyzer are the professional standard for observing \gls{can} traffic: they capture raw frames, decode them with a \gls{dbc} file and replay a recorded log. They show what is on the bus, but not whether a frame is normal for this vehicle, unless custom scripts are written on top of the product.
+
+\subsection{Intrusion detection research}
+
+Research on \gls{can} intrusion detection~\cite{lokman2019intrusion} follows three families. \textbf{Signature based detection} compares the traffic with known attack patterns and cannot recognise a new one. \textbf{Specification based detection} writes the expected behaviour by hand for every vehicle. \textbf{Anomaly based detection} learns normal traffic, for example from the timing of the messages~\cite{song2016intrusion,cho2016fingerprinting} or from its entropy~\cite{muter2011entropy}, and flags what deviates from it. These detectors usually rely on one signal, aim at attacks rather than at explaining the bus, and are evaluated on public benchmarks~\cite{seo2018gids,verma2020road}.
+
+\subsection{Viewers and diagnostic scanners}
+
+Open source utilities such as candump~\cite{canutils} and SavvyCAN~\cite{savvycan} display raw frames, with little control over replay and no notion of what is abnormal. Diagnostic scanners based on \gls{obd}, defined in SAE~J1979~\cite{sae_j1979}, or on \gls{uds}, defined in ISO~14229~\cite{iso14229}, ask specific \glspl{ecu} for known parameters, so they only see what they ask for.
+
+\subsection{Synthesis}
+
+Table~\ref{tab:existing-comparison} summarises these categories.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Existing solutions and their limits for BMS validation work.}
+\label{tab:existing-comparison}
+\begin{tabularx}{\textwidth}{|P{2.9cm}|P{2.9cm}|Y|Y|}
+\hline
+\textbf{Solution or category} & \textbf{Main purpose} & \textbf{Strengths} & \textbf{Limitations relevant to this project} \\
+\hline
+\gls{can} analysers (Vector CANoe, CANalyzer) & Observe, decode and replay \gls{can} traffic & Professional standard; capture, \gls{dbc} decoding and replay through a rich, configurable interface & No judgement on whether a frame is normal for the vehicle without custom scripts \\
+\hline
+Intrusion detection research & Detect attacks on the \gls{can} bus & Signature based: precise on known attacks; specification based: needs no attack data; anomaly based: learns normal traffic, widely applicable & Usually one signal or one set of rules; aims at attacks rather than at explaining the bus; a model trained on one vehicle rarely transfers; no explanation of an alert \\
+\hline
+Open source viewers (candump, SavvyCAN) & Display and log raw frames & Lightweight and open source & Little control over replay; no notion of what is abnormal \\
+\hline
+Diagnostic scanners (\gls{obd}, \gls{uds}) & Request known parameters, such as fault codes, from specific \glspl{ecu} & Standard request and response protocols & Only see what they ask for; do not monitor the bus as a whole \\
+\hline
+\end{tabularx}
+\end{table}
+
+Three limits come back. A detector built on a single signal misses a problem that does not disturb that signal. A model trained on one vehicle rarely transfers to another, because message layouts, sending rates and value ranges differ, and choosing the right model is often treated as a detail. And no tool turns an anomaly score into an explanation an engineer can act on within one workflow.
 
 \section{Problem statement}
 
-Four problems, all rooted in day-to-day BMS validation work, motivated this project.
+Four problems of day to day BMS validation work motivated the project:
 
-\textbf{No real-time monitoring.} A BMS validation engineer working with a recorded log has no running commentary on what the traffic is actually doing. Reading raw frames tells you what happened, not whether it was normal, and by the time an engineer notices something odd in a spreadsheet or a log viewer, the context that would explain it is already gone.
+\begin{enumerate}
+    \item \textbf{No live view of the traffic:} Reading raw frames says what happened, not whether it should have happened. By the time something odd is noticed in a spreadsheet or a log viewer, the context that would explain it is often lost.
+    \item \textbf{Weak replay:} Replaying a session is central to validation, but the usual tools either replay frames without judging them or accept only a few log formats, so engineers convert files by hand or change tools in the middle of an investigation.
+    \item \textbf{Scattered tools:} No single tool available to the team combines decoding, replay, live capture and anomaly detection. An engineer combines a \gls{can} analyser, a diagnostic scanner, and a spreadsheet for comparisons across sessions.
+    \item \textbf{Alerts without explanation:} When a tool flags something, it is usually a bare number that does not say which pattern caused it or what to check next.
+\end{enumerate}
 
-\textbf{Weak replay systems.} Replaying a recorded session is central to BMS validation, but the common tools either replay frames without judging them (Chapter~\ref{chap:requirements} reviews this) or only support a narrow set of log formats. An engineer routinely ends up converting formats by hand or switching tools mid-investigation, which slows down exactly the kind of repeated, comparative testing BMS validation depends on.
+The lack of security of the \gls{can} protocol (ISO~11898~\cite{iso11898}) makes these problems worse. Security is therefore a real but secondary motivation: the first goal is one clear and explainable view of the bus. The question this project answers is therefore: how can we give a BMS engineer one view of the \gls{can} traffic, adapted to each vehicle, that explains its own alerts, and show that it works on real recordings?
 
-\textbf{Fragmented tools.} No single tool available to the team combines decoding, replay, live capture, and anomaly awareness. An engineer typically pieces together a CAN analyzer for raw traffic, a diagnostic scanner for known parameters, and a spreadsheet or notebook for anything that needs comparing across sessions.
+\section{Proposed solution}
+\label{sec:proposed-solution}
 
-\textbf{Limited explainability.} Where a tool does flag something unusual, it is almost always a bare number. A severity score or a raw statistic does not tell an engineer what pattern triggered it or what to check next, so interpreting an alert still falls entirely on the engineer's own experience.
+We propose \textbf{CANvisionNative}, a diagnostic and validation platform for the \gls{can} traffic of Battery Management Systems. Diagnostics is its main purpose; live monitoring, log replay and anomaly detection are the means to serve it. It is made of four parts:
 
-The \gls{can} bus's lack of built-in security (ISO~11898~\cite{iso11898}, no sender identity, no signature) compounds all four problems, since a fragmented, non-monitoring toolchain also has no way to notice a malicious frame, not only a faulty one. Security is therefore a real motivation for this project, but a secondary one: the primary driver is that BMS engineers need a single, explainable, always-on diagnostic view of the bus, and a system built to provide that view naturally strengthens security awareness as a side effect.
+\begin{itemize}
+    \item A Windows desktop client (\gls{wpf}, \gls{mvvm}) where the analyst imports a log, replays it and reviews the results.
+    \item A Python backend (FastAPI) that reads recordings in several formats, decodes the frames when a \gls{dbc} file exists, scores each frame and explains the flagged ones in plain language.
+    \item Machine learning models trained separately for each vehicle.
+    \item Three traffic sources: recorded logs, a live simulator, and live capture from a \gls{can} adapter.
+\end{itemize}
 
-Beyond building the system, this project also required a rigorous validation phase, since a diagnostic platform that produces incorrect or misleading alerts is not trustworthy. This is documented in full in Chapter~\ref{chap:validation}, which describes six confirmed software defects that were found through evidence-based testing on a real one-hour vehicle recording, and their correction.
+CANvisionNative does not compete with detection research; it gathers in one diagnostic workflow what the tools of Section~\ref{sec:existing} offer separately: replay of several log formats, monitoring, anomaly detection per vehicle, and explanations in plain language. The model used for a vehicle is chosen explicitly and its status is shown before use. The platform can be used after the fact, on a recorded log, or as a live monitor when an adapter is connected.
 
 \section{Objectives}
 
 \subsection{General objective}
 
-The general objective of this project is to design, implement, and rigorously validate a diagnostic and validation platform for Battery Management Systems that gives an engineer continuous, unified visibility into \gls{can} traffic, adapts to the specific vehicle being analysed, and explains its own alerts in plain language. This objective covers the software platform only: the general objective, and every specific objective below, was scoped and validated as software running on recorded and simulated traffic, with live hardware capture designed and implemented but not experimentally validated, for the reasons given in Chapter~\ref{chap:requirements}'s risk analysis and Chapter~\ref{chap:validation}'s limitations.
+The general objective is to design, build and validate a diagnostic platform for Battery Management Systems that gives an engineer a unified view of the \gls{can} traffic, adapts to the vehicle being analysed, and explains its own alerts.
 
 \subsection{Specific objectives}
 
+The specific objectives are:
+
 \begin{enumerate}
-    \item Design and implement a multi-layer \gls{can} anomaly-detection pipeline combining timing, payload, machine-learning, and temporal-persistence signals into a single fusion score.
-    \item Support multiple input sources: recorded logs (\gls{csv}, \gls{mf4}, candump, Vector \gls{can}) and a live attack simulator, both fully validated in software, plus a live hardware capture path (ELM327 or SocketCAN) that was implemented and code-complete but not validated against a physical vehicle within this project.
-    \item Train and integrate vehicle-specific machine-learning models so that detection adapts to the vehicle being analysed instead of relying on one generic model.
-    \item Build a desktop client that lets an analyst import a log, replay it, review detected anomalies, and export a report.
-    \item Add a natural-language explanation layer that describes each anomaly and recommends an action, using a combination of rule-based reasoning and a Large Language Model.
-    \item Validate the complete software pipeline against a real vehicle recording, using measurable, reproducible evidence, and correct any defect found before considering the system ready.
+    \item Build a detection pipeline that combines a machine learning model with timing, payload and persistence checks.
+    \item Accept the common recording formats (\gls{csv}, \gls{mf4}, candump, Vector and PCAN logs), a live simulator and live capture through python-can.
+    \item Train a separate model for each vehicle, and put into production only the models evaluated on a recording kept out of their training.
+    \item Build a desktop client to import a log, replay it, review the anomalies and export a report.
+    \item Add an explanation layer, separate from detection, using rules and a \gls{llm}.
+    \item Validate the pipeline on real recordings with reproducible evidence, and correct every defect found.
 \end{enumerate}
 
 \section{Development methodology}
 \label{sec:methodology}
 
-\subsection{Waterfall, Agile, and Scrum}
+\subsection{Comparison: Waterfall, Scrum and the Unified Process}
 
-Table~\ref{tab:methodology-comparison} compares the three methodological approaches usually considered for a project of this size, before explaining which one guided this project and why.
+Before organising the work, we compared three processes usually considered for a project of this size: the Waterfall model~\cite{royce1970managing}, Scrum~\cite{schwaber2020scrum}, and the \gls{up}~\cite{jacobson1999unified}, with its variant \gls{ttup}~\cite{roques2007uml}, which separates a functional branch and a technical branch before joining them in the design.
+
+We chose the \gls{up}. Two main uncertainties of the project could not be estimated at the start: how well a model trained for one vehicle would perform, and how many defects a careful validation would uncover. A Waterfall plan would have frozen the detection design and the validation scope before either was known. Scrum assumes a team with separate roles and regular ceremonies, which one developer cannot reproduce. The \gls{up} keeps what fits a project of one person: iterations that each deliver a working increment, use cases that drive the work, an architecture tested early, and a list of risks that decides the order of the work.
+
+Table~\ref{tab:methodology-comparison} compares the three processes on the criteria that mattered for this project.
 
 \begin{table}[H]
 \centering
-\caption{Comparison of Waterfall, Agile, and Scrum.}
+\small
+\caption{Comparison of Waterfall, Scrum and the Unified Process.}
 \label{tab:methodology-comparison}
-\begin{tabular}{|p{2.6cm}|p{5.4cm}|p{5.4cm}|}
+\begin{tabularx}{\textwidth}{|P{2.7cm}|Y|Y|Y|}
 \hline
-\textbf{Approach} & \textbf{Advantages} & \textbf{Disadvantages} \\
+\textbf{Criterion} & \textbf{Waterfall} & \textbf{Scrum} & \textbf{Unified Process (2TUP)} \\
 \hline
-Waterfall & Clear, predictable phases, easy to plan and document up front, well suited to fixed, well-understood requirements. & Requirements are frozen too early for an exploratory project. A defect found late (for example during validation) is expensive to trace back to an earlier phase, and it is a poor fit when the exact scope of the machine-learning layer or the validation effort cannot be fully specified in advance. \\
+Organisation & Sequential phases, each finished before the next & Short sprints with a prioritised backlog & Four phases, each made of iterations \\
 \hline
-Agile (general) & Iterative delivery of working software. Requirements and design can evolve as understanding improves, and feedback is incorporated continuously instead of only at the end. & Requires discipline to avoid scope drift. Without a team, several Agile ceremonies (stand-ups, planning poker) lose most of their value. \\
+Requirements & Frozen at the start & Change freely from sprint to sprint & Captured as use cases, refined at each iteration \\
 \hline
-Scrum & Structures Agile delivery around a prioritized backlog and short, incremental delivery cycles, each producing a working increment that can be reviewed and built upon. Makes it natural to reprioritize (for example, to insert a dedicated correction phase) once real evidence changes what matters most. & Formal Scrum assumes a cross-functional team with distinct roles (Product Owner, Scrum Master, development team) and regular ceremonies. A single-developer project cannot reproduce these roles literally and has to adapt the framework rather than apply it as written. \\
+Architecture & Designed once, early & Emerges from the increments & Central: an executable architecture is built and tested early \\
 \hline
-\end{tabular}
+Risks & Found late, at integration or test & Handled implicitly, sprint by sprint & Listed at the start; the riskiest parts are done first \\
+\hline
+Documentation and models & Heavy, produced at each phase & Light & UML models as the main artefacts \\
+\hline
+Team needed & Any & A team with separate roles and regular ceremonies & Scales from one developer to a team \\
+\hline
+Fit for this project & Poor: the model quality and the number of defects were unknown & Partial: one developer cannot run the ceremonies & Good: iterative, driven by use cases and risks, centred on the architecture \\
+\hline
+\end{tabularx}
 \end{table}
 
-\subsection{Why Scrum was chosen for this project}
+\subsection{Principles and phases of the Unified Process}
 
-Scrum was chosen, in an adapted form, over a strict Waterfall plan because the project's two main sources of uncertainty, how well a vehicle-specific machine-learning model would actually perform, and how many real defects a rigorous validation pass would uncover, could not be estimated accurately before the work started. A Waterfall plan would have required freezing the detection design and the validation scope before either was known with any confidence. An incremental approach, where each milestone produced a working, testable piece of the system before the next one was scoped in detail, matched the way the project's own uncertainty was actually resolved: one milestone at a time, backed by evidence rather than by an up-front estimate.
+The \gls{up}~\cite{jacobson1999unified,kruchten2003rup} rests on four principles:
 
-It should be stated plainly that this was a single-person project, not a Scrum team. There was no Scrum Master, no separate Product Owner, and no fixed-length sprint calendar with daily stand-up meetings in the literal Scrum sense. What was kept from Scrum was its underlying discipline: a prioritized backlog, incremental delivery of working functionality, a review step before moving on, and a clear definition of done. Figure~\ref{fig:scrum-cycle} shows the standard Scrum cycle used here as a reference model. The rest of this section explains, phase by phase, how that discipline was actually applied on this project, without claiming that every ceremony in the diagram was run in its formal, textbook form.
+\begin{itemize}
+    \item \textbf{Driven by the use cases:} The use cases capture what the users need, and every iteration implements and tests some of them.
+    \item \textbf{Centred on the architecture:} An executable architecture is built early and the rest of the system grows on it.
+    \item \textbf{Iterative and incremental:} The work is cut into iterations, each one delivering a tested increment.
+    \item \textbf{Driven by the risks:} The main risks are listed at the start, and the iterations are ordered so that the riskiest parts are tackled first.
+\end{itemize}
 
-\begin{figure}[H]
+The life of a project is divided into four phases, each closed by a milestone. \textbf{Inception} defines the vision, the scope, the main use cases and the risks. \textbf{Elaboration} analyses the requirements and builds the architecture baseline. \textbf{Construction} builds the system in iterations. \textbf{Transition} delivers the system to its users: final tests, deployment and documentation. In every phase, the work spans the same disciplines, in varying proportions: requirements, analysis and design, implementation, test and deployment.
+
+\subsection{The Unified Process applied to CANvisionNative}
+
+Table~\ref{tab:up-phases} and Figure~\ref{fig:project-timeline} show how the project followed these phases. The roadmap of the project listed eight milestones, M1 to M8: the live foundation, the hardware layer, the training of the vehicle models, the explanation engine, the real time charts, session recording, integration, and the decoding pipeline. The live foundation, M1, built the executable architecture of the elaboration phase. The construction phase was made of four iterations: the first delivered milestones M3 to M8; the second validated this first pipeline on a real recording and corrected its defects; the third delivered milestone M2, the hardware layer; and the fourth rebuilt the models and evaluated them on recordings they had never seen.
+
+\begin{table}[H]
 \centering
-\includegraphics[width=0.6\textwidth]{scrum_workflow.png}
-\caption{Reference Scrum cycle used as the framework for this project's iterative process.}
-\label{fig:scrum-cycle}
-\end{figure}
-
-\subsection{How the real process reflected Scrum concepts}
-
-\textbf{Product backlog.} The project's internal roadmap served as a living backlog, listing milestones M1 through M8 (live foundation, hardware layer, multi-state \gls{ml} training, \gls{ai} explanation engine, real-time graphs, session recording, integration, offline/live decode pipeline) in priority order, reordered as earlier milestones revealed what the later ones actually needed.
-
-\textbf{Incremental development.} Each milestone was scoped to deliver a working, demonstrable increment of the system. For example, M1 delivered a functioning live pipeline before any machine-learning model existed, and M4 added the \gls{ai} explanation layer only once the detection pipeline it explains was already producing alerts. This mirrors the Scrum principle of shippable increments more closely than a single end-to-end build attempted in one pass.
-
-\textbf{Engineering correction phase as a stabilization iteration.} Once the milestone-based increments were functionally complete, the project entered a dedicated, evidence-based correction phase (Chapter~\ref{chap:validation}), comparable to a Scrum stabilization or hardening iteration: no new features were added, and the entire effort was redirected to finding and fixing defects, with each fix re-verified before moving to the next.
-
-\textbf{Validation iterations as reviews.} Where a Scrum team would hold a sprint review with stakeholders, this project substituted a stricter, evidence-based review: every claim about the system's behaviour had to be demonstrated on real data before it was accepted, and every fix was checked against reproducible evidence rather than presented for a subjective sign-off (Table~\ref{tab:qa-timeline} in Chapter~\ref{chap:validation}).
-
-\textbf{Repository freeze and Release Candidate.} Once the correction phase closed with all identified defects fixed and re-verified end to end, the repository was frozen for engineering changes, and the resulting state was treated as a Release Candidate, the practical equivalent of a Scrum definition of done applied to the whole project rather than to a single sprint.
-
-Figure~\ref{fig:project-timeline} places all of this on a single timeline: the milestone-based increments (M1, M3, M4, M5, M6, then M8/M7 together, then the code-complete M2, blocked on a compatible electric vehicle rather than on the hardware adapter itself), followed by the dedicated engineering correction phase, the validation re-run, and the resulting Release Candidate.
+\small
+\caption{Phases of the Unified Process in the project.}
+\label{tab:up-phases}
+\begin{tabularx}{\textwidth}{|P{2.6cm}|P{2.1cm}|Y|P{2.2cm}|}
+\hline
+\textbf{Phase} & \textbf{Period (2026)} & \textbf{Content and deliverables} & \textbf{Presented in} \\
+\hline
+Inception & February & Problem, existing tools, vision, use cases, initial risks and plan & Chapters~\ref{chap:framework} and~\ref{chap:inception} \\
+\hline
+Elaboration & February to March & Analysis and design models; executable architecture: client and backend, one runtime engine for replay, simulation and live capture (M1) & Chapter~\ref{chap:elaboration} \\
+\hline
+Construction, iteration 1 & March to June & First detection pipeline and client: M3 to M8 & Section~\ref{sec:it1} \\
+\hline
+Construction, iteration 2 & June to July & Validation and correction of six defects on a Kia EV6 recording & Section~\ref{sec:it2} \\
+\hline
+Construction, iteration 3 & August to September & Hardware layer and bench rig (M2) & Section~\ref{sec:it3} \\
+\hline
+Construction, iteration 4 & September & Model rebuild and evaluation on recordings kept out of training & Section~\ref{sec:it4} \\
+\hline
+Transition & September to October & Final release, tests, deployment guide and report & Chapter~\ref{chap:transition} \\
+\hline
+\end{tabularx}
+\end{table}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{project_timeline.png}
-\caption{Project timeline: milestone-based increments through to the Release Candidate.}
+\caption{Phases and iterations of the Unified Process in the project.}
 \label{fig:project-timeline}
 \end{figure}
 
-\subsection{Conclusion}
+Two rules applied to every iteration. A claim about the system was accepted only once shown on real data, and a defect was considered fixed only once the same test, run again, gave the expected result. As the only developer, we did not reproduce the roles of a team; each iteration ended with a review of its increment against its use cases before the next one started.
 
-Framed this way, the project followed an incremental, evidence-driven process consistent with Scrum's core principles, adapted honestly to the reality of a single-developer internship rather than dressed up with ceremonies that were never actually run.
+\subsection{Modelling language and tools}
+
+The models of this report follow the \gls{uml}~\cite{omg2017uml}. The following diagrams are used:
+
+\begin{itemize}
+    \item \textbf{Use case diagram:} It shows the actors of the system and the services the system offers them.
+    \item \textbf{Activity diagram:} It shows the flow of actions of a use case, with its decisions, divided between the actors and the system.
+    \item \textbf{Class diagram:} It shows the classes of the software, with their attributes, their operations and the relations between them. The domain model, a class diagram of the concepts of the problem without software details, and the data model, which describes the tables of the database, are drawn in the same notation.
+    \item \textbf{Component diagram:} It shows the parts of the system and the interfaces through which they depend on each other.
+    \item \textbf{Deployment diagram:} It shows the machines and the processes on which the components run, and how they communicate.
+    \item \textbf{Sequence diagram:} It shows, for one scenario, the numbered messages exchanged over time between an actor and the boundary, control and entity objects of the system.
+    \item \textbf{State diagram:} It shows the states an object goes through and the events that move it from one state to another.
+\end{itemize}
+
+The diagrams were drawn with draw.io from a script that keeps every diagram in a file that can be edited. The source code was versioned with Git and GitHub, and the report was typeset with \LaTeX.
 
 \section{Conclusion}
 
-This chapter presented the host organization, the context and motivation behind CANvisionNative, the problems it addresses, the objectives set at the start of the project, and the development methodology followed. The next chapter turns this context into a concrete requirements analysis.
+This chapter presented the host company, the context of the project, the existing solutions and their limits, the problem and the solution we propose, its objectives, and the Unified Process that organised the work. The next chapter presents the inception phase: the capture of the requirements.

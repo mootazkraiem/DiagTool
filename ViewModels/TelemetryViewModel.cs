@@ -27,10 +27,25 @@ public sealed class TelemetryViewModel : SectionViewModel
     private readonly List<double> socHistory = new();
     private readonly Dictionary<string, List<double>> signalValueHistory = new(StringComparer.OrdinalIgnoreCase);
 
-    public TelemetryViewModel(VehicleDataService vehicleDataService, CanLogImportService canLogImportService)
+    private readonly PythonApiClient? pythonApiClient;
+    private readonly ModelSelectionService? modelSelection;
+    private int discoveryGeneration;
+    private SignalDiscoveryResponse? discovery;
+    // Every DBC-decoded channel of the loaded capture (the cards show the first four).
+    private IReadOnlyList<DiscoveredChannel> decodedChannels = Array.Empty<DiscoveredChannel>();
+    private const int CardChannels = 4;
+    private const int MonitorChannels = 16;
+
+    public TelemetryViewModel(VehicleDataService vehicleDataService, CanLogImportService canLogImportService,
+                              PythonApiClient? pythonApiClient = null, ModelSelectionService? modelSelection = null)
         : base(vehicleDataService, SectionKey.Telemetry)
     {
         this.canLogImportService = canLogImportService;
+        this.pythonApiClient = pythonApiClient;
+        this.modelSelection = modelSelection;
+        DiscoveredChannels = new ObservableCollection<DiscoveredChannelItem>();
+        if (modelSelection is not null)
+            modelSelection.SelectionChanged += _ => { var pending = DiscoverSignalsAsync(); };
         latestSignals = VehicleDataService.CurrentSignals;
         SignalRows = new ObservableCollection<SignalItem>();
         ActiveSignals = new ObservableCollection<SignalLegendItem>();
@@ -78,14 +93,59 @@ public sealed class TelemetryViewModel : SectionViewModel
 
     public bool IsStreamFrozen => !VehicleDataService.IsRunning;
     public string StreamStateText => IsStreamFrozen ? "STREAM PAUSED" : "STREAM ACTIVE";
-    public string ConnectionStateText => string.Equals(Snapshot.Source, "python-api", StringComparison.OrdinalIgnoreCase) ? "CONNECTED" : "LOCAL FALLBACK";
-    public string LiveStateText => ConnectionStateText == "CONNECTED" ? "LIVE" : "OFFLINE";
+    public string ConnectionStateText => string.Equals(Snapshot.Source, "python-api", StringComparison.OrdinalIgnoreCase) ? "CONNECTED"
+        : ShowsCapture ? "CAPTURE" : "LOCAL FALLBACK";
+    public string LiveStateText => ConnectionStateText == "CONNECTED" ? "LIVE"
+        : string.Equals(Snapshot.Source, "log-playback", StringComparison.OrdinalIgnoreCase) || VehicleDataService.TotalReplayFrames > 0
+            ? "CAPTURE" : "OFFLINE";
     public string PacketsPerSecondText => $"{VehicleDataService.RuntimeFps:F1}";
     public string LastEventTimestamp => Snapshot.UpdatedAt.ToLocalTime().ToString("HH:mm:ss");
     public string ReplayStatusText => VehicleDataService.ReplayProgressPercent >= 100 ? "COMPLETE" : VehicleDataService.ReplayProgressPercent > 0 ? "RUNNING" : "IDLE";
     public string RuntimeStateText => $"{ConnectionStateText} / {ReplayStatusText}";
-    public string DetectionConfidenceText => $"{VehicleDataService.DetectionConfidence:F1}%";
+    public string DetectionConfidenceText => VehicleDataService.DetectionConfidence > 0 ? $"{VehicleDataService.DetectionConfidence:F1}%" : "--";
     public string ActiveModelName => ModelText;
+    // ── Signal channels found in the loaded capture (POST /api/signals/discover) ──
+    // With a DBC for the selected vehicle these are decoded signals; without one they
+    // are raw payload bytes, labelled as undecoded. Live mode keeps the fixed tiles.
+    public ObservableCollection<DiscoveredChannelItem> DiscoveredChannels { get; }
+    public bool HasDiscoveredChannels => DiscoveredChannels.Count > 0;
+    public bool ShowFixedChannels => !HasDiscoveredChannels;
+    public string SignalSourceText => discovery is null ? "SPEED · SOC · TEMP · VOLTAGE"
+        : discovery.Decoder == "dbc" ? $"DECODED · {discovery.Profile.ToUpperInvariant()} DBC"
+        : discovery.DbcAvailable ? $"RAW BYTES · {discovery.Profile.ToUpperInvariant()} DBC DECODES NO VARYING SIGNAL"
+        : $"RAW BYTES · NO DBC FOR {(string.IsNullOrWhiteSpace(discovery.ModelId) ? "GENERAL" : discovery.ModelId.ToUpperInvariant())}";
+    public string SignalWindowText => discovery is null ? "LAST 80 SAMPLES" : "80 SAMPLES ACROSS CAPTURE";
+    public string SignalSourceToolTip => discovery?.Reason ?? "Live values decoded by the backend.";
+
+    private async Task DiscoverSignalsAsync()
+    {
+        var generation = ++discoveryGeneration;
+        var path = VehicleDataService.ReplaySourcePath;
+        SignalDiscoveryResponse? result = null;
+        if (pythonApiClient is not null && !string.IsNullOrWhiteSpace(path) && VehicleDataService.TotalReplayFrames > 0)
+        {
+            var model = modelSelection?.SelectedModelId ?? string.Empty;
+            if (string.Equals(model, ModelSelectionService.GeneralId, StringComparison.OrdinalIgnoreCase)) model = string.Empty;
+            result = await pythonApiClient.DiscoverSignalsAsync(path!, model, MonitorChannels, System.Threading.CancellationToken.None);
+        }
+        if (generation != discoveryGeneration) return;      // a newer capture or model superseded this one
+
+        discovery = result;
+        DiscoveredChannels.Clear();
+        decodedChannels = result?.Channels.Where(c => c.Decoded).ToList() ?? (IReadOnlyList<DiscoveredChannel>)Array.Empty<DiscoveredChannel>();
+        if (result is not null)
+        {
+            for (var i = 0; i < Math.Min(CardChannels, result.Channels.Count); i++)
+                DiscoveredChannels.Add(new DiscoveredChannelItem(result.Channels[i], i));
+        }
+        RefreshSignalRows();
+        OnPropertyChanged(nameof(HasDiscoveredChannels));
+        OnPropertyChanged(nameof(ShowFixedChannels));
+        OnPropertyChanged(nameof(SignalSourceText));
+        OnPropertyChanged(nameof(SignalWindowText));
+        OnPropertyChanged(nameof(SignalSourceToolTip));
+    }
+
     public string ReplayNameText => string.IsNullOrWhiteSpace(VehicleDataService.ReplayName) || VehicleDataService.ReplayName == "NO REPLAY" ? "No Replay" : VehicleDataService.ReplayName;
     public bool HasReplayLoaded => VehicleDataService.TotalReplayFrames > 0;
 
@@ -104,8 +164,8 @@ public sealed class TelemetryViewModel : SectionViewModel
     public string Trace2Text => $"ALERT DENSITY {AlertDensityText}";
     public string RuntimeReplayProgressText => $"{VehicleDataService.ReplayProgressPercent:F1}%";
     public string RuntimeReplayFramesText => $"{VehicleDataService.ProcessedReplayFrames}/{Math.Max(1, VehicleDataService.TotalReplayFrames)}";
-    public string PacketRateText => $"{Math.Max(0, Snapshot.Frequency):F1} Hz";
-    public string SampleRateText => $"{Math.Max(0, Snapshot.Frequency):F1} Hz";
+    public string PacketRateText => Snapshot.Frequency > 0 ? $"{Snapshot.Frequency:F1} Hz" : "--";
+    public string SampleRateText => Snapshot.Frequency > 0 ? $"{Snapshot.Frequency:F1} Hz" : "--";
     public string LatencyText => $"{Math.Max(0, VehicleDataService.RuntimeLatencyMs):F1} ms";
     public string ReplayFpsText => $"{Math.Max(0, VehicleDataService.RuntimeFps):F1}";
     public string DroppedFramesText => VehicleDataService.LoadedReplayPackets is { Count: > 0 } ? "0 (0.0%)" : "--";
@@ -158,7 +218,9 @@ public sealed class TelemetryViewModel : SectionViewModel
     public string CurrentTelemetryStateText => HasOperationalSignal(Snapshot.PeakAmperage) ? "Pack Current" : "Awaiting Stream";
     public string MotorTempTelemetryStateText => HasOperationalSignal(Snapshot.MotorTemp) ? TemperatureBand : "Awaiting Stream";
     public string BatteryTelemetryStateText => HasOperationalSignal(Snapshot.SOC) ? BatteryReserveText : "Waiting";
-    public string PacketsPerSecondTelemetryStateText => VehicleDataService.RuntimeFps > 0 ? "Live Bus Rate" : "Offline";
+    // RuntimeFps is the app's processing rate (frames analysed or polled per second),
+    // not the rate the bus carried; for a recording the two differ several-fold.
+    public string PacketsPerSecondTelemetryStateText => VehicleDataService.RuntimeFps > 0 ? "Processing Rate" : "Offline";
     public string ReplayProgressTelemetryStateText => VehicleDataService.TotalReplayFrames > 0 ? RuntimeReplayFramesText : "No Replay";
     public string PacketLossTelemetryStateText => PacketLossText == "---" ? "No Data" : "Loss Monitor";
     public string SpeedTelemetryText => SpeedTelemetryValueText;
@@ -203,6 +265,11 @@ public sealed class TelemetryViewModel : SectionViewModel
     {
         get
         {
+            // A capture that finished playing is not a degraded stream: its state is the
+            // result of its analysis.
+            if (ShowsCapture)
+                return VehicleDataService.CriticalAlerts > 0 ? "CRITICAL"
+                     : VehicleDataService.TotalAlerts > 0 ? "THREAT DETECTED" : "MONITORING";
             if (IsStreamFrozen) return "TELEMETRY DEGRADED";
             if (IsCalibrating)  return "BASELINING";
             var score = VehicleDataService.CurrentAnomalyScore; // 0.0–1.5 scale
@@ -247,7 +314,8 @@ public sealed class TelemetryViewModel : SectionViewModel
         }
     }
 
-    public string CanTrafficVolumeText => latestSignals.Count > 0 ? $"{latestSignals.Count} signals" : "No decoded signals";
+    public string CanTrafficVolumeText => latestSignals.Count > 0 ? $"{latestSignals.Count} signals"
+        : SignalRows.Count > 0 ? $"{SignalRows.Count} signals · capture DBC" : "No decoded signals";
     public string CurrentRiskScoreText => $"{VehicleDataService.CurrentAnomalyScore:F2}";
     public string SuspiciousCanIdsText
     {
@@ -263,37 +331,80 @@ public sealed class TelemetryViewModel : SectionViewModel
         }
     }
 
+    /// <summary>
+    /// Brings the live signal monitor up to date.
+    ///
+    /// Rows are matched to signals by CAN id and name and updated where they
+    /// stand; only a signal appearing or disappearing changes the collection
+    /// itself. Rebuilding the whole list on each refresh - twice a second while
+    /// a session runs - made the table flash and blank between ticks.
+    /// </summary>
     private void RefreshSignalRows()
     {
-        SignalRows.Clear();
-        ActiveSignals.Clear();
-        var displaySignals = latestSignals; // Only real decoded signals — no fabricated fallback
+        // Live decoded signals first; an offline capture sends no frames to the live stream,
+        // so its DBC-decoded values come from the capture itself, at the replay position.
+        var displaySignals = latestSignals.Count > 0 ? latestSignals : CaptureDecodedSignals();
 
-        if (displaySignals.Count > 0)
+        if (displaySignals.Count == 0)
         {
-            foreach (var signal in displaySignals.OrderBy(s => s.CanId).ThenBy(s => s.Name))
+            if (SignalRows.Count > 0) SignalRows.Clear();
+            if (ActiveSignals.Count > 0) ActiveSignals.Clear();
+            OnPropertyChanged(nameof(CanTrafficVolumeText));
+            return;
+        }
+
+        var ordered = displaySignals.OrderBy(s => s.CanId).ThenBy(s => s.Name).ToList();
+
+        // Drop rows whose signal is no longer in the stream.
+        var live = new HashSet<string>(ordered.Select(s => $"0x{s.CanId:X3}|{s.Name.ToUpperInvariant()}"));
+        for (var i = SignalRows.Count - 1; i >= 0; i--)
+            if (!live.Contains($"{SignalRows[i].CanId}|{SignalRows[i].Name}"))
+                SignalRows.RemoveAt(i);
+
+        var byKey = SignalRows.ToDictionary(r => $"{r.CanId}|{r.Name}");
+
+        for (var i = 0; i < ordered.Count; i++)
+        {
+            var signal = ordered[i];
+            var canId = $"0x{signal.CanId:X3}";
+            var name = signal.Name.ToUpperInvariant();
+            var trend = BuildTrendPoints(GetSignalHistory(signal), 72, 18);
+
+            if (byKey.TryGetValue($"{canId}|{name}", out var row))
             {
-                SignalRows.Add(new SignalItem(
-                    $"0x{signal.CanId:X3}",
-                    signal.Name.ToUpperInvariant(),
+                row.Update(
                     $"{signal.Value:F2}",
-                    signal.Unit,
                     BuildSignalStatus(signal),
                     Snapshot.Frequency,
                     Snapshot.TimeDiff,
-                    BuildTrendPoints(GetSignalHistory(signal), 72, 18),
-                    BuildSignalStatusBrush(signal),
-                    BuildCanIdBrush(signal.CanId)));
+                    trend,
+                    BuildSignalStatusBrush(signal));
+
+                // Keep the rows in the same order as the signals.
+                var at = SignalRows.IndexOf(row);
+                if (at != i) SignalRows.Move(at, i);
+                continue;
             }
 
-            foreach (var signal in displaySignals
-                         .OrderByDescending(item => Math.Abs(item.Value))
-                         .Take(5))
-            {
-                ActiveSignals.Add(new SignalLegendItem(signal.Name.ToUpperInvariant(), "#00FFFF"));
-            }
+            SignalRows.Insert(i, new SignalItem(
+                canId,
+                name,
+                $"{signal.Value:F2}",
+                signal.Unit,
+                BuildSignalStatus(signal),
+                Snapshot.Frequency,
+                Snapshot.TimeDiff,
+                trend,
+                BuildSignalStatusBrush(signal),
+                BuildCanIdBrush(signal.CanId)));
+        }
 
-            return;
+        ActiveSignals.Clear();
+        foreach (var signal in displaySignals
+                     .OrderByDescending(item => Math.Abs(item.Value))
+                     .Take(5))
+        {
+            ActiveSignals.Add(new SignalLegendItem(signal.Name.ToUpperInvariant(), "#00FFFF"));
         }
 
         OnPropertyChanged(nameof(CanTrafficVolumeText));
@@ -360,7 +471,7 @@ public sealed class TelemetryViewModel : SectionViewModel
 
         foreach (var s in latestSignals.OrderBy(s => s.FeatureKey).ThenBy(s => s.Name))
         {
-            lines.Add($"{s.TimestampUtc:o},0x{s.CanId:X3},{s.FeatureKey},{s.Name},{s.Value:F4},{s.Unit},{(s.OutOfRange ? "1" : "0")}");
+            lines.Add(FormattableString.Invariant($"{s.TimestampUtc:o},0x{s.CanId:X3},{s.FeatureKey},{s.Name},{s.Value:F4},{s.Unit},{(s.OutOfRange ? "1" : "0")}"));
         }
 
         System.IO.File.WriteAllLines(dialog.FileName, lines);
@@ -502,6 +613,7 @@ public sealed class TelemetryViewModel : SectionViewModel
 
     private void OnAlertHistoryUpdated(IReadOnlyList<RuntimeAlertEvent> _)
     {
+        RefreshCanActivityFromAlerts();
         RefreshRiskTimeline();
         RefreshTimelineAxes();
         RefreshTelemetryEvents();
@@ -550,6 +662,23 @@ public sealed class TelemetryViewModel : SectionViewModel
         RefreshCanActivity();
     }
 
+    // A capture played in the app sends nothing to the backend's live buffer, which fed
+    // this panel, so it said "no flagged CAN IDs" beside 339 alerts. For a capture the
+    // panel counts the analysis alerts per identifier instead.
+    private void RefreshCanActivityFromAlerts()
+    {
+        if (!ShowsCapture)
+            return;
+        _canIdStats.Clear();
+        foreach (var alert in VehicleDataService.AlertHistory)
+        {
+            _canIdStats[alert.CanId] = _canIdStats.TryGetValue(alert.CanId, out var s)
+                ? (s.Count + 1, s.ScoreSum + alert.Score)
+                : (1, alert.Score);
+        }
+        RefreshCanActivity();
+    }
+
     private void RefreshCanActivity()
     {
         var top = _canIdStats
@@ -585,6 +714,7 @@ public sealed class TelemetryViewModel : SectionViewModel
         motorTempHistory.Clear();
         packetRateHistory.Clear();
         signalValueHistory.Clear();
+        _ = DiscoverSignalsAsync();
 
         OnPropertyChanged(nameof(ReplayNameText));
         OnPropertyChanged(nameof(HasReplayLoaded));
@@ -766,6 +896,45 @@ public sealed class TelemetryViewModel : SectionViewModel
 
     private static bool HasOperationalSignal(double value) => Math.Abs(value) > 0.001;
 
+    /// <summary>
+    /// DBC-decoded values of the loaded capture for the LIVE SIGNAL MONITOR, when no live stream
+    /// feeds it. Without this, a recording fully decoded by its DBC showed "No decoded signals"
+    /// under channels that were decoded. Each value is the channel's sample at the replay cursor,
+    /// or its last value in the capture before a replay starts. Nothing is invented: a capture
+    /// without a DBC, or whose DBC decodes no varying signal, still shows no rows.
+    /// </summary>
+    private IReadOnlyList<DecodedSignal> CaptureDecodedSignals()
+    {
+        if (decodedChannels.Count == 0 || VehicleDataService.TotalReplayFrames == 0)
+            return Array.Empty<DecodedSignal>();
+
+        var progress = VehicleDataService.ReplayProgressPercent;
+        var duration = discovery?.DurationS ?? 0;
+        var now = DateTime.UtcNow;
+        var signals = new List<DecodedSignal>(decodedChannels.Count);
+        foreach (var channel in decodedChannels)
+        {
+            var upTo = channel.Values.Count - 1;
+            if (progress > 0 && progress < 100 && duration > 0 && channel.Times.Count == channel.Values.Count)
+            {
+                var cursor = progress / 100.0 * duration;
+                upTo = Math.Max(0, channel.Times.FindLastIndex(t => t <= cursor));
+            }
+            var signal = new DecodedSignal
+            {
+                Name = channel.Label,
+                Value = upTo >= 0 ? channel.Values[upTo] : channel.Last,
+                Unit = channel.Unit,
+                CanId = channel.CanId,
+                FeatureKey = "DBC",
+                TimestampUtc = now,
+            };
+            signalValueHistory[SignalHistoryKey(signal)] = channel.Values.Take(upTo + 1).ToList();
+            signals.Add(signal);
+        }
+        return signals;
+    }
+
     private string BuildSignalStatus(DecodedSignal signal)
     {
         if (IsStreamFrozen && latestSignals.Count > 0)
@@ -775,6 +944,8 @@ public sealed class TelemetryViewModel : SectionViewModel
 
         if (latestSignals.Count == 0)
         {
+            if (signal.FeatureKey == "DBC" && decodedChannels.Count > 0)
+                return "REPLAY";
             return ConnectionStateText == "CONNECTED" ? "READY" : "STANDBY";
         }
 
@@ -788,6 +959,7 @@ public sealed class TelemetryViewModel : SectionViewModel
         {
             "LIVE" => "#56F0AC",
             "READY" => "#00C8C8",
+            "REPLAY" => "#00C8C8",
             "HELD" => "#FFD94A",
             _ => "#4A6470",
         };
@@ -938,3 +1110,31 @@ public sealed class TelemetryViewModel : SectionViewModel
     }
 }
 
+/// <summary>One discovered channel as a Telemetry tile / channel row.</summary>
+public sealed class DiscoveredChannelItem
+{
+    private static readonly string[] Strokes = { "#2FF0D6", "#B07BFF", "#7EF7E4", "#FFB245" };
+
+    public DiscoveredChannelItem(DiscoveredChannel channel, int index)
+    {
+        Channel = channel;
+        StrokeHex = Strokes[index % Strokes.Length];
+        Values = channel.Values.ToList();
+    }
+
+    public DiscoveredChannel Channel { get; }
+    public string StrokeHex { get; }
+    public List<double> Values { get; }
+    public string Title => Channel.Decoded ? Channel.Label.ToUpperInvariant() : Channel.Label;
+    public string UnitText => Channel.Decoded ? (string.IsNullOrWhiteSpace(Channel.Unit) ? "--" : Channel.Unit.ToUpperInvariant()) : "RAW";
+    public string ValueText => Channel.Decoded
+        ? $"{Channel.Last:0.##}{(string.IsNullOrWhiteSpace(Channel.Unit) ? "" : " " + Channel.Unit)}"
+        : $"0x{(int)Channel.Last:X2}";
+    public string MetaText => Channel.Decoded ? $"DBC · 0x{Channel.CanId:X} · {RateText}" : $"UNDECODED · {RateText}";
+    public string RangeText => Channel.Decoded
+        ? $"range {Channel.Min:0.##} … {Channel.Max:0.##}"
+        : $"range 0x{(int)Channel.Min:X2} … 0x{(int)Channel.Max:X2} · {Channel.Distinct} values";
+    public string ToolTip => $"{Channel.Label}: {Channel.Samples:N0} samples, {RateText}, {RangeText}. Last value in the capture shown."
+                             + (Channel.Decoded ? "" : " Raw payload byte: no DBC defines what it means.");
+    private string RateText => Channel.RateHz >= 1 ? $"{Channel.RateHz:0} HZ" : Channel.RateHz > 0 ? $"{Channel.RateHz:0.##} HZ" : "-- HZ";
+}

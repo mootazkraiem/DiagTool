@@ -30,6 +30,11 @@ class VehicleProfile:
     raw_dbc: list[Path] = field(default_factory=list)
     # CANedge UDS transmit-list (JSON) — what to poll when logging live
     transmit_list: Optional[Path] = None
+    # True when the DBC files define every identifier this bus may carry. Live
+    # capture then flags any other identifier. Real vehicle DBCs here are
+    # partial (diagnostic responses, reverse-engineered subsets), so this stays
+    # False for them: their unknown identifiers are normal traffic.
+    complete_dbc: bool = False
 
 
 def _p(*parts: str) -> Path:
@@ -110,6 +115,16 @@ PROFILES: dict[str, VehicleProfile] = {
             _RAW_BASE / "BMW i3" / "BMW-i3-PT-CAN2.dbc",
         ],
     ),
+
+    # Two Arduino Uno + MCP2515 boards (arduino_bench_rig/). Its DBC defines
+    # everything the simulator board sends on purpose, so it is complete.
+    "bench_rig": VehicleProfile(
+        id="bench_rig",
+        name="Arduino bench rig",
+        bitrate=500_000,
+        raw_dbc=[_DBC_BASE / "bench-rig.dbc"],
+        complete_dbc=True,
+    ),
 }
 
 
@@ -126,6 +141,7 @@ def list_all() -> list[dict]:
             "has_uds_dbc": bool(p.uds_dbc),
             "has_raw_dbc": bool(p.raw_dbc),
             "has_transmit_list": p.transmit_list is not None,
+            "complete_dbc": p.complete_dbc,
         }
         for p in PROFILES.values()
     ]

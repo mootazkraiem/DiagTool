@@ -1,12 +1,13 @@
 \babel@toc {english}{}\relax 
 \babel@toc {english}{}\relax 
-\contentsline {chapter}{Acknowledgements}{}{chapter*.1}%
-\contentsline {chapter}{Abstract}{}{chapter*.2}%
+\contentsline {chapter}{Dedication}{}{section*.1}%
+\contentsline {chapter}{Acknowledgements}{}{chapter*.2}%
+\contentsline {chapter}{Abstract}{}{chapter*.3}%
 \babel@toc {french}{}\relax 
-\contentsline {chapter}{Résumé}{}{chapter*.3}%
+\contentsline {chapter}{Résumé}{}{chapter*.4}%
 \babel@toc {english}{}\relax 
-\contentsline {chapter}{General Introduction}{ix}{chapter*.9}%
-\contentsline {section}{Report structure}{x}{section*.10}%
+\contentsline {chapter}{General Introduction}{vii}{chapter*.10}%
+\contentsline {section}{Report structure}{viii}{section*.11}%
 \contentsline {chapter}{\numberline {1}General Framework}{1}{chapter.1}%
 \contentsline {section}{\numberline {1.1}Introduction}{1}{section.1.1}%
 \contentsline {section}{\numberline {1.2}Host organization}{1}{section.1.2}%
@@ -17,119 +18,98 @@
 \contentsline {section}{\numberline {1.5}Objectives}{3}{section.1.5}%
 \contentsline {subsection}{\numberline {1.5.1}General objective}{3}{subsection.1.5.1}%
 \contentsline {subsection}{\numberline {1.5.2}Specific objectives}{3}{subsection.1.5.2}%
-\contentsline {section}{\numberline {1.6}Development methodology}{4}{section.1.6}%
-\contentsline {subsection}{\numberline {1.6.1}Waterfall, Agile, and Scrum}{4}{subsection.1.6.1}%
-\contentsline {subsection}{\numberline {1.6.2}Why Scrum was chosen for this project}{5}{subsection.1.6.2}%
-\contentsline {subsection}{\numberline {1.6.3}How the real process reflected Scrum concepts}{5}{subsection.1.6.3}%
-\contentsline {subsection}{\numberline {1.6.4}Conclusion}{6}{subsection.1.6.4}%
-\contentsline {section}{\numberline {1.7}Conclusion}{6}{section.1.7}%
-\contentsline {chapter}{\numberline {2}Requirements Analysis}{7}{chapter.2}%
-\contentsline {section}{\numberline {2.1}Introduction}{7}{section.2.1}%
-\contentsline {section}{\numberline {2.2}Existing solutions analysis}{7}{section.2.2}%
-\contentsline {subsection}{\numberline {2.2.1}Category 1: CAN analyzers}{7}{subsection.2.2.1}%
-\contentsline {subsection}{\numberline {2.2.2}Category 2: IDS tools}{7}{subsection.2.2.2}%
-\contentsline {subsection}{\numberline {2.2.3}Category 3: Static viewers and diagnostic scanners}{8}{subsection.2.2.3}%
-\contentsline {subsection}{\numberline {2.2.4}Current limitations}{8}{subsection.2.2.4}%
-\contentsline {subsection}{\numberline {2.2.5}Why CANvisionNative is different}{8}{subsection.2.2.5}%
-\contentsline {section}{\numberline {2.3}Functional requirements}{9}{section.2.3}%
-\contentsline {section}{\numberline {2.4}Non-functional requirements}{10}{section.2.4}%
+\contentsline {section}{\numberline {1.6}Development methodology}{3}{section.1.6}%
+\contentsline {subsection}{\numberline {1.6.1}Waterfall, Agile and Scrum}{3}{subsection.1.6.1}%
+\contentsline {subsection}{\numberline {1.6.2}Why I chose an iterative approach}{3}{subsection.1.6.2}%
+\contentsline {subsection}{\numberline {1.6.3}How the process worked in practice}{4}{subsection.1.6.3}%
+\contentsline {section}{\numberline {1.7}Conclusion}{5}{section.1.7}%
+\contentsline {chapter}{\numberline {2}Requirements Analysis}{6}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Introduction}{6}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Existing solutions}{6}{section.2.2}%
+\contentsline {subsection}{\numberline {2.2.1}CAN analysers}{6}{subsection.2.2.1}%
+\contentsline {subsection}{\numberline {2.2.2}Intrusion detection research}{7}{subsection.2.2.2}%
+\contentsline {subsection}{\numberline {2.2.3}Viewers and diagnostic scanners}{7}{subsection.2.2.3}%
+\contentsline {subsection}{\numberline {2.2.4}Limits of the existing tools}{7}{subsection.2.2.4}%
+\contentsline {subsection}{\numberline {2.2.5}What CANvisionNative adds}{7}{subsection.2.2.5}%
+\contentsline {section}{\numberline {2.3}Functional requirements}{8}{section.2.3}%
+\contentsline {section}{\numberline {2.4}Non functional requirements}{10}{section.2.4}%
 \contentsline {section}{\numberline {2.5}Actors}{10}{section.2.5}%
 \contentsline {section}{\numberline {2.6}Use cases}{11}{section.2.6}%
-\contentsline {subsection}{\numberline {2.6.1}Activity diagram --- import and replay}{12}{subsection.2.6.1}%
-\contentsline {subsection}{\numberline {2.6.2}Sequence diagram --- request an AI explanation}{13}{subsection.2.6.2}%
 \contentsline {section}{\numberline {2.7}Risk analysis}{14}{section.2.7}%
 \contentsline {section}{\numberline {2.8}Planning}{15}{section.2.8}%
-\contentsline {section}{\numberline {2.9}Requirements traceability}{16}{section.2.9}%
-\contentsline {section}{\numberline {2.10}Conclusion}{17}{section.2.10}%
-\contentsline {chapter}{\numberline {3}System Design}{18}{chapter.3}%
-\contentsline {section}{\numberline {3.1}Introduction}{18}{section.3.1}%
-\contentsline {section}{\numberline {3.2}Technologies used}{18}{section.3.2}%
-\contentsline {section}{\numberline {3.3}Overall architecture}{19}{section.3.3}%
-\contentsline {subsection}{\numberline {3.3.1}Frontend architecture}{20}{subsection.3.3.1}%
-\contentsline {subsection}{\numberline {3.3.2}Backend architecture}{21}{subsection.3.3.2}%
-\contentsline {subsection}{\numberline {3.3.3}Database}{22}{subsection.3.3.3}%
-\contentsline {section}{\numberline {3.4}REST API}{22}{section.3.4}%
-\contentsline {section}{\numberline {3.5}Replay engine}{23}{section.3.5}%
-\contentsline {section}{\numberline {3.6}Detection pipeline}{24}{section.3.6}%
-\contentsline {section}{\numberline {3.7}Machine learning approach}{26}{section.3.7}%
-\contentsline {subsection}{\numberline {3.7.1}Feature engineering}{26}{subsection.3.7.1}%
-\contentsline {subsection}{\numberline {3.7.2}Model selection}{26}{subsection.3.7.2}%
-\contentsline {subsubsection}{\numberline {3.7.2.1}Problem definition}{26}{subsubsection.3.7.2.1}%
-\contentsline {subsubsection}{\numberline {3.7.2.2}Supervised versus unsupervised learning}{27}{subsubsection.3.7.2.2}%
-\contentsline {subsubsection}{\numberline {3.7.2.3}Candidate algorithms}{27}{subsubsection.3.7.2.3}%
-\contentsline {subsubsection}{\numberline {3.7.2.4}Selection criteria and engineering justification}{29}{subsubsection.3.7.2.4}%
-\contentsline {subsubsection}{\numberline {3.7.2.5}The contamination parameter}{29}{subsubsection.3.7.2.5}%
-\contentsline {subsection}{\numberline {3.7.3}Training pipeline}{29}{subsection.3.7.3}%
-\contentsline {subsection}{\numberline {3.7.4}Isolation Forest scoring}{30}{subsection.3.7.4}%
-\contentsline {subsection}{\numberline {3.7.5}State classification}{30}{subsection.3.7.5}%
-\contentsline {subsection}{\numberline {3.7.6}Runtime inference}{31}{subsection.3.7.6}%
-\contentsline {section}{\numberline {3.8}Hardware layer}{31}{section.3.8}%
-\contentsline {section}{\numberline {3.9}AI explanation engine}{31}{section.3.9}%
-\contentsline {section}{\numberline {3.10}Class diagram (backend detection core)}{32}{section.3.10}%
-\contentsline {section}{\numberline {3.11}Deployment diagram}{33}{section.3.11}%
-\contentsline {section}{\numberline {3.12}Conclusion}{33}{section.3.12}%
-\contentsline {chapter}{\numberline {4}Implementation}{34}{chapter.4}%
-\contentsline {section}{\numberline {4.1}Introduction}{34}{section.4.1}%
-\contentsline {section}{\numberline {4.2}Development environment}{34}{section.4.2}%
-\contentsline {section}{\numberline {4.3}Repository organization}{35}{section.4.3}%
-\contentsline {section}{\numberline {4.4}WPF application}{35}{section.4.4}%
-\contentsline {section}{\numberline {4.5}FastAPI backend}{38}{section.4.5}%
-\contentsline {subsection}{\numberline {4.5.1}Replay engine}{38}{subsection.4.5.1}%
-\contentsline {subsection}{\numberline {4.5.2}Parser and canonical frame representation}{39}{subsection.4.5.2}%
-\contentsline {subsection}{\numberline {4.5.3}MF4 conversion}{39}{subsection.4.5.3}%
-\contentsline {subsection}{\numberline {4.5.4}Vehicle profile system}{39}{subsection.4.5.4}%
-\contentsline {section}{\numberline {4.6}AI explanation module}{40}{section.4.6}%
-\contentsline {section}{\numberline {4.7}Charts}{40}{section.4.7}%
-\contentsline {section}{\numberline {4.8}Export}{41}{section.4.8}%
-\contentsline {section}{\numberline {4.9}Settings}{41}{section.4.9}%
-\contentsline {section}{\numberline {4.10}Hardware}{41}{section.4.10}%
-\contentsline {section}{\numberline {4.11}Conclusion}{42}{section.4.11}%
-\contentsline {chapter}{\numberline {5}Validation and Results}{43}{chapter.5}%
-\contentsline {section}{\numberline {5.1}Introduction}{43}{section.5.1}%
-\contentsline {section}{\numberline {5.2}Validation methodology}{43}{section.5.2}%
-\contentsline {subsection}{\numberline {5.2.1}Interactive UI audit}{45}{subsection.5.2.1}%
-\contentsline {subsection}{\numberline {5.2.2}Repository audit}{45}{subsection.5.2.2}%
-\contentsline {section}{\numberline {5.3}Real-data validation setup}{46}{section.5.3}%
-\contentsline {subsection}{\numberline {5.3.1}Dataset}{46}{subsection.5.3.1}%
-\contentsline {subsection}{\numberline {5.3.2}MF4 validation workflow}{46}{subsection.5.3.2}%
-\contentsline {section}{\numberline {5.4}Root-cause analysis of the initial alert volume}{46}{section.5.4}%
-\contentsline {section}{\numberline {5.5}Engineering correction phase}{47}{section.5.5}%
-\contentsline {subsection}{\numberline {5.5.1}Fix 1 — Vehicle model selection}{47}{subsection.5.5.1}%
-\contentsline {subsection}{\numberline {5.5.2}Fix 2 — Driving-state classification}{48}{subsection.5.5.2}%
-\contentsline {subsection}{\numberline {5.5.3}Fix 3 — Reason attribution}{48}{subsection.5.5.3}%
-\contentsline {subsection}{\numberline {5.5.4}Fix 4 — Replay parser consistency}{49}{subsection.5.5.4}%
-\contentsline {subsection}{\numberline {5.5.5}Fix 5 — Alert-polling timer left stopped}{49}{subsection.5.5.5}%
-\contentsline {subsection}{\numberline {5.5.6}Fix 6 — AI explanation cache staleness}{50}{subsection.5.5.6}%
-\contentsline {section}{\numberline {5.6}Before/after measurements}{50}{section.5.6}%
-\contentsline {section}{\numberline {5.7}Export validation}{55}{section.5.7}%
-\contentsline {section}{\numberline {5.8}Summary of engineering fixes}{55}{section.5.8}%
-\contentsline {section}{\numberline {5.9}Software readiness}{56}{section.5.9}%
-\contentsline {section}{\numberline {5.10}Discussion}{56}{section.5.10}%
-\contentsline {section}{\numberline {5.11}Limitations}{57}{section.5.11}%
-\contentsline {section}{\numberline {5.12}Future improvements}{57}{section.5.12}%
-\contentsline {section}{\numberline {5.13}Conclusion}{57}{section.5.13}%
-\contentsline {chapter}{General Conclusion}{58}{chapter*.58}%
-\contentsline {section}{Achievements}{58}{section*.59}%
-\contentsline {section}{Objectives reached}{58}{section*.60}%
-\contentsline {section}{Scientific contributions}{58}{section*.61}%
-\contentsline {section}{Engineering contributions}{59}{section*.62}%
-\contentsline {section}{Limitations}{59}{section*.63}%
-\contentsline {section}{Future work}{59}{section*.64}%
-\contentsline {chapter}{\numberline {A}REST API Endpoints}{61}{appendix.A}%
-\contentsline {chapter}{\numberline {B}Configuration}{63}{appendix.B}%
-\contentsline {section}{\numberline {B.1}Requirements}{63}{appendix.B.1}%
-\contentsline {section}{\numberline {B.2}Key Python dependencies}{63}{appendix.B.2}%
-\contentsline {section}{\numberline {B.3}Backend startup}{64}{appendix.B.3}%
-\contentsline {section}{\numberline {B.4}Persisted configuration}{64}{appendix.B.4}%
-\contentsline {section}{\numberline {B.5}Fusion score configuration}{64}{appendix.B.5}%
-\contentsline {chapter}{\numberline {C}Datasets}{65}{appendix.C}%
-\contentsline {section}{\numberline {C.1}Training corpus}{65}{appendix.C.1}%
-\contentsline {section}{\numberline {C.2}Dataset descriptions}{65}{appendix.C.2}%
-\contentsline {section}{\numberline {C.3}Selection criteria}{67}{appendix.C.3}%
-\contentsline {section}{\numberline {C.4}Why the Kia EV6 recording became the official validation dataset}{68}{appendix.C.4}%
-\contentsline {section}{\numberline {C.5}Cross-validation dataset}{68}{appendix.C.5}%
-\contentsline {chapter}{\numberline {D}Additional Validation Data}{69}{appendix.D}%
-\contentsline {section}{\numberline {D.1}Post-correction alert breakdown}{69}{appendix.D.1}%
-\contentsline {section}{\numberline {D.2}Top alerting CAN identifiers}{69}{appendix.D.2}%
-\contentsline {section}{\numberline {D.3}Additional screenshots}{70}{appendix.D.3}%
-\contentsline {chapter}{\numberline {E}Data Sources Summary}{73}{appendix.E}%
+\contentsline {section}{\numberline {2.9}Requirements traceability}{15}{section.2.9}%
+\contentsline {section}{\numberline {2.10}Conclusion}{16}{section.2.10}%
+\contentsline {chapter}{\numberline {3}System Design}{17}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Introduction}{17}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Technologies used}{17}{section.3.2}%
+\contentsline {section}{\numberline {3.3}Overall architecture}{18}{section.3.3}%
+\contentsline {subsection}{\numberline {3.3.1}Frontend architecture}{18}{subsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.3.2}Backend architecture}{18}{subsection.3.3.2}%
+\contentsline {subsection}{\numberline {3.3.3}Database}{19}{subsection.3.3.3}%
+\contentsline {section}{\numberline {3.4}Replay engine}{20}{section.3.4}%
+\contentsline {section}{\numberline {3.5}Detection pipeline}{22}{section.3.5}%
+\contentsline {subsection}{\numberline {3.5.1}Frame by frame path (live, simulation, replay)}{22}{subsection.3.5.1}%
+\contentsline {subsection}{\numberline {3.5.2}Offline analysis path}{22}{subsection.3.5.2}%
+\contentsline {section}{\numberline {3.6}Machine learning approach}{24}{section.3.6}%
+\contentsline {subsection}{\numberline {3.6.1}Problem definition}{24}{subsection.3.6.1}%
+\contentsline {subsection}{\numberline {3.6.2}Dataset files}{24}{subsection.3.6.2}%
+\contentsline {subsection}{\numberline {3.6.3}Supervised or unsupervised learning}{25}{subsection.3.6.3}%
+\contentsline {subsection}{\numberline {3.6.4}Candidate algorithms}{25}{subsection.3.6.4}%
+\contentsline {subsection}{\numberline {3.6.5}Choice of Isolation Forest}{25}{subsection.3.6.5}%
+\contentsline {subsection}{\numberline {3.6.6}First design and its limits}{26}{subsection.3.6.6}%
+\contentsline {subsection}{\numberline {3.6.7}Final design: one model per CAN identifier}{27}{subsection.3.6.7}%
+\contentsline {subsection}{\numberline {3.6.8}Training and promotion pipeline}{27}{subsection.3.6.8}%
+\contentsline {subsection}{\numberline {3.6.9}Model status}{28}{subsection.3.6.9}%
+\contentsline {section}{\numberline {3.7}Hardware layer}{29}{section.3.7}%
+\contentsline {section}{\numberline {3.8}Explanation engine}{29}{section.3.8}%
+\contentsline {section}{\numberline {3.9}Class and deployment diagrams}{29}{section.3.9}%
+\contentsline {section}{\numberline {3.10}Conclusion}{31}{section.3.10}%
+\contentsline {chapter}{\numberline {4}Implementation}{32}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Introduction}{32}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Development environment}{32}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Backend}{33}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}Replay engine}{33}{subsection.4.3.1}%
+\contentsline {subsection}{\numberline {4.3.2}Parser and common frame representation}{33}{subsection.4.3.2}%
+\contentsline {subsection}{\numberline {4.3.3}MF4 conversion}{33}{subsection.4.3.3}%
+\contentsline {subsection}{\numberline {4.3.4}Vehicle profiles and vehicle models}{33}{subsection.4.3.4}%
+\contentsline {subsection}{\numberline {4.3.5}Model management}{34}{subsection.4.3.5}%
+\contentsline {subsection}{\numberline {4.3.6}Explanation module}{34}{subsection.4.3.6}%
+\contentsline {subsection}{\numberline {4.3.7}Hardware and bench rig}{34}{subsection.4.3.7}%
+\contentsline {section}{\numberline {4.4}User interface}{35}{section.4.4}%
+\contentsline {section}{\numberline {4.5}Conclusion}{39}{section.4.5}%
+\contentsline {chapter}{\numberline {5}Validation and Results}{40}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Introduction}{40}{section.5.1}%
+\contentsline {section}{\numberline {5.2}Validation methodology}{40}{section.5.2}%
+\contentsline {subsection}{\numberline {5.2.1}Interactive interface audit}{40}{subsection.5.2.1}%
+\contentsline {section}{\numberline {5.3}First iteration: the first detection pipeline}{42}{section.5.3}%
+\contentsline {subsection}{\numberline {5.3.1}Dataset}{42}{subsection.5.3.1}%
+\contentsline {subsection}{\numberline {5.3.2}Conversion of the MF4 file}{42}{subsection.5.3.2}%
+\contentsline {subsection}{\numberline {5.3.3}Root cause analysis of the alerts}{42}{subsection.5.3.3}%
+\contentsline {subsection}{\numberline {5.3.4}Corrections}{43}{subsection.5.3.4}%
+\contentsline {subsubsection}{\numberline {5.3.4.1}Fix 1: vehicle model selection}{43}{subsubsection.5.3.4.1}%
+\contentsline {subsubsection}{\numberline {5.3.4.2}Fix 2: driving state classification}{43}{subsubsection.5.3.4.2}%
+\contentsline {subsubsection}{\numberline {5.3.4.3}Fix 3: attribution of the reason}{44}{subsubsection.5.3.4.3}%
+\contentsline {subsubsection}{\numberline {5.3.4.4}Fix 4: one parser for replay}{44}{subsubsection.5.3.4.4}%
+\contentsline {subsubsection}{\numberline {5.3.4.5}Fix 5: polling timer left stopped}{44}{subsubsection.5.3.4.5}%
+\contentsline {subsubsection}{\numberline {5.3.4.6}Fix 6: stale explanation cache}{45}{subsubsection.5.3.4.6}%
+\contentsline {subsection}{\numberline {5.3.5}Measurements before and after the corrections}{45}{subsection.5.3.5}%
+\contentsline {subsection}{\numberline {5.3.6}Summary of the first iteration}{47}{subsection.5.3.6}%
+\contentsline {section}{\numberline {5.4}Second iteration: evaluation of the final models}{47}{section.5.4}%
+\contentsline {subsection}{\numberline {5.4.1}Evaluation protocol}{47}{subsection.5.4.1}%
+\contentsline {subsection}{\numberline {5.4.2}Holdout results}{47}{subsection.5.4.2}%
+\contentsline {subsection}{\numberline {5.4.3}Models we did not put into production}{48}{subsection.5.4.3}%
+\contentsline {subsection}{\numberline {5.4.4}Consistency checks}{48}{subsection.5.4.4}%
+\contentsline {subsection}{\numberline {5.4.5}The application on a holdout recording}{49}{subsection.5.4.5}%
+\contentsline {subsection}{\numberline {5.4.6}Speed of the final models}{49}{subsection.5.4.6}%
+\contentsline {section}{\numberline {5.5}Comparison with the other candidate algorithms}{50}{section.5.5}%
+\contentsline {section}{\numberline {5.6}Live capture on the bench rig}{52}{section.5.6}%
+\contentsline {section}{\numberline {5.7}Automated tests}{53}{section.5.7}%
+\contentsline {section}{\numberline {5.8}Stability within the validated scope}{53}{section.5.8}%
+\contentsline {section}{\numberline {5.9}Limitations}{54}{section.5.9}%
+\contentsline {section}{\numberline {5.10}Conclusion}{54}{section.5.10}%
+\contentsline {chapter}{General Conclusion}{55}{chapter*.62}%
+\contentsline {section}{Objectives reached}{55}{section*.63}%
+\contentsline {section}{Project contributions}{55}{section*.64}%
+\contentsline {section}{Limitations}{56}{section*.65}%
+\contentsline {section}{Future work}{57}{section*.66}%
+\contentsline {chapter}{Bibliography}{58}{chapter*.67}%

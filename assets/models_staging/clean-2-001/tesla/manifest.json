@@ -1,0 +1,504 @@
+{
+  "schema_version": 3,
+  "model_family": "tesla",
+  "model_version": "clean-2-001",
+  "created_at": "2026-09-24T12:57:44+00:00",
+  "training_pipeline": {
+    "name": "backend.ml.training.clean_pipeline",
+    "version": "clean-2",
+    "git_commit": "6b659ecbfd5d0baf403e8c9f0d36dc1f14e555cb",
+    "git_dirty": false
+  },
+  "feature_pipeline": {
+    "name": "backend.ml.features.canonical",
+    "version": "canonical-1",
+    "window": 10
+  },
+  "model_type": "isolation_forest_per_can_id",
+  "model_params": {
+    "model": "IsolationForest",
+    "scaler": null,
+    "n_estimators": 200,
+    "max_samples": "auto",
+    "contamination": "auto",
+    "random_state": 42,
+    "n_jobs": 1
+  },
+  "calibration": {
+    "method": "empirical_quantile_strict",
+    "target_contamination": 0.02,
+    "definition": "threshold = (k+1)-th smallest training score_samples value, k = floor(target_contamination x rows); flagged iff score < threshold; ties at the threshold are not flagged"
+  },
+  "min_id_rows": 1000,
+  "models_file": {
+    "path": "models.joblib",
+    "sha256": "21d3b3f1dfeed83fdcec3e875e004c6e576bd63e27ae1b80e14442689b615523"
+  },
+  "id_models": {
+    "0x132": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.5546379184367815,
+      "median": -0.4126096908730492,
+      "rows": 30140,
+      "k": 602,
+      "flagged_count": 602,
+      "ties_at_threshold": 1
+    },
+    "0x204": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 1.5487949406953985
+      },
+      "recordings": 1,
+      "threshold": -0.6229269818176382,
+      "median": -0.377497742033916,
+      "rows": 3007,
+      "k": 60,
+      "flagged_count": 60,
+      "ties_at_threshold": 1
+    },
+    "0x212": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.7005755123974929,
+      "median": -0.3312934960184725,
+      "rows": 2992,
+      "k": 59,
+      "flagged_count": 59,
+      "ties_at_threshold": 1
+    },
+    "0x221": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {
+        "rolling_max_byte_diff": 3.855452653939752
+      },
+      "recordings": 1,
+      "threshold": -0.7119074027028368,
+      "median": -0.4516887943433876,
+      "rows": 36290,
+      "k": 725,
+      "flagged_count": 725,
+      "ties_at_threshold": 1
+    },
+    "0x224": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 1.061278124459133
+      },
+      "recordings": 1,
+      "threshold": -0.6965152282123513,
+      "median": -0.38891993721727636,
+      "rows": 2996,
+      "k": 59,
+      "flagged_count": 59,
+      "ties_at_threshold": 1
+    },
+    "0x22A": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.5435644431995964
+      },
+      "recordings": 1,
+      "threshold": -0.6184781925941333,
+      "median": -0.4070471163709612,
+      "rows": 3006,
+      "k": 60,
+      "flagged_count": 60,
+      "ties_at_threshold": 1
+    },
+    "0x252": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.0
+      },
+      "recordings": 1,
+      "threshold": -0.6473020441483774,
+      "median": -0.3746720085115871,
+      "rows": 3006,
+      "k": 60,
+      "flagged_count": 60,
+      "ties_at_threshold": 1
+    },
+    "0x264": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count"
+      ],
+      "constant_features": {
+        "payload_entropy": 1.061278124459133
+      },
+      "recordings": 1,
+      "threshold": -0.5710238449931849,
+      "median": -0.43019345853898094,
+      "rows": 3006,
+      "k": 60,
+      "flagged_count": 60,
+      "ties_at_threshold": 1
+    },
+    "0x292": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count"
+      ],
+      "constant_features": {
+        "payload_entropy": 3.0
+      },
+      "recordings": 1,
+      "threshold": -0.6539579232945361,
+      "median": -0.34258299020844707,
+      "rows": 2991,
+      "k": 59,
+      "flagged_count": 59,
+      "ties_at_threshold": 1
+    },
+    "0x2B4": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count"
+      ],
+      "constant_features": {
+        "payload_entropy": 1.061278124459133
+      },
+      "recordings": 1,
+      "threshold": -0.6457837232938248,
+      "median": -0.3700182573196363,
+      "rows": 2995,
+      "k": 59,
+      "flagged_count": 59,
+      "ties_at_threshold": 1
+    },
+    "0x2D2": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count"
+      ],
+      "constant_features": {
+        "payload_entropy": 2.0
+      },
+      "recordings": 1,
+      "threshold": -0.6670378807531195,
+      "median": -0.37530336785810864,
+      "rows": 3006,
+      "k": 60,
+      "flagged_count": 60,
+      "ties_at_threshold": 1
+    },
+    "0x2F2": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.5435644431995964
+      },
+      "recordings": 1,
+      "threshold": -0.668411166702471,
+      "median": -0.3653023759737175,
+      "rows": 2993,
+      "k": 59,
+      "flagged_count": 59,
+      "ties_at_threshold": 1
+    },
+    "0x372": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.5817056913390132,
+      "median": -0.48461752615136877,
+      "rows": 5720,
+      "k": 114,
+      "flagged_count": 114,
+      "ties_at_threshold": 1
+    },
+    "0x78A": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.6167597532028061,
+      "median": -0.4337222853507083,
+      "rows": 3005,
+      "k": 60,
+      "flagged_count": 60,
+      "ties_at_threshold": 1
+    },
+    "0x7AA": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.5727713578546327,
+      "median": -0.47148900149534323,
+      "rows": 2400,
+      "k": 48,
+      "flagged_count": 48,
+      "ties_at_threshold": 1
+    }
+  },
+  "sparse_ids": {
+    "0x20A": {
+      "rows": 291,
+      "recordings": 1
+    },
+    "0x232": {
+      "rows": 292,
+      "recordings": 1
+    },
+    "0x24A": {
+      "rows": 291,
+      "recordings": 1
+    },
+    "0x2A4": {
+      "rows": 292,
+      "recordings": 1
+    },
+    "0x300": {
+      "rows": 290,
+      "recordings": 1
+    },
+    "0x310": {
+      "rows": 171,
+      "recordings": 1
+    },
+    "0x312": {
+      "rows": 292,
+      "recordings": 1
+    },
+    "0x320": {
+      "rows": 895,
+      "recordings": 1
+    },
+    "0x332": {
+      "rows": 291,
+      "recordings": 1
+    },
+    "0x352": {
+      "rows": 291,
+      "recordings": 1
+    },
+    "0x364": {
+      "rows": 290,
+      "recordings": 1
+    },
+    "0x374": {
+      "rows": 292,
+      "recordings": 1
+    },
+    "0x392": {
+      "rows": 590,
+      "recordings": 1
+    },
+    "0x3AA": {
+      "rows": 290,
+      "recordings": 1
+    },
+    "0x3B2": {
+      "rows": 380,
+      "recordings": 1
+    },
+    "0x3C4": {
+      "rows": 352,
+      "recordings": 1
+    },
+    "0x3D2": {
+      "rows": 290,
+      "recordings": 1
+    },
+    "0x3F2": {
+      "rows": 288,
+      "recordings": 1
+    },
+    "0x401": {
+      "rows": 171,
+      "recordings": 1
+    },
+    "0x452": {
+      "rows": 289,
+      "recordings": 1
+    },
+    "0x472": {
+      "rows": 290,
+      "recordings": 1
+    },
+    "0x50A": {
+      "rows": 192,
+      "recordings": 1
+    },
+    "0x712": {
+      "rows": 20,
+      "recordings": 1
+    },
+    "0x72A": {
+      "rows": 48,
+      "recordings": 1
+    },
+    "0x752": {
+      "rows": 292,
+      "recordings": 1
+    },
+    "0x76A": {
+      "rows": 995,
+      "recordings": 1
+    },
+    "0x772": {
+      "rows": 893,
+      "recordings": 1
+    },
+    "0x77A": {
+      "rows": 592,
+      "recordings": 1
+    },
+    "0x782": {
+      "rows": 110,
+      "recordings": 1
+    }
+  },
+  "unmodelled_ids": {},
+  "training_corpus": {
+    "fingerprint": "f14d4256ff0f821bf15a85b4c7c5fb0a8916a5c38c4d2de5ce98918bc9c116fb",
+    "recordings": [
+      {
+        "path": "EV-CANlogs-main/Tesla/Model 3/tesla-model3-battery-only.log.log",
+        "sha256": "fde97eb1cc6a16420d70e34699ea13d1313d97eeaf030c8a7af11a56e55acdf3",
+        "content_sha256": "6a8324db6e82708a93ea6d556e8ad11964ccc67ff3140794f84715f5597278a8",
+        "frames": 118053,
+        "frame_cap": null
+      }
+    ]
+  },
+  "holdout": {
+    "recordings": []
+  },
+  "environment": {
+    "python": "3.14.4",
+    "sklearn": "1.9.0",
+    "numpy": "2.4.4",
+    "pandas": "3.0.3"
+  }
+}

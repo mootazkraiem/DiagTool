@@ -1,0 +1,370 @@
+{
+  "clean-2-001": {
+    "hyundai_ioniq5": {
+      "id_models": 2,
+      "sparse_ids": 2,
+      "sparse_rows0": 0,
+      "validation": "(not recorded)",
+      "training_rows_modelled": 51508,
+      "training_flagged": 1029,
+      "models_mb": 1.173494,
+      "training_flag_rate": 0.019977479226527917,
+      "leakage": [],
+      "holdout": []
+    },
+    "jaguar_ipace": {
+      "id_models": 46,
+      "sparse_ids": 97,
+      "sparse_rows0": 0,
+      "validation": "(not recorded)",
+      "training_rows_modelled": 192753,
+      "training_flagged": 3829,
+      "models_mb": 28.820021,
+      "training_flag_rate": 0.019864801066650065,
+      "leakage": [],
+      "holdout": [
+        {
+          "path": "EV-CANlogs-main/Jaguar IPACE/canbus_turningon_quickly.csv",
+          "rows": 48993,
+          "status_share": {
+            "scored": 0.8261792500969526,
+            "sparse_id": 0.17228991896801585,
+            "unseen_id": 0.0015308309350315352
+          },
+          "flagged": 1249,
+          "scored": 40477,
+          "flagged_share_of_scored": 0.030857029918225164
+        }
+      ]
+    },
+    "kaggle_normal": {
+      "id_models": 25,
+      "sparse_ids": 2,
+      "sparse_rows0": 0,
+      "validation": "(not recorded)",
+      "training_rows_modelled": 987607,
+      "training_flagged": 19740,
+      "models_mb": 15.262878,
+      "training_flag_rate": 0.01998770766104331,
+      "leakage": [],
+      "holdout": []
+    },
+    "kia_ev6": {
+      "id_models": 161,
+      "sparse_ids": 26,
+      "sparse_rows0": 0,
+      "validation": "(not recorded)",
+      "training_rows_modelled": 438418,
+      "training_flagged": 8672,
+      "models_mb": 78.779342,
+      "training_flag_rate": 0.019780209754161553,
+      "leakage": [],
+      "holdout": [
+        {
+          "path": "EV-CANlogs-main/Kia EV6/Vehicle everthing on.asc",
+          "rows": 436455,
+          "status_share": {
+            "scored": 0.9841197832537146,
+            "sparse_id": 0.015880216746285414
+          },
+          "flagged": 11109,
+          "scored": 429524,
+          "flagged_share_of_scored": 0.0258635140294838
+        }
+      ]
+    },
+    "mg_zs_ev": {
+      "id_models": 33,
+      "sparse_ids": 43,
+      "sparse_rows0": 0,
+      "validation": "(not recorded)",
+      "training_rows_modelled": 82192,
+      "training_flagged": 1629,
+      "models_mb": 21.257666,
+      "training_flag_rate": 0.019819447148140937,
+      "leakage": [],
+      "holdout": [
+        {
+          "path": "EV-CANlogs-main/MG ZS EV/Charging_6kW_CAN1_Test2.asc",
+          "rows": 99619,
+          "status_share": {
+            "scored": 0.11910378542245957,
+            "sparse_id": 0.05867354621106415,
+            "unseen_id": 0.8222226683664763
+          },
+          "flagged": 5173,
+          "scored": 11865,
+          "flagged_share_of_scored": 0.4359882005899705
+        }
+      ]
+    },
+    "nissan_leaf_2019": {
+      "id_models": 12,
+      "sparse_ids": 2,
+      "sparse_rows0": 0,
+      "validation": "(not recorded)",
+      "training_rows_modelled": 1315990,
+      "training_flagged": 26312,
+      "models_mb": 8.292958,
+      "training_flag_rate": 0.01999407290328954,
+      "leakage": [],
+      "holdout": [
+        {
+          "path": "Train/Nissan Leaf 2019/LOG/2F6913DB/00000021/00000001-61D9D9BA.MF4",
+          "rows": 491821,
+          "status_share": {
+            "scored": 0.9999512017583633,
+            "sparse_id": 4.8798241636693025e-05
+          },
+          "flagged": 2951,
+          "scored": 491797,
+          "flagged_share_of_scored": 0.006000443272325777
+        }
+      ]
+    },
+    "road_ambient": {
+      "id_models": 77,
+      "sparse_ids": 29,
+      "sparse_rows0": 0,
+      "validation": "(not recorded)",
+      "training_rows_modelled": 1408887,
+      "training_flagged": 28139,
+      "models_mb": 42.627946,
+      "training_flag_rate": 0.019972503117709227,
+      "leakage": [],
+      "holdout": [
+        {
+          "path": "road/road/ambient/ambient_highway_street_driving_long.log",
+          "rows": 148944,
+          "status_share": {
+            "scored": 0.9902043721130089,
+            "sparse_id": 0.009795627886991084
+          },
+          "flagged": 8982,
+          "scored": 147485,
+          "flagged_share_of_scored": 0.060901108587313964
+        }
+      ]
+    },
+    "tesla": {
+      "id_models": 15,
+      "sparse_ids": 29,
+      "sparse_rows0": 0,
+      "validation": "(not recorded)",
+      "training_rows_modelled": 107553,
+      "training_flagged": 2144,
+      "models_mb": 8.360519,
+      "training_flag_rate": 0.01993435794445529,
+      "leakage": [],
+      "holdout": []
+    }
+  },
+  "clean-2-002": {
+    "hyundai_ioniq5": {
+      "id_models": 2,
+      "sparse_ids": 2,
+      "sparse_rows0": 0,
+      "validation": "unvalidated_no_holdout",
+      "training_rows_modelled": 51508,
+      "training_flagged": 1029,
+      "models_mb": 1.173494,
+      "training_flag_rate": 0.019977479226527917,
+      "leakage": [],
+      "training_ids": 4,
+      "training_ids_unlisted": 0,
+      "listed_not_in_training": 0,
+      "seen_ids_reported_unseen": 0,
+      "calibration_recomputed_ids": 2,
+      "calibration_mismatches": [],
+      "holdout": []
+    },
+    "jaguar_ipace": {
+      "id_models": 46,
+      "sparse_ids": 110,
+      "sparse_rows0": 13,
+      "validation": "holdout_evaluated",
+      "training_rows_modelled": 192753,
+      "training_flagged": 3829,
+      "models_mb": 28.820021,
+      "training_flag_rate": 0.019864801066650065,
+      "leakage": [],
+      "training_ids": 156,
+      "training_ids_unlisted": 0,
+      "listed_not_in_training": 0,
+      "seen_ids_reported_unseen": 0,
+      "calibration_recomputed_ids": 46,
+      "calibration_mismatches": [],
+      "holdout": [
+        {
+          "path": "EV-CANlogs-main/Jaguar IPACE/canbus_turningon_quickly.csv",
+          "rows": 48993,
+          "status_share": {
+            "scored": 0.8261792500969526,
+            "sparse_id": 0.17249402975935338,
+            "unseen_id": 0.001326720143693997
+          },
+          "flagged": 1249,
+          "scored": 40477,
+          "flagged_share_of_scored": 0.030857029918225164
+        }
+      ]
+    },
+    "kaggle_normal": {
+      "id_models": 25,
+      "sparse_ids": 2,
+      "sparse_rows0": 0,
+      "validation": "unvalidated_no_holdout",
+      "training_rows_modelled": 987607,
+      "training_flagged": 19740,
+      "models_mb": 15.262878,
+      "training_flag_rate": 0.01998770766104331,
+      "leakage": [],
+      "training_ids": 27,
+      "training_ids_unlisted": 0,
+      "listed_not_in_training": 0,
+      "seen_ids_reported_unseen": 0,
+      "calibration_recomputed_ids": 25,
+      "calibration_mismatches": [],
+      "holdout": []
+    },
+    "kia_ev6": {
+      "id_models": 161,
+      "sparse_ids": 30,
+      "sparse_rows0": 4,
+      "validation": "holdout_evaluated",
+      "training_rows_modelled": 438418,
+      "training_flagged": 8672,
+      "models_mb": 78.779342,
+      "training_flag_rate": 0.019780209754161553,
+      "leakage": [],
+      "training_ids": 191,
+      "training_ids_unlisted": 0,
+      "listed_not_in_training": 0,
+      "seen_ids_reported_unseen": 0,
+      "calibration_recomputed_ids": 161,
+      "calibration_mismatches": [],
+      "holdout": [
+        {
+          "path": "EV-CANlogs-main/Kia EV6/Vehicle everthing on.asc",
+          "rows": 436455,
+          "status_share": {
+            "scored": 0.9841197832537146,
+            "sparse_id": 0.015880216746285414
+          },
+          "flagged": 11109,
+          "scored": 429524,
+          "flagged_share_of_scored": 0.0258635140294838
+        }
+      ]
+    },
+    "mg_zs_ev": {
+      "id_models": 33,
+      "sparse_ids": 45,
+      "sparse_rows0": 2,
+      "validation": "held_back",
+      "training_rows_modelled": 82192,
+      "training_flagged": 1629,
+      "models_mb": 21.257666,
+      "training_flag_rate": 0.019819447148140937,
+      "leakage": [],
+      "training_ids": 78,
+      "training_ids_unlisted": 0,
+      "listed_not_in_training": 0,
+      "seen_ids_reported_unseen": 0,
+      "calibration_recomputed_ids": 33,
+      "calibration_mismatches": [],
+      "holdout": [
+        {
+          "path": "EV-CANlogs-main/MG ZS EV/Charging_6kW_CAN1_Test2.asc",
+          "rows": 99619,
+          "status_share": {
+            "scored": 0.11910378542245957,
+            "sparse_id": 0.09746132765837842,
+            "unseen_id": 0.783434886919162
+          },
+          "flagged": 5173,
+          "scored": 11865,
+          "flagged_share_of_scored": 0.4359882005899705
+        }
+      ]
+    },
+    "nissan_leaf_2019": {
+      "id_models": 12,
+      "sparse_ids": 4,
+      "sparse_rows0": 2,
+      "validation": "holdout_evaluated",
+      "training_rows_modelled": 1315990,
+      "training_flagged": 26312,
+      "models_mb": 8.292958,
+      "training_flag_rate": 0.01999407290328954,
+      "leakage": [],
+      "training_ids": 16,
+      "training_ids_unlisted": 0,
+      "listed_not_in_training": 0,
+      "seen_ids_reported_unseen": 0,
+      "calibration_recomputed_ids": 12,
+      "calibration_mismatches": [],
+      "holdout": [
+        {
+          "path": "Train/Nissan Leaf 2019/LOG/2F6913DB/00000021/00000001-61D9D9BA.MF4",
+          "rows": 491821,
+          "status_share": {
+            "scored": 0.9999512017583633,
+            "sparse_id": 4.8798241636693025e-05
+          },
+          "flagged": 2951,
+          "scored": 491797,
+          "flagged_share_of_scored": 0.006000443272325777
+        }
+      ]
+    },
+    "road_ambient": {
+      "id_models": 77,
+      "sparse_ids": 29,
+      "sparse_rows0": 0,
+      "validation": "holdout_evaluated",
+      "training_rows_modelled": 1408887,
+      "training_flagged": 28139,
+      "models_mb": 42.627946,
+      "training_flag_rate": 0.019972503117709227,
+      "leakage": [],
+      "training_ids": 106,
+      "training_ids_unlisted": 0,
+      "listed_not_in_training": 0,
+      "seen_ids_reported_unseen": 0,
+      "calibration_recomputed_ids": 77,
+      "calibration_mismatches": [],
+      "holdout": [
+        {
+          "path": "road/road/ambient/ambient_highway_street_driving_long.log",
+          "rows": 148944,
+          "status_share": {
+            "scored": 0.9902043721130089,
+            "sparse_id": 0.009795627886991084
+          },
+          "flagged": 8982,
+          "scored": 147485,
+          "flagged_share_of_scored": 0.060901108587313964
+        }
+      ]
+    },
+    "tesla": {
+      "id_models": 15,
+      "sparse_ids": 29,
+      "sparse_rows0": 0,
+      "validation": "unvalidated_no_holdout",
+      "training_rows_modelled": 107553,
+      "training_flagged": 2144,
+      "models_mb": 8.360519,
+      "training_flag_rate": 0.01993435794445529,
+      "leakage": [],
+      "training_ids": 44,
+      "training_ids_unlisted": 0,
+      "listed_not_in_training": 0,
+      "seen_ids_reported_unseen": 0,
+      "calibration_recomputed_ids": 15,
+      "calibration_mismatches": [],
+      "holdout": []
+    }
+  }
+}

@@ -1,0 +1,13 @@
+% The dedication is a full page letter, made by dedication/make_letter.py
+% (edit the words there and run it again).
+\clearpage
+\thispagestyle{empty}
+\phantomsection
+\addcontentsline{toc}{chapter}{Dedication}
+\markboth{\MakeUppercase{Dedication}}{\MakeUppercase{Dedication}}
+\begin{tikzpicture}[remember picture, overlay]
+\node[anchor=north west, inner sep=0pt] at (current page.north west)
+  {\includegraphics[width=\paperwidth,height=\paperheight]{dedication_letter.pdf}};
+\end{tikzpicture}
+\null
+\clearpage

@@ -182,6 +182,37 @@ public sealed class CanLogImportTests
         Assert.Equal(1.0, CsvCanLayout.FromHeader("timestamp,can_id,b0,b1,b2,b3,b4,b5,b6,b7")!.TimestampDivisor);
     }
 
+    // ── no invented signals on recorded vehicles (closure fix) ───────────────
+
+    [Fact]
+    public async Task RecordedTraffic_OnDemoSchemaIds_IsNotDecodedIntoFakeSignals()
+    {
+        // Jaguar I-PACE sends CAN ID 0x104 with byte 0 = 0x00. The built-in demo layout
+        // calls 0x104 "INVERTER_STATUS" and decoded that byte as Motor_Temp = -40 C.
+        var file = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(file, string.Join(Environment.NewLine, new[]
+            {
+                "Time Stamp,ID,Extended,Dir,Bus,LEN,D1,D2,D3,D4,D5,D6,D7,D8",
+                "12720776,00000104,false,Rx,0,8,00,00,00,04,00,00,00,00,",
+                "12720900,00000102,false,Rx,0,8,00,00,00,00,00,00,00,00,",
+            }) + Environment.NewLine);
+            var result = await Import(file);
+
+            Assert.Equal(2, result.Packets.Count);
+            Assert.All(result.Packets, p => Assert.Empty(p.Signals));
+            Assert.All(result.Packets, p => Assert.Equal(0.0, p.Snapshot.MotorTemp));
+            Assert.All(result.Packets, p => Assert.Equal(0.0, p.Snapshot.BatteryTemp));
+            Assert.DoesNotContain(result.Packets, p => p.EventText.Contains("INVERTER_STATUS") || p.EventText.Contains("BMS_THERMAL"));
+            Assert.Contains(result.Packets, p => p.EventText.Contains("CAN_104"));
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
     // ── CANvision converter / simulator CSV (timestamp,can_id,b0..b7) ───────
 
     [Fact]

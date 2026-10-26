@@ -1,0 +1,295 @@
+{
+ "slides": [
+  {
+   "index": 7,
+   "hidden": false,
+   "clicks": [
+    {
+     "names": [
+      "snd1",
+      "snd1-a",
+      "fr1",
+      "same",
+      "same-t"
+     ]
+    },
+    {
+     "names": [
+      "miss0",
+      "miss1",
+      "miss2",
+      "can-concl",
+      "can-src"
+     ]
+    }
+   ]
+  },
+  {
+   "index": 9,
+   "hidden": false,
+   "clicks": [
+    {
+     "names": [
+      "pb0-n",
+      "pb0-t",
+      "pb0-d",
+      "pb0-l"
+     ]
+    },
+    {
+     "names": [
+      "pb1-n",
+      "pb1-t",
+      "pb1-d",
+      "pb1-l"
+     ]
+    },
+    {
+     "names": [
+      "pb2-n",
+      "pb2-t",
+      "pb2-d",
+      "pb2-l"
+     ]
+    },
+    {
+     "names": [
+      "pb3-n",
+      "pb3-t",
+      "pb3-d"
+     ]
+    },
+    {
+     "names": [
+      "pb-sec"
+     ]
+    }
+   ]
+  },
+  {
+   "index": 23,
+   "hidden": false,
+   "clicks": [
+    {
+     "names": [
+      "st1",
+      "st-a1"
+     ]
+    },
+    {
+     "names": [
+      "st2",
+      "st-a2"
+     ]
+    },
+    {
+     "names": [
+      "st3",
+      "st-a3"
+     ]
+    },
+    {
+     "names": [
+      "st4",
+      "st-a4"
+     ]
+    },
+    {
+     "names": [
+      "st5",
+      "st-a5"
+     ]
+    },
+    {
+     "names": [
+      "be-box",
+      "be-box-t",
+      "arch-cap"
+     ]
+    }
+   ]
+  },
+  {
+   "index": 24,
+   "hidden": false,
+   "clicks": [
+    {
+     "names": [
+      "ex0-l",
+      "ex0-s",
+      "ex0-r"
+     ]
+    },
+    {
+     "names": [
+      "ex1-l",
+      "ex1-s",
+      "ex1-r"
+     ]
+    }
+   ]
+  },
+  {
+   "index": 25,
+   "hidden": false,
+   "clicks": [
+    {
+     "names": [
+      "iso-p0",
+      "iso-p1",
+      "iso-p2",
+      "iso-p3",
+      "iso-p4",
+      "iso-p5",
+      "iso-p6",
+      "iso-p7",
+      "iso-p8",
+      "iso-p9",
+      "iso-p10",
+      "iso-p11",
+      "iso-p12",
+      "iso-p13",
+      "iso-odd",
+      "iso-v",
+      "iso-h",
+      "iso-v-n",
+      "iso-h-n"
+     ]
+    }
+   ]
+  },
+  {
+   "index": 26,
+   "hidden": false,
+   "clicks": [
+    {
+     "names": [
+      "jag-n",
+      "jag0-id",
+      "jag0-a",
+      "jag0-m",
+      "jag1-id",
+      "jag1-a",
+      "jag1-m",
+      "jag2-id",
+      "jag2-a",
+      "jag2-m",
+      "jag3-id",
+      "jag3-a",
+      "jag3-m",
+      "jag4-id",
+      "jag4-a",
+      "jag4-m",
+      "jag-more"
+     ]
+    },
+    {
+     "names": [
+      "kia-hl",
+      "jag-hl",
+      "hl-link",
+      "hl-box"
+     ]
+    },
+    {
+     "names": [
+      "veh-msg"
+     ]
+    }
+   ]
+  },
+  {
+   "index": 27,
+   "hidden": false,
+   "clicks": [
+    {
+     "names": [
+      "xf1",
+      "xf-a1",
+      "xf2",
+      "xf-a2",
+      "xf3",
+      "xf-a3"
+     ]
+    },
+    {
+     "names": [
+      "x-frame",
+      "x-shot",
+      "x-cap"
+     ]
+    },
+    {
+     "names": [
+      "x-r1",
+      "x-r2",
+      "x-r3"
+     ]
+    }
+   ]
+  },
+  {
+   "index": 31,
+   "hidden": false,
+   "clicks": [
+    {
+     "names": [
+      "v-fx-h",
+      "v-f0-n",
+      "v-f0",
+      "v-f1-n",
+      "v-f1",
+      "v-f2-n",
+      "v-f2",
+      "v-f3-n",
+      "v-f3",
+      "v-f4-n",
+      "v-f4",
+      "v-f5-n",
+      "v-f5",
+      "v-note"
+     ]
+    }
+   ]
+  },
+  {
+   "index": 39,
+   "hidden": false,
+   "clicks": [
+    {
+     "names": [
+      "end-thx",
+      "end-esprit",
+      "end-sep",
+      "end-capg"
+     ]
+    }
+   ]
+  },
+  {
+   "index": 40,
+   "hidden": true,
+   "clicks": []
+  },
+  {
+   "index": 41,
+   "hidden": true,
+   "clicks": []
+  },
+  {
+   "index": 42,
+   "hidden": true,
+   "clicks": []
+  },
+  {
+   "index": 43,
+   "hidden": true,
+   "clicks": []
+  },
+  {
+   "index": 44,
+   "hidden": true,
+   "clicks": []
+  }
+ ]
+}

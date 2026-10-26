@@ -25,16 +25,17 @@ _RESPONSES: dict[str, str] = {
         "normal frequency. Log all source timestamps for forensic review."
     ),
     "payload_freeze": (
-        "INVESTIGATE — Replay attack suspected on {can_id}. "
-        "Verify ECU liveness via challenge-response if hardware permits."
+        "INVESTIGATE — Identical frames keep repeating on {can_id}. "
+        "Check that the ECU is alive and sending fresh values: a stuck ECU and replayed "
+        "frames both look like this."
     ),
     "rate_spike": (
-        "MONITOR — Sudden burst on {can_id} detected. "
-        "Watch for escalation to sustained DoS flood."
+        "MONITOR — Sudden burst on {can_id}. "
+        "Watch whether the rate stays high."
     ),
     "rpm_spoof": (
-        "ALERT — Engine RPM spoofing detected on {can_id}. "
-        "Cross-validate against ignition timing and throttle position signals."
+        "ALERT — Engine RPM on {can_id} disagrees with the other engine signals. "
+        "Cross-validate against ignition timing and throttle position."
     ),
     "fuzzy_payload": (
         "QUARANTINE — Unrecognised payload pattern on {can_id}. "

@@ -1,33 +1,40 @@
 @startuml
-skinparam backgroundColor white
-skinparam defaultFontName Helvetica
-skinparam defaultFontSize 12
-skinparam shadowing false
-skinparam roundcorner 6
-skinparam ActivityBorderThickness 1
-skinparam activity {
-  BackgroundColor #EAF2FF
-  BorderColor #2C5AA0
-  ArrowColor #2C5AA0
-  DiamondBackgroundColor #FFF3E0
-  DiamondBorderColor #C77800
-}
+!include style.iuml
+skinparam roundCorner 14
 
+|Analyst|
 start
-:Select log file;
-:Detect format & select vehicle;
-:Parse into canonical stream;
-if (Frames parsed?) then (yes)
-  :Start replay subprocess;
-  repeat
-    :Score frame (fusion);
-    if (Score >= threshold?) then (yes)
-      :Emit alert;
-    endif
-  repeat while (more frames?) is (yes) not (no)
-  :Publish alert list;
-else (no)
-  :Show import error;
+:Choose a log file;
+|Desktop client|
+:Recognise the format
+and read the frames;
+|Analyst|
+:Choose the vehicle model;
+:Run the analysis;
+|Desktop client|
+:POST /analyze
+(file, model_id);
+|Backend|
+if (model allowed
+offline?) then (no)
+  :HTTP 409 with the reason;
+  |Desktop client|
+  :Show the reason;
+  stop
+else (yes)
+  |Backend|
+  :Score every frame with the
+  model of its identifier;
+  :Count the unresolved frames
+  and their reasons;
+  :Additional checks,
+  merge bursts into alerts;
 endif
+|Desktop client|
+:Show the results
+on the Dashboard;
+|Analyst|
+:Replay the log
+in Log Playback;
 stop
 @enduml

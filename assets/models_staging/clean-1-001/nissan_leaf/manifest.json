@@ -1,0 +1,91 @@
+{
+  "schema_version": 2,
+  "model_family": "nissan_leaf",
+  "model_version": "clean-1-001",
+  "created_at": "2026-09-24T11:49:51+00:00",
+  "training_pipeline": {
+    "name": "backend.ml.training.clean_pipeline",
+    "version": "clean-1",
+    "git_commit": "bbdb84b3f830ec7a970c29f86cf8129031d33c34",
+    "git_dirty": false
+  },
+  "feature_pipeline": {
+    "name": "backend.ml.features.canonical",
+    "version": "canonical-1",
+    "window": 10
+  },
+  "features": [
+    "time_diff",
+    "rolling_mean_time_diff",
+    "rolling_std_time_diff",
+    "byte_diff",
+    "rolling_mean_byte_diff",
+    "rolling_std_byte_diff",
+    "rolling_max_byte_diff",
+    "changed_bytes_count",
+    "payload_entropy"
+  ],
+  "dropped_features": {},
+  "scaler": {
+    "path": "scaler.joblib",
+    "sha256": "16a48a3b8962cc2ed0b88fd00694a1284d61b53aa5bc07fb996d37db8b0c6c58"
+  },
+  "model": {
+    "path": "model.joblib",
+    "sha256": "693e2fc6ae18daee71d7f987329397e843f5bf58b440087ff70af2bd4dc112c2"
+  },
+  "model_params": {
+    "scaler": "RobustScaler",
+    "model": "IsolationForest",
+    "n_estimators": 200,
+    "contamination": 0.02,
+    "random_state": 42,
+    "n_jobs": 1
+  },
+  "threshold": {
+    "value": 0.06726967939195777,
+    "method": "median_minus_kmad",
+    "k": 3.0,
+    "median": 0.16611944270749635,
+    "mad": 0.032949921105179525,
+    "score_min": -0.12378616884350235,
+    "score_max": 0.2207363486328096,
+    "fit_rows": 248168
+  },
+  "training_corpus": {
+    "fingerprint": "a14e85d66f5592d4b514a4b374fa2a90b236e3c51f2f968c551acbc26fc2c0c5",
+    "recordings": [
+      {
+        "path": "EV-CANlogs-main/Nissan LEAF/62kWh/Nissan leaf 62kwh fast charging from 80ish soc , car is off and charger wakes car up, charging , then charger ends session v2.csv",
+        "sha256": "7d7e3b3495dc97fa45a6e61646560f8d38e5e1f0f98eceb749e3b9e649985499",
+        "content_sha256": "2753130e3304cd8843ab79d299b457b47502ffe9b98f628b2960a2c0f43a0389",
+        "frames": 245708,
+        "frame_cap": null
+      },
+      {
+        "path": "EV-CANlogs-main/Nissan LEAF/Special Logs from battery upgraded LEAFs/QC_ZE0_30kWhABB_FAIL.txt",
+        "sha256": "798c0fb6e3ccc0ee02aac3d2abf62af7f25ee45e7a828c3853ce01e54dea4328",
+        "content_sha256": "bee29cd17ebb031d5ad9a1d8b133aa4f0f66c9658c0392e638dccbb87d8b86b0",
+        "frames": 3099,
+        "frame_cap": null
+      }
+    ]
+  },
+  "holdout": {
+    "recordings": [
+      {
+        "path": "EV-CANlogs-main/Nissan LEAF/Special Logs from battery upgraded LEAFs/QC_ZE0_30kWhABB_SUCCESS_PER.txt",
+        "sha256": "4fa8fd255f4115594fc3539cc33bf27873b7d481fe1cfb871bcf083974ab12ad",
+        "content_sha256": "ad6312f2da6224ee4454ae66283ac1151ef9f855aa65ed72961cba04084e072c",
+        "frames": 6529,
+        "frame_cap": null
+      }
+    ]
+  },
+  "environment": {
+    "python": "3.14.4",
+    "sklearn": "1.9.0",
+    "numpy": "2.4.4",
+    "pandas": "3.0.3"
+  }
+}

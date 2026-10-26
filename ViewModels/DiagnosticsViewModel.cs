@@ -144,13 +144,15 @@ public sealed class DiagnosticsViewModel : SectionViewModel
 
     public string TotalEventsText    => FilteredIdsEvents.Count.ToString();
     public string CurrentAttackText  => VehicleDataService.DetectedAttackType;
-    public string CurrentRiskText    => $"{VehicleDataService.CurrentAnomalyScore:F2}";
-    public string DiagConfidenceText => $"{VehicleDataService.DetectionConfidence:F1}%";
+    public string CurrentRiskText    => ShowsCapture ? $"{PeakFlaggedScore:F2}" : $"{VehicleDataService.CurrentAnomalyScore:F2}";
+    public string RiskScoreLabel     => ShowsCapture ? "PEAK SCORE" : "FUSION SCORE";
+    public string DiagConfidenceText => VehicleDataService.DetectionConfidence > 0 ? $"{VehicleDataService.DetectionConfidence:F1}%" : "--";
     public string DiagPacketRateText => $"{VehicleDataService.RuntimeFps:F1}";
     public string DiagLatencyText    => $"{VehicleDataService.RuntimeLatencyMs:F1} ms";
 
     public override string ReliabilityScoreText =>
-        VehicleDataService.TotalAlerts == 0 ? "---" : $"{VehicleDataService.DetectionConfidence:F1}%";
+        VehicleDataService.TotalAlerts == 0 || VehicleDataService.DetectionConfidence <= 0
+            ? "---" : $"{VehicleDataService.DetectionConfidence:F1}%";
 
     private async Task StartFullScanAsync()
     {
@@ -204,7 +206,7 @@ public sealed class DiagnosticsViewModel : SectionViewModel
         else
         {
             var rows = FilteredIdsEvents.Select(item =>
-                $"{item.TimestampUtc:O},{item.CanId},{item.Severity},{item.Score:F4},{item.AttackType},\"{item.Reason.Replace("\"", "\"\"")}\"");
+                FormattableString.Invariant($"{item.TimestampUtc:O},{item.CanId},{item.Severity},{item.Score:F4},{item.AttackType},\"{item.Reason.Replace("\"", "\"\"")}\""));
             File.WriteAllLines(
                 dialog.FileName,
                 new[] { "timestamp,can_id,risk_level,anomaly_score,attack_type,reason" }.Concat(rows));
@@ -325,6 +327,7 @@ public sealed class DiagnosticsViewModel : SectionViewModel
         base.OnDataUpdated(snapshot);
         OnPropertyChanged(nameof(CurrentAttackText));
         OnPropertyChanged(nameof(CurrentRiskText));
+        OnPropertyChanged(nameof(RiskScoreLabel));
         OnPropertyChanged(nameof(DiagConfidenceText));
         OnPropertyChanged(nameof(DiagPacketRateText));
         OnPropertyChanged(nameof(DiagLatencyText));

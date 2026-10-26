@@ -58,6 +58,17 @@ public abstract class SectionViewModel : ViewModelBase
 
     public VehicleSnapshot Snapshot => VehicleDataService.CurrentSnapshot ?? VehicleSnapshot.Default();
 
+    // A loaded capture is on screen rather than a live stream.
+    protected bool ShowsCapture => string.Equals(Snapshot.Source, "log-playback", StringComparison.OrdinalIgnoreCase)
+                                   || VehicleDataService.TotalReplayFrames > 0;
+
+    // Highest score among the frames the analysis flagged (0 when none). Replayed frames
+    // carry no score of their own and the fusion score only moves in a live session, so
+    // this is the score behind the state shown for a capture.
+    protected double PeakFlaggedScore => VehicleDataService.AlertHistory.Count > 0
+        ? VehicleDataService.AlertHistory.Max(a => a.Score)
+        : 0.0;
+
     // Navigation and Cards
     private int currentCardIndex = 0;
     public int CurrentCardIndex

@@ -20,4 +20,11 @@ public static class DevOptions
     /// it does not fabricate any data.
     /// </summary>
     public static bool SkipDataGate { get; set; }
+
+    /// <summary>
+    /// Seconds the Home entrance holds on its first frame before it plays
+    /// (<c>--entrance-delay=3</c>). Lets a screen recorder that attaches to the
+    /// window after it opens still capture the whole entrance. 0: plays at once.
+    /// </summary>
+    public static double EntranceDelaySeconds { get; set; }
 }

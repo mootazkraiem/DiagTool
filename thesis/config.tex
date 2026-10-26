@@ -22,6 +22,8 @@
 \usepackage{setspace}
 \setstretch{1.15}
 \setlength{\parindent}{0.5cm}
+% every paragraph starts with an indent, also the first one after a heading
+\usepackage{indentfirst}
 
 % ---------- Color ----------
 \usepackage[table]{xcolor}
@@ -39,7 +41,70 @@
 \graphicspath{{images/}{images/graphs/}{images/screenshots/}{images/logos/}{diagrams/}}
 \usepackage{float}
 \usepackage{subcaption}
-\usepackage{placeins}      % \FloatBarrier to keep figures inside their chapter/section
+
+% ---------- Page breaks ----------
+% Figures and tables float ([htbp]) so that the text keeps filling a page instead of
+% leaving an empty band when a figure does not fit; these limits let large figures
+% share a page with text.
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.8}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.8}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{4}
+% Pages that hold only figures or tables start at the top instead of being centred.
+\makeatletter
+\setlength{\@fptop}{0pt}
+\setlength{\@fpsep}{\floatsep}
+\setlength{\@fpbot}{0pt plus 1fil}
+\makeatother
+% A heading is never left at the bottom of a page with only a line or two under it:
+% \Needspace{h} starts a new page when less than h of the page is left (same logic as
+% the needspace package, defined here because that package is not installed).
+\usepackage{etoolbox}
+\makeatletter
+\newcommand{\Needspace}[1]{\par\penalty-100\begingroup
+  \setlength{\dimen@}{#1}%
+  % On a page that has no text yet, the room left is \vsize, which LaTeX has already
+  % reduced by the figures and tables placed at the top of that page.
+  \ifdim\pagegoal=\maxdimen \dimen@ii\vsize \else \dimen@ii\pagegoal \fi
+  \advance\dimen@ii-\pagetotal
+  \ifdim\dimen@>\dimen@ii
+    \ifdim\pagegoal=\maxdimen \ifdim\vsize<\textheight \null\fi\fi
+    \ifdim\dimen@ii>\z@ \vfil\fi
+    \break
+  \fi\endgroup}
+\makeatother
+\pretocmd{\section}{\Needspace{13\baselineskip}}{}{\PackageWarning{config}{PATCHFAIL section}}
+\pretocmd{\subsection}{\Needspace{7\baselineskip}}{}{\PackageWarning{config}{PATCHFAIL subsection}}
+\pretocmd{\subsubsection}{\Needspace{6\baselineskip}}{}{\PackageWarning{config}{PATCHFAIL subsubsection}}
+% Loaded after the heading check so that pending figures are placed first. A figure
+% stays near its section: it may share a page with the start of the next one.
+\usepackage[section,above,below]{placeins}
+% When a section starts while figures of the previous one are still waiting, placeins
+% ejects the page and, if they do not all fit at the top of the next one, uses \clearpage,
+% which leaves a page with one figure and the new section alone on the page after. Here
+% the waiting figures are placed page by page instead, and the text goes on under the
+% last of them.
+\makeatletter
+\def\FloatBarrier{\par\begingroup\let\@elt\relax\@tempcnta\z@
+  \loop
+    \edef\@tempa{\@deferlist\@dbldeferlist}%
+    \ifx\@tempa\@empty \@tempswafalse \else \@tempswatrue \fi
+    \if@tempswa
+      \ifdim\pagegoal=\maxdimen \ifx\@toplist\@empty \@tempcnta9 \fi\fi
+      \ifnum\@tempcnta>6 \clearpage \@tempswafalse \fi
+    \fi
+  \if@tempswa
+    \advance\@tempcnta\@ne
+    \ifdim\pagegoal=\maxdimen \null\fi
+    \newpage
+  \repeat
+  \endgroup\@fb@topbarrier}
+\makeatother
+\clubpenalty=10000
+\widowpenalty=10000
 
 % ---------- Tables ----------
 \usepackage{amsmath}
@@ -48,6 +113,15 @@
 \usepackage{multirow}
 \usepackage{array}
 \usepackage{tabularx}
+% prose columns of tables: ragged right, no stretched spaces
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+% long tables are not floats: they start right under the text that introduces them and
+% continue on the next page with their header repeated
+\usepackage{xltabular}
+\setlength{\LTcapwidth}{\textwidth}
+\setlength{\LTpre}{\medskipamount}
+\setlength{\LTpost}{\medskipamount}
 
 % ---------- Diagrams ----------
 \usepackage{ifthen}
@@ -108,6 +182,7 @@
 % ---------- Bibliography (IEEE style) ----------
 \usepackage[backend=biber,style=ieee,sorting=none]{biblatex}
 \addbibresource{references.bib}
+\setlength{\bibitemsep}{3pt}
 
 % ---------- Headers / footers ----------
 \usepackage{fancyhdr}
@@ -117,6 +192,14 @@
 \fancyhead[L]{\small\leftmark}
 \fancyhead[R]{\small\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
+% ESPRIT band of triangles along the bottom edge of the page. The cover, the dedication and
+% the back cover use the empty style, so they are the only pages without it.
+\newcommand{\espritband}{\begin{tikzpicture}[remember picture,overlay]
+  \node[anchor=south west,inner sep=0pt] at (current page.south west)
+    {\includegraphics[width=\paperwidth,height=40pt]{esprit_band.pdf}};
+\end{tikzpicture}}
+\fancyfoot[C]{\espritband}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\espritband\raisebox{14pt}[0pt][0pt]{\thepage}}\renewcommand{\headrulewidth}{0pt}}
 
 % ---------- Section title numbering depth ----------
 \setcounter{secnumdepth}{3}
@@ -125,3 +208,5 @@
 % ---------- Custom commands ----------
 \newcommand{\todofill}[1]{\textbf{[TO FILL: #1]}}
 \newcommand{\code}[1]{\texttt{#1}}
+% a logo with its name under it; the optional argument sets the height of the logo
+\newcommand{\techlogo}[3][1.1cm]{\begin{tabular}[b]{@{}c@{}}\rule[-0.55cm]{0pt}{1.1cm}\raisebox{-0.5\height}{\includegraphics[height=#1]{#2}}\\[2pt]\footnotesize #3\end{tabular}}

@@ -1,0 +1,66 @@
+{
+  "replay_source": "C:\\Users\\benkr\\OneDrive\\can_project\\assets\\EV-CANlogs-main\\Jaguar IPACE\\canbus_turningon_quickly.csv",
+  "total_frames_processed": 50361,
+  "total_alerts": 5,
+  "alerts_per_1000_frames": 0.09928317547308434,
+  "critical_alert_rate": 0.0,
+  "high_alert_rate": 0.019856635094616864,
+  "alerts_per_severity": {
+    "MEDIUM": 3,
+    "LOW": 1,
+    "HIGH": 1
+  },
+  "alerts_per_reason": {
+    "timing_burst": 5
+  },
+  "alerts_per_can_id": {
+    "0x7E4": 4,
+    "0x7EC": 1
+  },
+  "alerts_per_risk_level": {
+    "MEDIUM": 3,
+    "LOW": 1,
+    "HIGH": 1
+  },
+  "max_fusion_score_observed": 0.8023583221073884,
+  "average_fusion_score_observed": 0.050657677519591306,
+  "runtime_duration_sec": 251.26474059999964,
+  "fps": 200.43003200425994,
+  "alert_records": [
+    {
+      "timestamp": 15.808331,
+      "can_id": 2020,
+      "risk_level": "MEDIUM",
+      "score": 0.7970863970588236,
+      "reason": "timing=2.000, payload=0.277, ml=0.000, persistence=0.000, freq=1Hz, can_id_entropy=4.094"
+    },
+    {
+      "timestamp": 15.827643,
+      "can_id": 2028,
+      "risk_level": "LOW",
+      "score": 0.4633521354306017,
+      "reason": "timing=0.797, payload=0.527, ml=0.000, persistence=0.000, freq=8Hz, can_id_entropy=4.176"
+    },
+    {
+      "timestamp": 17.268447,
+      "can_id": 2020,
+      "risk_level": "HIGH",
+      "score": 0.8023583221073884,
+      "reason": "timing=1.938, payload=0.351, ml=0.000, persistence=0.010, freq=1Hz, can_id_entropy=4.161"
+    },
+    {
+      "timestamp": 19.55944,
+      "can_id": 2020,
+      "risk_level": "MEDIUM",
+      "score": 0.6897011798681525,
+      "reason": "timing=1.616, payload=0.355, ml=0.000, persistence=0.000, freq=1Hz, can_id_entropy=3.998"
+    },
+    {
+      "timestamp": 21.814098,
+      "can_id": 2020,
+      "risk_level": "MEDIUM",
+      "score": 0.6542161381810878,
+      "reason": "timing=1.558, payload=0.311, ml=0.000, persistence=0.000, freq=1Hz, can_id_entropy=4.122"
+    }
+  ]
+}

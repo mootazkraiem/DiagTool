@@ -1,23 +1,39 @@
 @startuml
-skinparam backgroundColor white
-skinparam defaultFontName Helvetica
-skinparam defaultFontSize 14
-skinparam shadowing false
-skinparam roundcorner 6
-skinparam component {
-  BackgroundColor #EAF2FF
-  BorderColor #2C5AA0
-  ArrowColor #2C5AA0
+!include style.iuml
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 45
+
+package "Desktop client  (C#, WPF, .NET Framework 4.8)" as Client {
+  [Views (XAML)] as Views
+  [ViewModels] as VMs
+  [Services\nPythonApiClient, VehicleDataService,\nModelSelectionService, CanLogImportService] as Services
 }
 
-component "Desktop Client\n(WPF)" as Client
-component "Backend\n(FastAPI)" as Backend
-component "Machine Learning" as ML
-component "SQLite" as DB
-component "CAN Interface" as CAN
+package "Backend  (Python, FastAPI, 127.0.0.1:8765)" as Backend {
+  [REST API\nserver.py] as Api
+  [Detection\nRealtimeEngine,\nvehicle_scoring,\nsession_analyzer] as Detect
+  [Model management\nmodel_manifest,\nmodel_status] as Models
+  [Decoding\ndbc_manager,\nsignal_discovery] as Decode
+  [Explanation\nexplainer/llm.py] as Explain
+  [Hardware\ncan_interface] as Hw
+  [Persistence\nSQLite store] as Store
+}
 
-Client --> Backend
-Backend --> ML
-Backend --> DB
-Backend --> CAN
+database "assets/models\n(manifest.json,\nmodels.joblib)" as ModelFiles
+cloud "Gemini API" as Gemini
+node "Ollama\n(local model)" as Ollama
+
+Views -down-> VMs : data binding
+VMs -down-> Services
+Services -down-> Api : HTTP + JSON
+Api -down-> Detect
+Api -down-> Explain
+Api -down-> Decode
+Api -down-> Store
+Hw -up-> Detect : frames
+Detect -down-> Models
+Models -down-> ModelFiles
+Explain -down-> Gemini
+Explain -down-> Ollama
 @enduml

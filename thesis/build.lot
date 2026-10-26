@@ -1,40 +1,37 @@
 \babel@toc {english}{}\relax 
 \babel@toc {english}{}\relax 
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {1.1}{\ignorespaces Existing solutions and their limits for BMS validation work.}}{3}{table.caption.11}%
+\contentsline {table}{\numberline {1.2}{\ignorespaces Comparison of Waterfall, Scrum and the Unified Process.}}{6}{table.caption.12}%
+\contentsline {table}{\numberline {1.3}{\ignorespaces Phases of the Unified Process in the project.}}{7}{table.caption.13}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {2.1}{\ignorespaces Functional requirements, by theme and priority.}}{10}{table.caption.15}%
+\contentsline {table}{\numberline {2.2}{\ignorespaces Non functional requirements, classified with FURPS+.}}{11}{table.caption.16}%
+\contentsline {table}{\numberline {2.3}{\ignorespaces Summary of the use cases.}}{12}{table.caption.18}%
+\contentsline {table}{\numberline {2.4}{\ignorespaces Use case \emph {Import log}, with \emph {Select vehicle}, \emph {Check model status} and \emph {Detect anomaly} (offline analysis).}}{12}{table.caption.19}%
+\contentsline {table}{\numberline {2.5}{\ignorespaces Use case \emph {Replay log}.}}{13}{table.caption.20}%
+\contentsline {table}{\numberline {2.6}{\ignorespaces Use case \emph {Request explanation}.}}{14}{table.caption.21}%
+\contentsline {table}{\numberline {2.7}{\ignorespaces Use case \emph {Export report}.}}{14}{table.caption.22}%
+\contentsline {table}{\numberline {2.8}{\ignorespaces Use case \emph {Connect hardware} (live capture).}}{14}{table.caption.23}%
+\contentsline {table}{\numberline {2.9}{\ignorespaces Initial risk list.}}{16}{table.caption.25}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {3.1}{\ignorespaces Scoring and alerting rules of the two detection paths.}}{32}{table.caption.39}%
+\contentsline {table}{\numberline {3.2}{\ignorespaces Dataset files used in the project.}}{33}{table.caption.41}%
+\contentsline {table}{\numberline {3.3}{\ignorespaces Candidate machine learning algorithms for the anomaly score.}}{33}{table.caption.42}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {4.1}{\ignorespaces Iterations of the construction phase.}}{35}{table.caption.43}%
+\contentsline {table}{\numberline {4.2}{\ignorespaces Vehicle profiles with \acrshort {dbc} decoding.}}{38}{table.caption.45}%
+\contentsline {table}{\numberline {4.3}{\ignorespaces Root causes of the 15,945 alerts of the first pipeline.}}{40}{table.caption.47}%
+\contentsline {table}{\numberline {4.4}{\ignorespaces Before and after the corrections, on the Kia EV6 recording (97,741 frames).}}{43}{table.caption.48}%
+\contentsline {table}{\numberline {4.5}{\ignorespaces Defects corrected during the second iteration.}}{45}{table.caption.52}%
+\contentsline {table}{\numberline {4.6}{\ignorespaces Parameters of the final models.}}{48}{table.caption.53}%
+\contentsline {table}{\numberline {4.7}{\ignorespaces Status of a model and what it allows.}}{49}{table.caption.55}%
+\contentsline {table}{\numberline {4.8}{\ignorespaces Final models scored on their holdout recordings.}}{51}{table.caption.57}%
+\contentsline {table}{\numberline {4.9}{\ignorespaces Speed of the live path with the final models, on the first 10,000 frames of each holdout. The model call is given as mean and 99th percentile.}}{52}{table.caption.58}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {5.1}{\ignorespaces Stages of the validation.}}{62}{table.caption.71}%
+\contentsline {table}{\numberline {5.2}{\ignorespaces Testing matrix: what was covered, and how.}}{62}{table.caption.72}%
+\contentsline {table}{\numberline {5.3}{\ignorespaces Requirements traceability, from requirement to implementation to validation.}}{63}{table.caption.73}%
+\contentsline {table}{\numberline {5.4}{\ignorespaces User guide: main tasks.}}{65}{table.caption.74}%
 \babel@toc {french}{}\relax 
 \babel@toc {english}{}\relax 
-\addvspace {10\p@ }
-\contentsline {table}{\numberline {1.1}{\ignorespaces Comparison of Waterfall, Agile, and Scrum.}}{4}{table.caption.11}%
-\addvspace {10\p@ }
-\contentsline {table}{\numberline {2.1}{\ignorespaces Textual description of the main use cases.}}{12}{table.caption.15}%
-\contentsline {table}{\numberline {2.2}{\ignorespaces Risk analysis.}}{15}{table.caption.18}%
-\contentsline {table}{\numberline {2.3}{\ignorespaces Requirements traceability: from requirement to implementation to validation.}}{17}{table.caption.20}%
-\addvspace {10\p@ }
-\contentsline {table}{\numberline {3.1}{\ignorespaces Technology choices and the main alternative considered.}}{19}{table.caption.21}%
-\contentsline {table}{\numberline {3.2}{\ignorespaces Technologies used, by category.}}{20}{table.caption.22}%
-\addvspace {10\p@ }
-\contentsline {table}{\numberline {4.1}{\ignorespaces Repository statistics (source code only).}}{32}{table.caption.34}%
-\contentsline {table}{\numberline {4.2}{\ignorespaces Supported vehicle profiles.}}{37}{table.caption.40}%
-\contentsline {table}{\numberline {4.3}{\ignorespaces Candidate machine-learning algorithms for anomaly scoring.}}{40}{table.caption.42}%
-\addvspace {10\p@ }
-\contentsline {table}{\numberline {5.1}{\ignorespaces QA timeline.}}{47}{table.caption.46}%
-\contentsline {table}{\numberline {5.2}{\ignorespaces Testing matrix: what was covered, and how.}}{48}{table.caption.48}%
-\contentsline {table}{\numberline {5.3}{\ignorespaces Root-cause breakdown of the 15,945 baseline alerts.}}{50}{table.caption.50}%
-\contentsline {table}{\numberline {5.4}{\ignorespaces Before/after comparison on the real Kia EV6 recording (97,741 frames).}}{54}{table.caption.51}%
-\contentsline {table}{\numberline {5.5}{\ignorespaces Summary of engineering fixes and their validation status.}}{58}{table.caption.59}%
-\addvspace {10\p@ }
-\contentsline {table}{\numberline {A.1}{\ignorespaces Backend REST API endpoints.}}{64}{table.A.1}%
-\addvspace {10\p@ }
-\contentsline {table}{\numberline {B.1}{\ignorespaces Software requirements.}}{66}{table.caption.69}%
-\contentsline {table}{\numberline {B.2}{\ignorespaces Hardware requirements.}}{66}{table.caption.70}%
-\contentsline {table}{\numberline {B.3}{\ignorespaces Default fusion and severity configuration.}}{67}{table.caption.71}%
-\addvspace {10\p@ }
-\contentsline {table}{\numberline {C.1}{\ignorespaces Main sources of the training corpus.}}{68}{table.caption.72}%
-\contentsline {table}{\numberline {C.2}{\ignorespaces CSS Electronics EV Data Pack (Kia EV6) — primary validation dataset.}}{69}{table.caption.73}%
-\contentsline {table}{\numberline {C.3}{\ignorespaces ROAD dataset~\blx@tocontentsinit {0}\cite {verma2020road} — training corpus.}}{69}{table.caption.74}%
-\contentsline {table}{\numberline {C.4}{\ignorespaces Car-Hacking dataset~\blx@tocontentsinit {0}\cite {seo2018gids} — training corpus.}}{70}{table.caption.75}%
-\contentsline {table}{\numberline {C.5}{\ignorespaces Community EV CAN logs — training corpus.}}{70}{table.caption.76}%
-\addvspace {10\p@ }
-\contentsline {table}{\numberline {D.1}{\ignorespaces Severity distribution after correction.}}{72}{table.caption.77}%
-\contentsline {table}{\numberline {D.2}{\ignorespaces Reason-attribution distribution after the Fix 3 correction.}}{72}{table.caption.78}%
-\addvspace {10\p@ }
-\contentsline {table}{\numberline {E.1}{\ignorespaces Every dataset used, and its source.}}{76}{table.caption.84}%

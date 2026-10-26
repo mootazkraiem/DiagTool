@@ -1,0 +1,20 @@
+{
+  "idle": {
+    "method": "median_minus_kmad",
+    "k": 3.0,
+    "median_score": 0.18696329744096635,
+    "mad": 0.02472385007321448,
+    "threshold": 0.1127917472213229,
+    "score_min": -0.1969743503320477,
+    "score_max": 0.24173095828831087
+  },
+  "driving": {
+    "method": "median_minus_kmad",
+    "k": 3.0,
+    "median_score": 0.16375296250101584,
+    "mad": 0.02817740304077654,
+    "threshold": 0.07922075337868623,
+    "score_min": -0.18111326684065077,
+    "score_max": 0.2325188684280609
+  }
+}

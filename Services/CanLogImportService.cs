@@ -135,31 +135,11 @@ public sealed class CanLogImportService
         return new CanImportResult(frames, snapshots, events, packets, total, parsed, skipped);
     }
 
-    private IReadOnlyList<DecodedSignal> DecodeFrame(CanFrame frame)
-    {
-        if (!PredefinedCanSchema.DbcMap.TryGetValue(frame.CanId, out var signalDefinitions))
-        {
-            return Array.Empty<DecodedSignal>();
-        }
-
-        var signals = new List<DecodedSignal>(signalDefinitions.Count);
-        foreach (var definition in signalDefinitions)
-        {
-            var raw = ExtractRaw(frame.Data, definition);
-            var value = (raw * definition.Factor) + definition.Offset;
-            signals.Add(new DecodedSignal
-            {
-                Name = definition.Name,
-                FeatureKey = string.IsNullOrWhiteSpace(definition.FeatureKey) ? definition.Name : definition.FeatureKey,
-                Value = value,
-                Unit = definition.Unit,
-                TimestampUtc = frame.TimestampUtc,
-                CanId = frame.CanId,
-            });
-        }
-
-        return signals;
-    }
+    // Imported captures are not decoded here. PredefinedCanSchema describes a synthetic
+    // demo layout (CAN IDs 0x100-0x105), not any recorded vehicle or the bench rig; applied
+    // to real traffic it invented readings - Jaguar I-PACE 0x104, byte 0 = 0x00, became
+    // "Motor_Temp -40.0 C", and threshold anomalies were built from such values.
+    private static IReadOnlyList<DecodedSignal> DecodeFrame(CanFrame frame) => Array.Empty<DecodedSignal>();
 
     public async Task<ValidationScoreResponse?> ScoreValidationFileAsync(string filePath, CancellationToken cancellationToken)
     {
@@ -411,46 +391,9 @@ public sealed class CanLogImportService
         return Math.Max(0, delta);
     }
 
-    private static double ExtractRaw(byte[] data, SignalDefinition definition)
-    {
-        ulong raw = 0;
-        if (definition.IsLittleEndian)
-        {
-            for (var i = 0; i < data.Length; i++)
-            {
-                raw |= ((ulong)data[i]) << (8 * i);
-            }
-        }
-        else
-        {
-            for (var i = 0; i < data.Length; i++)
-            {
-                raw = (raw << 8) | data[i];
-            }
-        }
-
-        var mask = definition.Length >= 64 ? ulong.MaxValue : ((1UL << definition.Length) - 1UL);
-        raw = (raw >> definition.StartBit) & mask;
-
-        if (!definition.IsSigned)
-        {
-            return raw;
-        }
-
-        var signBit = 1UL << (definition.Length - 1);
-        if ((raw & signBit) == 0)
-        {
-            return raw;
-        }
-
-        var signed = (long)(raw | (~mask));
-        return signed;
-    }
-
-    private string ResolveFrameName(int canId)
-    {
-        return PredefinedCanSchema.TranslationMap.TryGetValue(canId, out var name) ? name : $"CAN_{canId:X3}";
-    }
+    // Generic name: the demo schema's message names (e.g. 0x104 "INVERTER_STATUS") do not
+    // describe recorded vehicles.
+    private static string ResolveFrameName(int canId) => $"CAN_{canId:X3}";
 
     private static bool TryParseFrame(string rawLine, CsvCanLayout? csvLayout, out CanFrameRecord frame)
     {

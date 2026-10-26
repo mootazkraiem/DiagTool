@@ -1,95 +1,33 @@
 \chapter{Additional Validation Data}
 \label{app:additional-validation}
 
-\section{Post-correction alert breakdown}
+\section{Identifiers with the most alerts}
 
-Table~\ref{tab:app-severity} and Table~\ref{tab:app-reason} give the full severity and reason-attribution breakdown of the 11{,}971 alerts produced by the corrected pipeline on the Kia EV6 recording (Chapter~\ref{chap:validation}), superseding the pre-correction breakdown of Table~\ref{tab:rootcause}.
-
-\begin{table}[H]
-\centering
-\caption{Severity distribution after correction.}
-\label{tab:app-severity}
-\begin{tabular}{|l|r|r|}
-\hline
-\textbf{Severity} & \textbf{Count} & \textbf{Share} \\
-\hline
-LOW      & 4{,}748 & 39.7\% \\
-\hline
-MEDIUM   & 2{,}069 & 17.3\% \\
-\hline
-HIGH     & 2{,}279 & 19.0\% \\
-\hline
-CRITICAL & 2{,}875 & 24.0\% \\
-\hline
-\textbf{Total} & \textbf{11{,}971} & \textbf{100\%} \\
-\hline
-\end{tabular}
-\end{table}
-
-\begin{table}[H]
-\centering
-\caption{Reason-attribution distribution after the Fix 3 correction.}
-\label{tab:app-reason}
-\begin{tabular}{|l|r|r|}
-\hline
-\textbf{Dominant layer (bucket)} & \textbf{Count} & \textbf{Share} \\
-\hline
-Timing (timing\_burst)       & 5{,}031 & 42.0\% \\
-\hline
-Payload (continuity\_break)  & 4{,}451 & 37.2\% \\
-\hline
-ML (ml\_outlier)             & 2{,}489 & 20.8\% \\
-\hline
-\textbf{Total} & \textbf{11{,}971} & \textbf{100\%} \\
-\hline
-\end{tabular}
-\end{table}
-
-\section{Top alerting CAN identifiers}
-
-Figure~\ref{fig:app-top-canids} ranks the eight most frequent identifiers in the post-correction alert list. The identifiers 0x7EC, 0x7E4, 0x7BB, 0x7A8, 0x7B3, and 0x7A0 all fall in the 0x7A0--0x7EC range reserved for \gls{uds} diagnostic request/response pairs, consistent with the recording's active-polling capture method described in Appendix~\ref{app:datasets}. Identifier 0x19, the single most frequent alert source, and 0x13 are broadcast identifiers rather than diagnostic ones, and correspond to the high-frequency battery and drivetrain messages discussed in Section~\ref{sec:validation-rootcause}.
+Figure~\ref{fig:app-top-canids} ranks the eight identifiers with the most alerts after correction. Six of them (0x7EC, 0x7E4, 0x7BB, 0x7A8, 0x7B3 and 0x7A0) lie in the range 0x7A0 to 0x7EC, which the vehicle uses for \gls{uds} diagnostic requests and responses. This matches the way the recording was made, by active polling (Appendix~\ref{app:datasets}). The two others, 0x19, the identifier with the most alerts, and 0x13, are broadcast identifiers and not diagnostic ones; without a \gls{dbc} file for them, we cannot say which values they carry.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{top_can_ids.png}
-\caption{Top alerting CAN identifiers in the corrected pipeline's alert list.}
+\caption{Identifiers with the most alerts in the corrected first pipeline.}
 \label{fig:app-top-canids}
 \end{figure}
 
 \section{Additional screenshots}
 
-Figure~\ref{fig:screen-dashboard} shows the Dashboard view during a live session: the fusion score gauge, active-threat panel, and IDS quick statistics.
+Figure~\ref{fig:screen-export-csv} shows the first rows of the \gls{csv} file exported from the Anomaly Intel screen after the analysis of the Jaguar I-PACE holdout recording. The figure is a rendering of the real file. Before the correction described in Chapter~\ref{chap:impl}, the scores were written with a decimal comma on a French Windows installation, which shifted the later columns. We read the file again with a standard \gls{csv} reader after the correction: its 339 rows all have the 9 columns of the header, and every score is read as a number.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{02_dashboard_live.png}
-\caption{Dashboard view: fusion score, active-threat panel, and IDS quick statistics.}
-\label{fig:screen-dashboard}
-\end{figure}
-
-Figure~\ref{fig:screen-settings} shows the Settings view, including the hardware interface fields, the alert threshold slider, and the vehicle profile list also summarized in Table~\ref{tab:vehicles}.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{05_settings.png}
-\caption{Settings view: hardware interface, neural core configuration, and vehicle profiles.}
-\label{fig:screen-settings}
-\end{figure}
-
-Figure~\ref{fig:screen-export-csv} shows a rendering of the real exported CSV file, reconstructed from the raw export because the exporter writes the Score column with a French-locale decimal comma (for example 0,415) without quoting it, which shifts every later column when the file is opened with a plain, comma-delimited reader. This is a genuine, minor formatting quirk of the export path, noted here for completeness; it does not affect any of the validation results in Chapter~\ref{chap:validation}, all of which were read from the underlying JSON summary rather than the CSV export.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{09_export_csv_preview.png}
-\caption[Exported CSV file preview]{Exported CSV file (reconstructed preview), Time/CAN\_ID/Severity/AttackType/Score columns.}
+\includegraphics[width=\textwidth]{f09_export_csv.png}
+\caption[Exported CSV file]{First rows of the exported \gls{csv} file (Time, CAN\_ID, Severity, Pattern, Score and Reason columns).}
 \label{fig:screen-export-csv}
 \end{figure}
 
-Figure~\ref{fig:screen-export-pdf} shows the first page of the exported PDF report, generated from the same completed replay: header, summary statistics, and the start of the paginated alert table.
+Figure~\ref{fig:screen-export-pdf} shows the first page of the PDF report built from the same 339 alerts: the session facts, the summary by severity, the identifiers with the most alerts and the start of the alert table. The complete report has 13 pages and ends with the explanation requested during the session.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.8\textwidth]{10_export_pdf_page1.png}
+{\setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.4pt}\fbox{\includegraphics[width=0.8\textwidth]{f10_export_pdf.png}}}
 \caption{Exported PDF report, first page.}
 \label{fig:screen-export-pdf}
 \end{figure}

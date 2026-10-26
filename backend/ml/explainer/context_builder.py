@@ -77,19 +77,26 @@ def build_context(alert: dict[str, Any]) -> dict[str, Any]:
     kb = retrieve(alert)
     similar = find_similar(alert, top_k=3)
 
-    state_key = anomaly["state"].lower()
-    stats = _load_state_stats()
-    state_normal = stats.get(state_key) or stats.get("driving") or {}
+    if alert.get("is_burst_summary"):
+        anomaly["burst"] = {"merged_frames": int(alert.get("suppressed_count", 0) or 0),
+                            "window_s": alert.get("burst_window_s")}
+    if isinstance(alert.get("layer_scores"), dict):
+        anomaly["layer_scores"] = {k: round(float(v), 3) for k, v in alert["layer_scores"].items()}
 
-    # Pre-compute deviation strings for prompt rendering
-    freq_range = state_normal.get("frequency_range", [0, 9999])
-    ent_range = state_normal.get("entropy_range", [0, 9999])
-    td_range = state_normal.get("time_diff_range", [0, 9999])
+    state_key = anomaly["state"].lower()
+    # state_stats.json holds hand-written, bus-wide reference profiles per driving
+    # state. They were never measured on this vehicle or on one identifier, so they
+    # are not passed on as this alert's "normal" rate: the explainer compared a single
+    # identifier with them and invented deviations (e.g. 0 msg/s vs 40-150 msg/s).
+    state_normal: dict[str, Any] = {}
+
+    def _plain(value: float | None, unit: str = "") -> str:
+        return "not measured for this alert" if value is None else f"{value}{unit}"
 
     deviations = {
-        "frequency": _deviation_tag(anomaly["frequency"], freq_range[0], freq_range[1]),
-        "entropy":   _deviation_tag(anomaly["entropy"],   ent_range[0],  ent_range[1]),
-        "time_diff": _deviation_tag(anomaly["time_diff"], td_range[0],   td_range[1]),
+        "frequency": _plain(anomaly["frequency"], " msg/s"),
+        "entropy":   _plain(anomaly["entropy"]),
+        "time_diff": _plain(anomaly["time_diff"], " s"),
     }
 
     return {

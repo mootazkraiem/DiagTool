@@ -1,33 +1,39 @@
 @startuml
-skinparam backgroundColor white
-skinparam defaultFontName Helvetica
-skinparam defaultFontSize 12
-skinparam shadowing false
-skinparam roundcorner 6
-skinparam ArrowColor #2C5AA0
-skinparam ArrowThickness 1.1
-skinparam component {
-  BackgroundColor #EAF2FF
-  BorderColor #2C5AA0
-}
+!include style.iuml
+skinparam roundCorner 14
 
-component "Training\ndataset\n(7M+ frames)" as Dataset
-component "Cleaning &\nnormalization" as Clean
-component "Feature\nengineering" as Feat
-component "Train /\nvalidation split" as Split
-
-component "K-Means training\n(state classification)" as KMeans
-component "Isolation Forest\ntraining (per state,\nper vehicle)" as IF
-component "Validation\n(held-out split)" as Validate #FFF3E0
-component "Model export\n(.joblib)" as Export
-component "Runtime\nloading" as Runtime #E8F5E9
-
-Dataset -right-> Clean
-Clean -right-> Feat
-Feat -right-> Split
-Split -down-> KMeans
-KMeans -right-> IF
-IF -right-> Validate
-Validate -right-> Export
-Export -right-> Runtime
+start
+:Recordings of one vehicle
+(listed in the plan file);
+:Split by recording:
+training recordings / holdout recordings
+(no overlap, checked with SHA-256);
+:Compute the 9 features per identifier
+on the training recordings;
+repeat :Next identifier;
+  if (at least 1,000 rows
+  and varying features?) then (yes)
+    :Fit an Isolation Forest
+    (200 trees, seed 42, no scaler);
+    :Threshold: 2% of the training rows
+    (strict quantile), keep the median;
+  else (no)
+    :Record it as sparse
+    or unmodelled;
+  endif
+repeat while (identifiers left?) is (yes)
+->no;
+:Write models.joblib and manifest.json
+to assets/models_staging/<version>;
+:Score the holdout recordings,
+write the validation report;
+if (evaluation acceptable?) then (yes)
+  :Promote to assets/models
+  (model file stored with Git LFS);
+  :Archive the replaced files
+  with promotion.json;
+else (no)
+  :Hold the model back;
+endif
+stop
 @enduml

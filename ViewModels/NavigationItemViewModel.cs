@@ -4,6 +4,7 @@ public sealed class NavigationItemViewModel : ViewModelBase
 {
     private bool isActive;
     private bool isUnlocked;
+    private bool isAvailable = true;
 
     public NavigationItemViewModel(string moduleCode, string title, string description, SectionViewModel section)
     {
@@ -34,5 +35,16 @@ public sealed class NavigationItemViewModel : ViewModelBase
     {
         get => isUnlocked;
         set => SetProperty(ref isUnlocked, value);
+    }
+
+    /// <summary>
+    /// Whether this tab belongs in the bar at all for the session in progress.
+    /// Hardware Setup is hidden while a recorded log is being analysed: there is
+    /// no adapter involved in reading a file, so the screen has nothing to say.
+    /// </summary>
+    public bool IsAvailable
+    {
+        get => isAvailable;
+        set => SetProperty(ref isAvailable, value);
     }
 }

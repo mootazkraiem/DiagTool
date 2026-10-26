@@ -1,33 +1,27 @@
 @startuml
-skinparam backgroundColor white
-skinparam defaultFontName Helvetica
-skinparam defaultFontSize 11
-skinparam shadowing false
-skinparam roundcorner 6
-skinparam ArrowColor #2C5AA0
-skinparam ArrowThickness 1.1
-skinparam component {
-  BackgroundColor #EAF2FF
-  BorderColor #2C5AA0
-}
+!include style.iuml
+skinparam linetype ortho
+skinparam nodesep 35
+skinparam ranksep 40
 
-component "M1\nLive\nfoundation" as M1
-component "M3\nMulti-state\nML training" as M3
-component "M4\nAI explanation\nengine" as M4
-component "M5\nReal-time\ngraphs" as M5
-
-component "M6\nSession\nrecording" as M6
-component "M8 / M7\nDecode pipeline\n& integration" as M8
-component "M2\nHardware layer\n(code-complete)" as M2
-component "Engineering\ncorrection phase" as Fix #FFE0B2
-component "Release\nCandidate" as RC #E8F5E9
+rectangle "M1\nlive foundation" as M1
+rectangle "M3\ntraining per\ndriving state" as M3
+rectangle "M4\nexplanation\nengine" as M4
+rectangle "M5\nreal time\ncharts" as M5
+rectangle "M6\nsession\nrecording" as M6
+rectangle "M8 and M7\ndecoding and\nintegration" as M8
+rectangle "M2\nhardware layer" as M2
+rectangle "Iteration 1\nvalidation and\nsix corrections" as V1
+rectangle "Iteration 2\nmodel rebuild and\nholdout evaluation" as V2
+rectangle "Final release" as End
 
 M1 -right-> M3
 M3 -right-> M4
 M4 -right-> M5
-M5 -down-> M6
-M6 -right-> M8
-M8 -right-> M2
-M2 -right-> Fix
-Fix -right-> RC
+M5 -right-> M6
+M6 -down-> M8
+M8 -left-> M2
+M2 -left-> V1
+V1 -left-> V2
+V2 -left-> End
 @enduml

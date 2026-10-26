@@ -1,0 +1,603 @@
+{
+  "schema_version": 3,
+  "model_family": "kaggle_normal",
+  "model_version": "clean-2-001",
+  "created_at": "2026-09-24T12:50:09+00:00",
+  "training_pipeline": {
+    "name": "backend.ml.training.clean_pipeline",
+    "version": "clean-2",
+    "git_commit": "6b659ecbfd5d0baf403e8c9f0d36dc1f14e555cb",
+    "git_dirty": false
+  },
+  "feature_pipeline": {
+    "name": "backend.ml.features.canonical",
+    "version": "canonical-1",
+    "window": 10
+  },
+  "model_type": "isolation_forest_per_can_id",
+  "model_params": {
+    "model": "IsolationForest",
+    "scaler": null,
+    "n_estimators": 200,
+    "max_samples": "auto",
+    "contamination": "auto",
+    "random_state": 42,
+    "n_jobs": 1
+  },
+  "calibration": {
+    "method": "empirical_quantile_strict",
+    "target_contamination": 0.02,
+    "definition": "threshold = (k+1)-th smallest training score_samples value, k = floor(target_contamination x rows); flagged iff score < threshold; ties at the threshold are not flagged"
+  },
+  "min_id_rows": 1000,
+  "models_file": {
+    "path": "models.joblib",
+    "sha256": "3e97676fe5719fc1d8906b00d453b03930f81103ef40f33eebfdc141a3ade624"
+  },
+  "id_models": {
+    "0x2": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.5863490319601411,
+      "median": -0.43576822409378907,
+      "rows": 50637,
+      "k": 1012,
+      "flagged_count": 1012,
+      "ties_at_threshold": 1
+    },
+    "0xA0": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.5725009806390778,
+      "median": -0.45826201343601447,
+      "rows": 5058,
+      "k": 101,
+      "flagged_count": 101,
+      "ties_at_threshold": 1
+    },
+    "0xA1": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.606830038668228,
+      "median": -0.43785754200746363,
+      "rows": 5058,
+      "k": 101,
+      "flagged_count": 101,
+      "ties_at_threshold": 1
+    },
+    "0x130": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.5629791038382577,
+      "median": -0.4220196446878976,
+      "rows": 50637,
+      "k": 1012,
+      "flagged_count": 1012,
+      "ties_at_threshold": 1
+    },
+    "0x131": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.5678173858118599,
+      "median": -0.42354091343747285,
+      "rows": 50637,
+      "k": 1012,
+      "flagged_count": 1012,
+      "ties_at_threshold": 1
+    },
+    "0x140": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.5790662580073261,
+      "median": -0.4187532182906235,
+      "rows": 50637,
+      "k": 1012,
+      "flagged_count": 1012,
+      "ties_at_threshold": 1
+    },
+    "0x153": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.8112781244591328
+      },
+      "recordings": 1,
+      "threshold": -0.6669568513507709,
+      "median": -0.3788390135128427,
+      "rows": 50637,
+      "k": 1012,
+      "flagged_count": 1012,
+      "ties_at_threshold": 1
+    },
+    "0x18F": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count"
+      ],
+      "constant_features": {
+        "payload_entropy": 1.5487949406953985
+      },
+      "recordings": 1,
+      "threshold": -0.6382678868276244,
+      "median": -0.4039169634977195,
+      "rows": 50677,
+      "k": 1013,
+      "flagged_count": 1013,
+      "ties_at_threshold": 1
+    },
+    "0x1F1": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.5971824561907716,
+      "median": -0.4292081187762679,
+      "rows": 25314,
+      "k": 506,
+      "flagged_count": 506,
+      "ties_at_threshold": 1
+    },
+    "0x260": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.5886423361745192,
+      "median": -0.4121026166132923,
+      "rows": 50677,
+      "k": 1013,
+      "flagged_count": 1013,
+      "ties_at_threshold": 1
+    },
+    "0x2A0": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {
+        "rolling_max_byte_diff": 2.5649493574615367
+      },
+      "recordings": 1,
+      "threshold": -0.620435955275106,
+      "median": -0.4298208887931276,
+      "rows": 50677,
+      "k": 1013,
+      "flagged_count": 1013,
+      "ties_at_threshold": 1
+    },
+    "0x2B0": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.5849188765718955,
+      "median": -0.4261432941426868,
+      "rows": 50596,
+      "k": 1011,
+      "flagged_count": 1011,
+      "ties_at_threshold": 1
+    },
+    "0x2C0": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.5435644431995964
+      },
+      "recordings": 1,
+      "threshold": -0.6559908709061436,
+      "median": -0.3883029256296069,
+      "rows": 50679,
+      "k": 1013,
+      "flagged_count": 1013,
+      "ties_at_threshold": 1
+    },
+    "0x316": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.5785485039547115,
+      "median": -0.44529754868408705,
+      "rows": 50677,
+      "k": 1013,
+      "flagged_count": 1013,
+      "ties_at_threshold": 1
+    },
+    "0x329": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.6075496855556324,
+      "median": -0.42368935770719934,
+      "rows": 50676,
+      "k": 1013,
+      "flagged_count": 1013,
+      "ties_at_threshold": 1
+    },
+    "0x350": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.6112236661504331,
+      "median": -0.437371113715972,
+      "rows": 50651,
+      "k": 1013,
+      "flagged_count": 1013,
+      "ties_at_threshold": 1
+    },
+    "0x370": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.6480422993541773,
+      "median": -0.3648618509525961,
+      "rows": 50631,
+      "k": 1012,
+      "flagged_count": 1012,
+      "ties_at_threshold": 1
+    },
+    "0x430": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.0
+      },
+      "recordings": 1,
+      "threshold": -0.6903615029591822,
+      "median": -0.3550399215397205,
+      "rows": 25314,
+      "k": 506,
+      "flagged_count": 506,
+      "ties_at_threshold": 1
+    },
+    "0x43F": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.6024902323085127,
+      "median": -0.43076400740402365,
+      "rows": 50631,
+      "k": 1012,
+      "flagged_count": 1012,
+      "ties_at_threshold": 1
+    },
+    "0x440": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.576517241126007,
+      "median": -0.44042994209031,
+      "rows": 50631,
+      "k": 1012,
+      "flagged_count": 1012,
+      "ties_at_threshold": 1
+    },
+    "0x4B1": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.6027423066988367,
+      "median": -0.430465870509125,
+      "rows": 25314,
+      "k": 506,
+      "flagged_count": 506,
+      "ties_at_threshold": 1
+    },
+    "0x4F0": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.6338968380192743,
+      "median": -0.4030130129994988,
+      "rows": 25312,
+      "k": 506,
+      "flagged_count": 506,
+      "ties_at_threshold": 1
+    },
+    "0x545": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count",
+        "payload_entropy"
+      ],
+      "constant_features": {},
+      "recordings": 1,
+      "threshold": -0.6239965621450632,
+      "median": -0.42528200264456706,
+      "rows": 50676,
+      "k": 1013,
+      "flagged_count": 1013,
+      "ties_at_threshold": 1
+    },
+    "0x5F0": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff"
+      ],
+      "constant_features": {
+        "byte_diff": 0.0,
+        "rolling_mean_byte_diff": 0.0,
+        "rolling_std_byte_diff": 0.0,
+        "rolling_max_byte_diff": 0.0,
+        "changed_bytes_count": 0.0,
+        "payload_entropy": 0.5435644431995964
+      },
+      "recordings": 1,
+      "threshold": -0.6687407814648705,
+      "median": -0.39989571806443697,
+      "rows": 10119,
+      "k": 202,
+      "flagged_count": 202,
+      "ties_at_threshold": 1
+    },
+    "0x690": {
+      "features": [
+        "time_diff",
+        "rolling_mean_time_diff",
+        "rolling_std_time_diff",
+        "byte_diff",
+        "rolling_mean_byte_diff",
+        "rolling_std_byte_diff",
+        "rolling_max_byte_diff",
+        "changed_bytes_count"
+      ],
+      "constant_features": {
+        "payload_entropy": 1.061278124459133
+      },
+      "recordings": 1,
+      "threshold": -0.6763923998319187,
+      "median": -0.35690928940845656,
+      "rows": 5054,
+      "k": 101,
+      "flagged_count": 101,
+      "ties_at_threshold": 1
+    }
+  },
+  "sparse_ids": {
+    "0x5A0": {
+      "rows": 497,
+      "recordings": 1
+    },
+    "0x5A2": {
+      "rows": 497,
+      "recordings": 1
+    }
+  },
+  "unmodelled_ids": {},
+  "training_corpus": {
+    "fingerprint": "d6358db41b2afb35548815d5ef0087f8862a585933dc84dfa33b9b12789f0613",
+    "recordings": [
+      {
+        "path": "archive/normal_run_data.txt",
+        "sha256": "27a076832b0b9aa051d804b8c996a5dd14b312210c721676b5a9ebc58113aa7d",
+        "content_sha256": "5b1eb8d1a4f851825b22a78496bdadcdbf8828d91703ebe6882f428fc02d047b",
+        "frames": 988871,
+        "frame_cap": null
+      }
+    ]
+  },
+  "holdout": {
+    "recordings": []
+  },
+  "environment": {
+    "python": "3.14.4",
+    "sklearn": "1.9.0",
+    "numpy": "2.4.4",
+    "pandas": "3.0.3"
+  }
+}

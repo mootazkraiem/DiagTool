@@ -48,13 +48,13 @@
         </Style>
 
         <Style x:Key="LpLaneLabel" TargetType="cv:CvTrackedText" BasedOn="{StaticResource CvCaps}">
-            <Setter Property="FontSize" Value="9"/>
+            <Setter Property="FontSize" Value="11"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
 
         <Style x:Key="LpRulerText" TargetType="TextBlock">
             <Setter Property="FontFamily" Value="{StaticResource CvMonoFont}"/>
-            <Setter Property="FontSize" Value="9"/>
+            <Setter Property="FontSize" Value="11"/>
             <Setter Property="Foreground" Value="{DynamicResource CvTextDimBrush}"/>
         </Style>
     </UserControl.Resources>
@@ -92,7 +92,7 @@
                 <StackPanel Grid.Column="0" VerticalAlignment="Center" MaxWidth="220">
                     <cv:CvTrackedText Label="SESSION" Style="{StaticResource CvCaps}"/>
                     <TextBlock Text="{Binding FileNameShortText}" FontFamily="{StaticResource CvMonoFont}"
-                               FontSize="12" Foreground="{DynamicResource CvTextBrightBrush}"
+                               FontSize="12.5" Foreground="{DynamicResource CvTextBrightBrush}"
                                TextTrimming="CharacterEllipsis" Margin="0,2,0,0"
                                ToolTip="{Binding FileNameShortText}"/>
                 </StackPanel>
@@ -111,6 +111,27 @@
                             Content="■" Margin="4,0,0,0" ToolTip="Stop and rewind to the first frame"/>
                     <Button Style="{StaticResource CvButtonTransport}" Command="{Binding ForwardCommand}"
                             Content="⏭" Margin="4,0,0,0" ToolTip="Step forward / fast-forward"/>
+
+                    <!-- End of capture. Appears only once the last frame has been
+                         replayed, so the readouts stopping is explained rather than
+                         looking like the replay has hung. Play already restarts from
+                         the first frame, so this is that command with a name. -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0"
+                                Visibility="{Binding IsReplayComplete, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <Ellipse Width="6" Height="6" VerticalAlignment="Center"
+                                 Fill="{DynamicResource CvAccentBrush}" Effect="{DynamicResource CvAccentGlow}"/>
+                        <cv:CvTrackedText Label="{Binding ReplayCompleteText}" Margin="8,0,0,0" VerticalAlignment="Center"
+                                          FontFamily="{StaticResource CvMonoFont}" FontSize="11.5"
+                                          Foreground="{DynamicResource CvAccentBrush}"/>
+                        <Button Command="{Binding PlayCommand}" Margin="12,0,0,0"
+                                Style="{StaticResource CvButtonGhost}" Padding="12,5"
+                                AutomationProperties.Name="REPLAY AGAIN"
+                                ToolTip="Replay this capture from the first frame">
+                            <cv:CvTrackedText Label="REPLAY AGAIN" FontFamily="{StaticResource CvMonoFont}"
+                                              FontSize="11.5" Tracking="1"
+                                              Foreground="{DynamicResource CvAccentBrush}"/>
+                        </Button>
+                    </StackPanel>
                 </StackPanel>
 
                 <!-- Speed -->
@@ -130,17 +151,17 @@
                     <StackPanel Margin="0,0,26,0">
                         <cv:CvTrackedText Label="FRAMES" Style="{StaticResource CvCaps}"/>
                         <TextBlock Text="{Binding PlaybackPositionText}" FontFamily="{StaticResource CvMonoFont}"
-                                   FontSize="12" Foreground="{DynamicResource CvTextBrightBrush}" Margin="0,2,0,0"/>
+                                   FontSize="12.5" Foreground="{DynamicResource CvTextBrightBrush}" Margin="0,2,0,0"/>
                     </StackPanel>
                     <StackPanel Margin="0,0,26,0">
                         <cv:CvTrackedText Label="STATE" Style="{StaticResource CvCaps}"/>
                         <cv:CvTrackedText Label="{Binding PlaybackMode}" FontFamily="{StaticResource CvMonoFont}"
-                                          FontSize="12" Foreground="{DynamicResource CvAccentBrush}" Margin="0,2,0,0"/>
+                                          FontSize="12.5" Foreground="{DynamicResource CvAccentBrush}" Margin="0,2,0,0"/>
                     </StackPanel>
                     <StackPanel>
                         <cv:CvTrackedText Label="ML ANALYSIS" Style="{StaticResource CvCaps}"/>
                         <cv:CvTrackedText Label="{Binding MlAnalysisStateText}" FontFamily="{StaticResource CvMonoFont}"
-                                          FontSize="12" Foreground="{DynamicResource CvTextBrightBrush}" Margin="0,2,0,0"/>
+                                          FontSize="12.5" Foreground="{DynamicResource CvTextBrightBrush}" Margin="0,2,0,0"/>
                     </StackPanel>
                 </StackPanel>
 
@@ -149,25 +170,25 @@
                     <Button Style="{StaticResource CvButtonGhost}" Command="{Binding OpenLogCommand}"
                             Height="30" Padding="14,0" ToolTip="Open a CAN log for replay">
                         <cv:CvTrackedText Label="OPEN FILE" FontFamily="{StaticResource CvDisplayFont}"
-                                          FontSize="11" FontWeight="SemiBold"/>
+                                          FontSize="12" FontWeight="SemiBold"/>
                     </Button>
                     <Button Style="{StaticResource CvButtonGhost}" Command="{Binding StartRecordCommand}"
                             Height="30" Padding="12,0" Margin="6,0,0,0" ToolTip="Start recording the bus to a new log">
                         <StackPanel Orientation="Horizontal">
                             <Ellipse Width="7" Height="7" Fill="{DynamicResource CvDangerBrush}" VerticalAlignment="Center"/>
-                            <cv:CvTrackedText Label="REC" FontFamily="{StaticResource CvDisplayFont}" FontSize="11"
+                            <cv:CvTrackedText Label="REC" FontFamily="{StaticResource CvDisplayFont}" FontSize="12"
                                               FontWeight="SemiBold" Margin="6,0,0,0"/>
                         </StackPanel>
                     </Button>
                     <Button Style="{StaticResource CvButtonGhost}" Command="{Binding StopRecordCommand}"
                             Height="30" Padding="12,0" Margin="6,0,0,0" ToolTip="Stop the recording and close the file">
                         <cv:CvTrackedText Label="STOP REC" FontFamily="{StaticResource CvDisplayFont}"
-                                          FontSize="11" FontWeight="SemiBold"/>
+                                          FontSize="12" FontWeight="SemiBold"/>
                     </Button>
                     <Button Style="{StaticResource CvButtonDanger}" Command="{Binding InjectTestCommand}"
                             Height="30" Padding="12,0" Margin="6,0,0,0" ToolTip="Inject a test frame onto the bus">
                         <cv:CvTrackedText Label="INJECT" FontFamily="{StaticResource CvDisplayFont}"
-                                          FontSize="11" FontWeight="SemiBold"/>
+                                          FontSize="12" FontWeight="SemiBold"/>
                     </Button>
                 </StackPanel>
             </Grid>
@@ -181,17 +202,17 @@
                     <Rectangle DockPanel.Dock="Left" Style="{StaticResource CvSectionMarker}"/>
                     <cv:CvTrackedText DockPanel.Dock="Left" Label="REPLAY TIMELINE" Style="{StaticResource CvPanelTitle}"/>
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                        <cv:CvTrackedText Label="CURSOR" Style="{StaticResource CvCaps}" FontSize="9"/>
-                        <TextBlock Text="{Binding CurrentTimestampText}" FontFamily="{StaticResource CvMonoFont}" FontSize="10.5"
+                        <cv:CvTrackedText Label="CURSOR (LOG TIME)" Style="{StaticResource CvCaps}" FontSize="11"/>
+                        <TextBlock Text="{Binding CurrentTimestampText}" FontFamily="{StaticResource CvMonoFont}" FontSize="12"
                                    Foreground="{DynamicResource CvAccentBrush}" Margin="6,0,16,0"/>
-                        <cv:CvTrackedText Label="SPEED" Style="{StaticResource CvCaps}" FontSize="9"/>
-                        <TextBlock Text="{Binding PlaybackSpeedText}" FontFamily="{StaticResource CvMonoFont}" FontSize="10"
+                        <cv:CvTrackedText Label="SPEED" Style="{StaticResource CvCaps}" FontSize="11"/>
+                        <TextBlock Text="{Binding PlaybackSpeedText}" FontFamily="{StaticResource CvMonoFont}" FontSize="11.5"
                                    Foreground="{DynamicResource CvTextSoftBrush}" Margin="6,0,16,0"/>
-                        <cv:CvTrackedText Label="SYNC" Style="{StaticResource CvCaps}" FontSize="9"/>
-                        <cv:CvTrackedText Label="{Binding SyncStateText}" FontFamily="{StaticResource CvMonoFont}" FontSize="10"
+                        <cv:CvTrackedText Label="SYNC" Style="{StaticResource CvCaps}" FontSize="11"/>
+                        <cv:CvTrackedText Label="{Binding SyncStateText}" FontFamily="{StaticResource CvMonoFont}" FontSize="11.5"
                                           Foreground="{DynamicResource CvTextSoftBrush}" Margin="6,0,16,0"/>
-                        <cv:CvTrackedText Label="TOTAL" Style="{StaticResource CvCaps}" FontSize="9"/>
-                        <TextBlock Text="{Binding SessionDurationText}" FontFamily="{StaticResource CvMonoFont}" FontSize="10.5"
+                        <cv:CvTrackedText Label="TOTAL" Style="{StaticResource CvCaps}" FontSize="11"/>
+                        <TextBlock Text="{Binding SessionDurationText}" FontFamily="{StaticResource CvMonoFont}" FontSize="12"
                                    Foreground="{DynamicResource CvAccentBrush}" Margin="6,0,0,0"/>
                     </StackPanel>
                 </DockPanel>
@@ -222,7 +243,7 @@
                         </StackPanel>
                         <StackPanel Canvas.Top="112" Orientation="Horizontal">
                             <Ellipse Width="5" Height="5" Fill="#FF5050" VerticalAlignment="Center"/>
-                            <cv:CvTrackedText Label="ATTACK WINDOW" Style="{StaticResource LpLaneLabel}" Margin="7,0,0,0"/>
+                            <cv:CvTrackedText Label="FLAGGED SPANS" Style="{StaticResource LpLaneLabel}" Margin="7,0,0,0"/>
                         </StackPanel>
                     </Canvas>
 
@@ -247,7 +268,7 @@
 
                             <!-- ground-truth lane note when the log has no _gt.csv -->
                             <TextBlock Canvas.Left="8" Canvas.Top="84" Text="{Binding GroundTruthNoteText}"
-                                       FontFamily="{StaticResource CvMonoFont}" FontSize="10"
+                                       FontFamily="{StaticResource CvMonoFont}" FontSize="11.5"
                                        Foreground="{DynamicResource CvTextFaintBrush}"/>
 
                             <!-- attack / ground-truth windows -->
@@ -369,7 +390,7 @@
                                 <cv:CvTrackedText Label="THRESHOLD" Style="{StaticResource CvCaps}"/>
                                 <TextBlock Text="{Binding DetectionThresholdText}" Style="{StaticResource CvTileValue}"
                                            Foreground="{DynamicResource CvDangerBrush}"/>
-                                <cv:CvTrackedText Label="ALERT TRIGGER" Style="{StaticResource CvTileMeta}"/>
+                                <cv:CvTrackedText Label="{Binding DetectionThresholdMetaText}" Style="{StaticResource CvTileMeta}"/>
                             </StackPanel>
                         </Border>
                         <Border Style="{StaticResource CvTile}" Margin="5,0" Padding="12,10">
@@ -377,23 +398,24 @@
                                 <cv:CvTrackedText Label="DETECTIONS" Style="{StaticResource CvCaps}"/>
                                 <TextBlock Text="{Binding TotalDetectionsText}" Style="{StaticResource CvTileValue}"
                                            Foreground="{DynamicResource CvWarnBrush}"/>
-                                <cv:CvTrackedText Label="TOTAL" Style="{StaticResource CvTileMeta}"/>
+                                <cv:CvTrackedText Label="WHOLE SESSION" Style="{StaticResource CvTileMeta}"/>
                             </StackPanel>
                         </Border>
                         <Border Style="{StaticResource CvTile}" Margin="5,0" Padding="12,10">
                             <StackPanel>
-                                <cv:CvTrackedText Label="STATUS" Style="{StaticResource CvCaps}"/>
+                                <cv:CvTrackedText Label="STATUS AT CURSOR" Style="{StaticResource CvCaps}"/>
                                 <cv:CvTrackedText Label="{Binding CurrentDetectionText}" Style="{StaticResource CvTileValue}"/>
                                 <cv:CvTrackedText Label="{Binding CurrentAttackTypeText}" Style="{StaticResource CvTileMeta}"/>
                             </StackPanel>
                         </Border>
                     </UniformGrid>
 
-                    <!-- LiveCharts2 detection trend, fixed 0-1 axis + threshold line + cursor -->
+                    <!-- detection trend: flagged-frame scores on a fixed 0-1 axis, the model's
+                         0.50 cut-off (vehicle models only) and the playback cursor -->
                     <Grid Grid.Row="2" x:Name="ScoreChartHost" Margin="16,6,16,0" MinHeight="112" ClipToBounds="True">
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="0.28*"/>
-                            <RowDefinition Height="0.72*"/>
+                            <RowDefinition Height="0.5*"/>
+                            <RowDefinition Height="0.5*"/>
                         </Grid.RowDefinitions>
 
                         <!-- gridlines -->
@@ -407,7 +429,8 @@
 
                         <!-- threshold: the score a frame must cross to be flagged -->
                         <Line Grid.Row="0" X1="0" Y1="0" X2="1" Y2="0" Stretch="Fill" VerticalAlignment="Bottom"
-                              Stroke="{DynamicResource CvDangerBrush}" StrokeThickness="1" StrokeDashArray="6 7" Opacity="0.55"/>
+                              Stroke="{DynamicResource CvDangerBrush}" StrokeThickness="1" StrokeDashArray="6 7" Opacity="0.55"
+                              Visibility="{Binding HasScoreThreshold, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
                         <Canvas Grid.RowSpan="2" ClipToBounds="True"
                                 Visibility="{Binding HasReplayLoaded, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -461,7 +484,7 @@
                     <StackPanel Margin="16,13,16,12">
                         <cv:CvTrackedText Label="REPLAY PROGRESS" Style="{StaticResource CvCaps}" Margin="0,0,0,9"/>
                         <DockPanel Style="{StaticResource CvKvRowTight}">
-                            <cv:CvTrackedText Label="CURRENT TIME" Style="{StaticResource CvKvKey}"/>
+                            <cv:CvTrackedText Label="LOG TIME AT CURSOR" Style="{StaticResource CvKvKey}"/>
                             <TextBlock Text="{Binding CurrentTimestampText}" Style="{StaticResource CvKvValue}"/>
                         </DockPanel>
                         <DockPanel Style="{StaticResource CvKvRowTight}">
@@ -502,8 +525,8 @@
                             <cv:CvTrackedText DockPanel.Dock="Left" Label="RECENT ALERTS" Style="{StaticResource CvCaps}"/>
                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
                                 <TextBlock Text="{Binding AlertCountText}" FontFamily="{StaticResource CvMonoFont}"
-                                           FontSize="10" Foreground="{DynamicResource CvDangerBrush}"/>
-                                <cv:CvTrackedText Label="IN SESSION" Style="{StaticResource CvCaps}" FontSize="9" Margin="6,0,0,0"/>
+                                           FontSize="11.5" Foreground="{DynamicResource CvDangerBrush}"/>
+                                <cv:CvTrackedText Label="IN SESSION" Style="{StaticResource CvCaps}" FontSize="11" Margin="6,0,0,0"/>
                             </StackPanel>
                         </DockPanel>
 
@@ -519,16 +542,16 @@
                                                     <ColumnDefinition Width="52"/>
                                                     <ColumnDefinition Width="*"/>
                                                 </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" Style="{StaticResource CvCell}" FontSize="10.5"
+                                                <TextBlock Grid.Column="0" Style="{StaticResource CvCell}" FontSize="12"
                                                            Foreground="{DynamicResource CvTextSoftBrush}"
                                                            Text="{Binding TimestampUtc, Converter={StaticResource UtcToLocalTimeConverter}, ConverterParameter=HH:mm:ss}"/>
                                                 <TextBlock x:Name="Sev" Grid.Column="1" Text="{Binding Severity}"
-                                                           Style="{StaticResource CvCell}" FontSize="10.5" FontWeight="SemiBold"
+                                                           Style="{StaticResource CvCell}" FontSize="12" FontWeight="SemiBold"
                                                            Foreground="{DynamicResource CvTextMutedBrush}"/>
                                                 <TextBlock Grid.Column="2" Text="{Binding CanId}" Style="{StaticResource CvCell}"
-                                                           FontSize="10.5" Foreground="{DynamicResource CvAccentBrush}"/>
+                                                           FontSize="12" Foreground="{DynamicResource CvAccentBrush}"/>
                                                 <TextBlock Grid.Column="3" Text="{Binding AttackType}" Style="{StaticResource CvCell}"
-                                                           FontSize="10.5" Foreground="{DynamicResource CvTextBrush}"
+                                                           FontSize="12" Foreground="{DynamicResource CvTextBrush}"
                                                            ToolTip="{Binding Reason}"/>
                                             </Grid>
                                         </Border>
@@ -590,14 +613,14 @@
                                                Fill="{DynamicResource CvAccentBrush}" VerticalAlignment="Center"/>
                                     <cv:CvTrackedText Label="NORMAL" Style="{StaticResource CvCaps}" Margin="7,0,0,0"/>
                                     <TextBlock Text="{Binding NormalFramesPercentText}" FontFamily="{StaticResource CvMonoFont}"
-                                               FontSize="11" Foreground="{DynamicResource CvTextBrightBrush}" Margin="7,0,0,0"/>
+                                               FontSize="12" Foreground="{DynamicResource CvTextBrightBrush}" Margin="7,0,0,0"/>
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal">
                                     <Rectangle Width="9" Height="9" RadiusX="2" RadiusY="2"
                                                Fill="{DynamicResource CvWarnBrush}" VerticalAlignment="Center"/>
                                     <cv:CvTrackedText Label="DETECTED" Style="{StaticResource CvCaps}" Margin="7,0,0,0"/>
                                     <TextBlock Text="{Binding DetectionRateText}" FontFamily="{StaticResource CvMonoFont}"
-                                               FontSize="11" Foreground="{DynamicResource CvWarnBrush}" Margin="7,0,0,0"/>
+                                               FontSize="12" Foreground="{DynamicResource CvWarnBrush}" Margin="7,0,0,0"/>
                                 </StackPanel>
                                 <TextBlock Text="{Binding DetectionRateBasisText}" FontFamily="{StaticResource CvMonoFont}" FontSize="11"
                                    Foreground="{DynamicResource CvTextMutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0">
@@ -673,7 +696,7 @@
                             <cv:CvTrackedText DockPanel.Dock="Left" Label="VEHICLE / AI MODEL" Style="{StaticResource CvCaps}"/>
                             <cv:CvTrackedText DockPanel.Dock="Right" HorizontalAlignment="Right"
                                               Label="{Binding ModelSelection.SelectedModel.StatusText}"
-                                              Style="{StaticResource CvCaps}" FontSize="9"
+                                              Style="{StaticResource CvCaps}" FontSize="11"
                                               Foreground="{DynamicResource CvOkBrush}"/>
                         </DockPanel>
                         <ComboBox Style="{StaticResource CvComboBox}" Height="32" IsSynchronizedWithCurrentItem="False"
@@ -682,7 +705,7 @@
                                   ToolTip="Model used by the backend replay and the offline analysis">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type models:TrainedModelInfo}">
-                                    <TextBlock Text="{Binding Name}" FontFamily="{StaticResource CvUiFont}" FontSize="11.5"
+                                    <TextBlock Text="{Binding Name}" FontFamily="{StaticResource CvUiFont}" FontSize="12.5"
                                                TextTrimming="CharacterEllipsis"/>
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
@@ -693,7 +716,7 @@
                                        Foreground="{DynamicResource CvAccentBrush}"/>
                         </DockPanel>
                         <TextBlock Text="{Binding OfflineStatusText}" Margin="0,8,0,0" TextWrapping="Wrap"
-                                   FontFamily="{StaticResource CvMonoFont}" FontSize="9.5"
+                                   FontFamily="{StaticResource CvMonoFont}" FontSize="11"
                                    Foreground="{DynamicResource CvTextMutedBrush}"/>
                     </StackPanel>
                 </Border>
@@ -707,20 +730,20 @@
                                        Fill="{DynamicResource CvVioletBrush}" Effect="{DynamicResource CvVioletGlow}"/>
                             <cv:CvTrackedText DockPanel.Dock="Left" Label="OFFLINE RESULT" Style="{StaticResource CvPanelTitle}"/>
                             <cv:CvTrackedText DockPanel.Dock="Right" HorizontalAlignment="Right"
-                                              Label="{Binding OfflineResult.VehicleId}" Style="{StaticResource CvCaps}" FontSize="9"/>
+                                              Label="{Binding OfflineResult.VehicleId}" Style="{StaticResource CvCaps}" FontSize="11"/>
                         </DockPanel>
 
                         <UniformGrid Rows="1" Columns="3" Margin="-4,0">
                             <Border Style="{StaticResource CvTile}" Margin="4" Padding="10,8">
                                 <StackPanel>
-                                    <cv:CvTrackedText Label="FRAMES" Style="{StaticResource CvCaps}" FontSize="8.5"/>
+                                    <cv:CvTrackedText Label="FRAMES" Style="{StaticResource CvCaps}" FontSize="10.5"/>
                                     <TextBlock Text="{Binding OfflineResult.TotalFrames, StringFormat=N0}"
                                                Style="{StaticResource CvTileValue}" FontSize="15"/>
                                 </StackPanel>
                             </Border>
                             <Border Style="{StaticResource CvTile}" Margin="4" Padding="10,8">
                                 <StackPanel>
-                                    <cv:CvTrackedText Label="ANOMALIES" Style="{StaticResource CvCaps}" FontSize="8.5"/>
+                                    <cv:CvTrackedText Label="ANOMALIES" Style="{StaticResource CvCaps}" FontSize="10.5"/>
                                     <TextBlock Text="{Binding OfflineResult.AnomalyCount, StringFormat=N0}"
                                                Style="{StaticResource CvTileValue}" FontSize="15"
                                                Foreground="{DynamicResource CvWarnBrush}"/>
@@ -728,7 +751,7 @@
                             </Border>
                             <Border Style="{StaticResource CvTile}" Margin="4" Padding="10,8">
                                 <StackPanel>
-                                    <cv:CvTrackedText Label="RATE" Style="{StaticResource CvCaps}" FontSize="8.5"/>
+                                    <cv:CvTrackedText Label="RATE" Style="{StaticResource CvCaps}" FontSize="10.5"/>
                                     <TextBlock Text="{Binding OfflineResult.AnomalyRate, StringFormat={}{0:F2}%}"
                                                FontSize="15">
                                         <TextBlock.Style>
@@ -752,13 +775,13 @@
                                 <DataTemplate>
                                     <DockPanel Margin="0,0,0,4">
                                         <TextBlock DockPanel.Dock="Left" Text="{Binding CanId}" Width="76"
-                                                   FontFamily="{StaticResource CvMonoFont}" FontSize="10.5"
+                                                   FontFamily="{StaticResource CvMonoFont}" FontSize="12"
                                                    Foreground="{DynamicResource CvAccentBrush}"/>
                                         <TextBlock DockPanel.Dock="Right" Text="{Binding Count, StringFormat=x{0}}"
-                                                   HorizontalAlignment="Right" FontFamily="{StaticResource CvMonoFont}" FontSize="10"
+                                                   HorizontalAlignment="Right" FontFamily="{StaticResource CvMonoFont}" FontSize="11.5"
                                                    Foreground="{DynamicResource CvTextMutedBrush}"/>
                                         <TextBlock Text="{Binding AvgScore, StringFormat=score {0:F2}}"
-                                                   FontFamily="{StaticResource CvMonoFont}" FontSize="10"
+                                                   FontFamily="{StaticResource CvMonoFont}" FontSize="11.5"
                                                    Foreground="{DynamicResource CvTextSoftBrush}"/>
                                     </DockPanel>
                                 </DataTemplate>
@@ -806,7 +829,7 @@
                             <StackPanel Orientation="Horizontal">
                                 <Ellipse Style="{StaticResource CvStatusDot}" Width="6" Height="6"/>
                                 <cv:CvTrackedText Label="{Binding RecordStatusText}" Margin="8,0,0,0"
-                                                  FontFamily="{StaticResource CvMonoFont}" FontSize="10"
+                                                  FontFamily="{StaticResource CvMonoFont}" FontSize="11.5"
                                                   Foreground="{DynamicResource CvAccentDimBrush}"/>
                             </StackPanel>
                         </Border>

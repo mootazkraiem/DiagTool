@@ -1,42 +1,46 @@
 @startuml
-skinparam backgroundColor white
-skinparam defaultFontName Helvetica
-skinparam defaultFontSize 12
-skinparam shadowing false
-skinparam roundcorner 6
-skinparam ArrowColor #2C5AA0
-skinparam ArrowThickness 1.1
-skinparam component {
-  BackgroundColor #EAF2FF
-  BorderColor #2C5AA0
-}
-skinparam rectangle {
-  BackgroundColor #F5F8FF
-  BorderColor #7C93B8
-}
+!include style.iuml
+skinparam linetype ortho
+left to right direction
 
-component "Desktop\nclient" as Client
+[Desktop client\nPythonApiClient] as Client
 
-rectangle "FastAPI backend endpoints" {
-  component "/api/replay/*\n/api/live/*\n/analyze" as Detect
-  component "/api/explain/{i}" as Explain
-  component "/api/vehicles\n/api/session/*\n/api/settings" as Admin
+package "REST API (server.py)" {
+  [/analyze\n/api/offline/*] as EOffline
+  [/api/replay/*] as EReplay
+  [/api/live/*\n/api/live/hardware/*] as ELive
+  [/api/explain/{index}\n/api/chat] as EExplain
+  [/api/models\n/api/vehicles] as EModels
+  [/api/signals/discover\n/api/dataset/describe] as ECapture
+  [/api/session/*\n/api/settings\n/api/db/stats] as EData
 }
 
-component "Detection\nengine" as Engine
-component "AI explanation\nengine" as AI
-component "Data layer\n(DB, models, DBC)" as Data
+package "Backend components" {
+  [Offline analysis\nvehicle_scoring, session_analyzer] as COffline
+  [Replay process\nreplay_runner] as CReplay
+  [RealtimeEngine] as CEngine
+  [Hardware\ncan_interface] as CHw
+  [Explanation\nexplainer/llm.py] as CExplain
+  [Model status\nmodel_status, vehicle_profiles] as CModels
+  [Capture description\nsignal_discovery, dataset_facts] as CCapture
+  [SQLite store\nand settings] as CData
+}
 
-Detect -[hidden]down- Explain
-Explain -[hidden]down- Admin
+Client --> EOffline
+Client --> EReplay
+Client --> ELive
+Client --> EExplain
+Client --> EModels
+Client --> ECapture
+Client --> EData
 
-Client -up-> Detect
-Client -right-> Explain
-Client -down-> Admin
-
-Detect -right-> Engine
-Explain -right-> AI
-Admin -right-> Data
-Engine -down-> Data
-AI -down-> Data
+EOffline --> COffline
+EReplay --> CReplay
+CReplay --> CEngine
+ELive --> CHw
+CHw --> CEngine
+EExplain --> CExplain
+EModels --> CModels
+ECapture --> CCapture
+EData --> CData
 @enduml

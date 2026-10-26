@@ -1,0 +1,74 @@
+{
+  "training": {
+    "fingerprint": "21fa48e9fb800c322ea9c3e9e487948a7465ccffc5069280814839733d712bf9",
+    "recordings": [
+      {
+        "path": "Train/Nissan Leaf 2019/LOG/2F6913DB/00000014/00000001-61D93E3C.MF4",
+        "sha256": "76f273be694f19e691d1aadc5e5a081e747317c48efd6a0102b0e8508a32323b",
+        "content_sha256": "c27b804ceddf3e39cf6dff18ab5ae652627581702e651536b8002d867cebb2f3",
+        "frames": 26378,
+        "frame_cap": null
+      },
+      {
+        "path": "Train/Nissan Leaf 2019/LOG/2F6913DB/00000014/00000002-61D93E42.MF4",
+        "sha256": "f2b940079d1602a6bcb4e69de6256b08d82252f010d9a7090d4ad94c29468da4",
+        "content_sha256": "1282d5cedecef3be22c7ebab705b657d133c5b0885f72178d96c7498ef6ec8ca",
+        "frames": 34317,
+        "frame_cap": null
+      },
+      {
+        "path": "Train/Nissan Leaf 2019/LOG/2F6913DB/00000014/00000003-61D93E49.MF4",
+        "sha256": "6466e2bc17201e999bc47c421390138a285a58d756f9034cde5767692d0fe3d0",
+        "content_sha256": "cb4760167156e6d31b2cd19fa3940cb2a9c2a56729747d4488c4d4730563133e",
+        "frames": 19385,
+        "frame_cap": null
+      },
+      {
+        "path": "Train/Nissan Leaf 2019/LOG/2F6913DB/00000016/00000001-61D94900.MF4",
+        "sha256": "bc9abbbc33eee02dea64b660fcb5103dbe4a6f877c3f902e73f1e5456bfef597",
+        "content_sha256": "7f2a950149dca37b67c310f040c230d545de2b69779fa16cfbd309bbc84c334d",
+        "frames": 2685,
+        "frame_cap": null
+      },
+      {
+        "path": "Train/Nissan Leaf 2019/LOG/2F6913DB/00000017/00000001-61D9D6F7.MF4",
+        "sha256": "595e320332d8e469240f98a1f8bc1054f2214e4da632a38fde13eff81512676b",
+        "content_sha256": "5721641b420895e296e58cf2a79c3956c4219343b375b3ebb7f05ac4b39da106",
+        "frames": 585160,
+        "frame_cap": null
+      },
+      {
+        "path": "Train/Nissan Leaf 2019/LOG/2F6913DB/00000017/00000002-61D9D7B9.MF4",
+        "sha256": "6adc72dfb5454ae93cd65909986e6d007a49523363c2ccf6535b5afb3ca7f79b",
+        "content_sha256": "5e33938fc65231473d9709b0c0751cb83a2c3c164517d74c07512fdb32eb2dca",
+        "frames": 281826,
+        "frame_cap": null
+      },
+      {
+        "path": "Train/Nissan Leaf 2019/LOG/2F6913DB/00000019/00000001-61D9D80A.MF4",
+        "sha256": "0d8d90ebd2cc6cf88bbb5677b4e4361b12d9782d1841bbec3d0e5ad0b18e1078",
+        "content_sha256": "ed9f15f2115a7411fc76bfd82142d548d7bcdd39a3e7c0576b72c835481edafe",
+        "frames": 154896,
+        "frame_cap": null
+      },
+      {
+        "path": "Train/Nissan Leaf 2019/LOG/2F6913DB/00000020/00000001-61D9D830.MF4",
+        "sha256": "d610098de81725637cdfc11eab105808ed5a36a72ed09ff496e1f6403f794c52",
+        "content_sha256": "1a73a00f22982973df5bb8798ab1f4bbb1f25bd02c684ea95e260c8d496f756c",
+        "frames": 212423,
+        "frame_cap": null
+      }
+    ]
+  },
+  "holdout": {
+    "recordings": [
+      {
+        "path": "Train/Nissan Leaf 2019/LOG/2F6913DB/00000021/00000001-61D9D9BA.MF4",
+        "sha256": "b941c5eba8363de7cd2b5fa6a3a93a9119a032dbd0224eafd7f3ce6d5149e90d",
+        "content_sha256": "26768996bd2f455f8358c6b96667d753f48c350d230c76cddc3aa0015799deec",
+        "frames": 491969,
+        "frame_cap": null
+      }
+    ]
+  }
+}

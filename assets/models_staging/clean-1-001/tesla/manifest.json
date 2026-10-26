@@ -1,0 +1,76 @@
+{
+  "schema_version": 2,
+  "model_family": "tesla",
+  "model_version": "clean-1-001",
+  "created_at": "2026-09-24T11:52:39+00:00",
+  "training_pipeline": {
+    "name": "backend.ml.training.clean_pipeline",
+    "version": "clean-1",
+    "git_commit": "bbdb84b3f830ec7a970c29f86cf8129031d33c34",
+    "git_dirty": false
+  },
+  "feature_pipeline": {
+    "name": "backend.ml.features.canonical",
+    "version": "canonical-1",
+    "window": 10
+  },
+  "features": [
+    "time_diff",
+    "rolling_mean_time_diff",
+    "rolling_std_time_diff",
+    "byte_diff",
+    "rolling_mean_byte_diff",
+    "rolling_std_byte_diff",
+    "rolling_max_byte_diff",
+    "changed_bytes_count",
+    "payload_entropy"
+  ],
+  "dropped_features": {},
+  "scaler": {
+    "path": "scaler.joblib",
+    "sha256": "8b1a8f03e283073c9a9275f4e4fe651bd3976b5d1514874347b050df58191bad"
+  },
+  "model": {
+    "path": "model.joblib",
+    "sha256": "1ec9b1c43034d9e8b532d0318be0a81e441673e4d192aaeaa418b9d8e90702fd"
+  },
+  "model_params": {
+    "scaler": "RobustScaler",
+    "model": "IsolationForest",
+    "n_estimators": 200,
+    "contamination": 0.02,
+    "random_state": 42,
+    "n_jobs": 1
+  },
+  "threshold": {
+    "value": 0.15193872377082857,
+    "method": "median_minus_kmad",
+    "k": 3.0,
+    "median": 0.21654633781299804,
+    "mad": 0.021535871347389823,
+    "score_min": -0.06662885582146882,
+    "score_max": 0.26210783359171425,
+    "fit_rows": 117613
+  },
+  "training_corpus": {
+    "fingerprint": "f14d4256ff0f821bf15a85b4c7c5fb0a8916a5c38c4d2de5ce98918bc9c116fb",
+    "recordings": [
+      {
+        "path": "EV-CANlogs-main/Tesla/Model 3/tesla-model3-battery-only.log.log",
+        "sha256": "fde97eb1cc6a16420d70e34699ea13d1313d97eeaf030c8a7af11a56e55acdf3",
+        "content_sha256": "6a8324db6e82708a93ea6d556e8ad11964ccc67ff3140794f84715f5597278a8",
+        "frames": 118053,
+        "frame_cap": null
+      }
+    ]
+  },
+  "holdout": {
+    "recordings": []
+  },
+  "environment": {
+    "python": "3.14.4",
+    "sklearn": "1.9.0",
+    "numpy": "2.4.4",
+    "pandas": "3.0.3"
+  }
+}

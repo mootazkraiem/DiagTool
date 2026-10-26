@@ -37,9 +37,42 @@
         </Style>
         <Style x:Key="AiLayerValue" TargetType="TextBlock">
             <Setter Property="FontFamily" Value="{StaticResource CvMonoFont}"/>
-            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontSize" Value="11.5"/>
             <Setter Property="HorizontalAlignment" Value="Right"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- Severity filter chip. Tag carries the view model's "is this the active
+             filter" flag, so the selected one is legible at a glance. -->
+        <Style x:Key="SeverityFilterChip" TargetType="Button">
+            <Setter Property="FontFamily" Value="{StaticResource CvMonoFont}"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Padding" Value="9,3"/>
+            <Setter Property="Margin" Value="4,0,0,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="{DynamicResource CvTextDimBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Chip" CornerRadius="3" Padding="{TemplateBinding Padding}"
+                                Background="Transparent" BorderThickness="1"
+                                BorderBrush="{DynamicResource CvBorderBrush}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Chip" Property="BorderBrush" Value="{DynamicResource CvBorderAccentBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource CvTextBrush}"/>
+                            </Trigger>
+                            <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="True">
+                                <Setter TargetName="Chip" Property="BorderBrush" Value="{DynamicResource CvAccentBrush}"/>
+                                <Setter TargetName="Chip" Property="Background" Value="{DynamicResource CvOverlay0EBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource CvAccentBrush}"/>
+                            </DataTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </UserControl.Resources>
 
@@ -129,8 +162,31 @@
                         <DockPanel>
                             <Rectangle DockPanel.Dock="Left" Style="{StaticResource CvSectionMarker}"/>
                             <cv:CvTrackedText DockPanel.Dock="Left" Label="AI DETECTION" Style="{StaticResource CvPanelTitle}"/>
+
+                            <!-- Severity filter. A session is mostly LOW alerts, so the
+                                 few that matter are hard to reach; these hide the rest
+                                 from the list without changing any count above. -->
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal"
+                                        VerticalAlignment="Center" Margin="12,0,0,0">
+                                <Button Style="{StaticResource SeverityFilterChip}" Content="ALL"
+                                        Command="{Binding SetSeverityFilterCommand}" CommandParameter="ALL"
+                                        AutomationProperties.Name="FILTER ALL"
+                                        ToolTip="Show every alert"
+                                        Tag="{Binding IsFilterAll}"/>
+                                <Button Style="{StaticResource SeverityFilterChip}" Content="WARN+"
+                                        Command="{Binding SetSeverityFilterCommand}" CommandParameter="WARNING+"
+                                        AutomationProperties.Name="FILTER WARNING"
+                                        ToolTip="Hide LOW — show WARNING, HIGH and CRITICAL only"
+                                        Tag="{Binding IsFilterWarning}"/>
+                                <Button Style="{StaticResource SeverityFilterChip}" Content="CRIT"
+                                        Command="{Binding SetSeverityFilterCommand}" CommandParameter="CRITICAL"
+                                        AutomationProperties.Name="FILTER CRITICAL"
+                                        ToolTip="Show CRITICAL alerts only"
+                                        Tag="{Binding IsFilterCritical}"/>
+                            </StackPanel>
+
                             <TextBlock DockPanel.Dock="Right" Text="{Binding StatusText}" HorizontalAlignment="Right"
-                                       VerticalAlignment="Center" FontFamily="{StaticResource CvMonoFont}" FontSize="9.5"
+                                       VerticalAlignment="Center" FontFamily="{StaticResource CvMonoFont}" FontSize="11"
                                        Foreground="{DynamicResource CvTextSoftBrush}" TextTrimming="CharacterEllipsis"
                                        Margin="12,0,0,0"/>
                         </DockPanel>
@@ -143,7 +199,7 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <cv:CvTrackedText Label="TIMELINE" Style="{StaticResource CvCaps}" FontSize="9"
+                        <cv:CvTrackedText Label="TIMELINE" Style="{StaticResource CvCaps}" FontSize="11"
                                           VerticalAlignment="Center" Margin="0,0,10,0"/>
                         <Grid Grid.Column="1" x:Name="ThreatTrack" Height="20">
                             <Border Height="3" CornerRadius="1.5" Background="{DynamicResource CvOverlay14Brush}" VerticalAlignment="Center"/>
@@ -182,10 +238,22 @@
                         </Grid>
                     </Grid>
 
-                    <!-- alert list -->
+                    <!-- nothing left after filtering: say so, rather than going blank -->
+                    <StackPanel Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="16"
+                                Visibility="{Binding ShowFilterEmptyState, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <TextBlock Text="NO ALERTS AT THIS SEVERITY" HorizontalAlignment="Center"
+                                   FontFamily="{StaticResource CvMonoFont}" FontSize="11.5"
+                                   Foreground="{DynamicResource CvTextSoftBrush}"/>
+                        <TextBlock Text="Choose ALL to see the whole session." HorizontalAlignment="Center" Margin="0,6,0,0"
+                                   FontFamily="{StaticResource CvUiFont}" FontSize="11.5"
+                                   Foreground="{DynamicResource CvTextDimBrush}"/>
+                    </StackPanel>
+
+                    <!-- alert list: the filtered view, so the severity chips above
+                         change what is listed without touching the session counts -->
                     <ScrollViewer Grid.Row="2" Margin="0,4,0,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
-                                  Visibility="{Binding HasAlerts, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <ItemsControl ItemsSource="{Binding Alerts}">
+                                  Visibility="{Binding HasVisibleAlerts, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <ItemsControl ItemsSource="{Binding VisibleAlerts}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Border Style="{StaticResource CvTableRow}" Height="Auto" MinHeight="42" Padding="16,6" Cursor="Hand">
@@ -202,19 +270,19 @@
                                                 <ColumnDefinition Width="104"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="{Binding Severity}" Style="{StaticResource CvCell}"
-                                                       FontSize="10.5" FontWeight="SemiBold"
+                                                       FontSize="12" FontWeight="SemiBold"
                                                        Foreground="{Binding SeverityColor, Converter={StaticResource HexColorToBrushConverter}}"/>
                                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding CanId}" Style="{StaticResource CvCell}"
                                                            Foreground="{DynamicResource CvAccentBrush}"/>
-                                                <TextBlock Text="{Binding AttackType}" FontFamily="{StaticResource CvUiFont}" FontSize="10"
+                                                <TextBlock Text="{Binding AttackType}" FontFamily="{StaticResource CvUiFont}" FontSize="11.5"
                                                            Foreground="{DynamicResource CvTextMutedBrush}" TextTrimming="CharacterEllipsis"/>
                                             </StackPanel>
                                             <TextBlock Grid.Column="2" Text="{Binding ScoreText}" Style="{StaticResource CvCell}"
                                                        HorizontalAlignment="Right"
                                                        Foreground="{Binding SeverityColor, Converter={StaticResource HexColorToBrushConverter}}"/>
                                             <TextBlock Grid.Column="3" Text="{Binding Time}" Style="{StaticResource CvCell}"
-                                                       FontSize="10" HorizontalAlignment="Right" Margin="10,0,0,0"
+                                                       FontSize="11.5" HorizontalAlignment="Right" Margin="10,0,0,0"
                                                        Foreground="{DynamicResource CvTextSoftBrush}"/>
                                         </Grid>
                                     </Border>
@@ -244,18 +312,18 @@
                                     <TextBlock Text="{Binding SelectedAlert.ScoreText}" FontFamily="{StaticResource CvDisplayFont}"
                                                FontSize="22" FontWeight="Bold" HorizontalAlignment="Right"
                                                Foreground="{Binding SelectedAlert.SeverityColor, Converter={StaticResource HexColorToBrushConverter}}"/>
-                                    <cv:CvTrackedText Label="FUSION" Style="{StaticResource CvCaps}" FontSize="9" HorizontalAlignment="Right"/>
+                                    <cv:CvTrackedText Label="FUSION" Style="{StaticResource CvCaps}" FontSize="11" HorizontalAlignment="Right"/>
                                 </StackPanel>
                                 <StackPanel VerticalAlignment="Center">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding SelectedAlert.Severity}" FontFamily="{StaticResource CvMonoFont}" FontSize="11"
+                                        <TextBlock Text="{Binding SelectedAlert.Severity}" FontFamily="{StaticResource CvMonoFont}" FontSize="12"
                                                    FontWeight="SemiBold"
                                                    Foreground="{Binding SelectedAlert.SeverityColor, Converter={StaticResource HexColorToBrushConverter}}"/>
-                                        <TextBlock Text="  ·  " Foreground="{DynamicResource CvTextFaintBrush}" FontSize="11"/>
-                                        <TextBlock Text="{Binding SelectedAlert.CanId}" FontFamily="{StaticResource CvMonoFont}" FontSize="11"
+                                        <TextBlock Text="  ·  " Foreground="{DynamicResource CvTextFaintBrush}" FontSize="12"/>
+                                        <TextBlock Text="{Binding SelectedAlert.CanId}" FontFamily="{StaticResource CvMonoFont}" FontSize="12"
                                                    Foreground="{DynamicResource CvAccentBrush}"/>
                                     </StackPanel>
-                                    <TextBlock Margin="0,2,0,0" FontFamily="{StaticResource CvMonoFont}" FontSize="10"
+                                    <TextBlock Margin="0,2,0,0" FontFamily="{StaticResource CvMonoFont}" FontSize="11.5"
                                                Foreground="{DynamicResource CvTextSoftBrush}">
                                         <Run Text="{Binding SelectedAlert.AttackType, Mode=OneWay}"/><Run Text="  ·  "/><Run Text="{Binding SelectedAlert.Time, Mode=OneWay}"/>
                                     </TextBlock>
@@ -273,7 +341,7 @@
                                     <RowDefinition Height="17"/><RowDefinition Height="17"/>
                                 </Grid.RowDefinitions>
 
-                                <cv:CvTrackedText Grid.Row="0" Label="TIMING" Style="{StaticResource CvCaps}" FontSize="9" VerticalAlignment="Center"/>
+                                <cv:CvTrackedText Grid.Row="0" Label="TIMING" Style="{StaticResource CvCaps}" FontSize="11" VerticalAlignment="Center"/>
                                 <Border Grid.Row="0" Grid.Column="1" x:Name="LayerTrack" Style="{StaticResource AiLayerTrack}" Margin="0,0,8,0">
                                     <Border HorizontalAlignment="Left" CornerRadius="2" Background="{DynamicResource CvAccentBrush}">
                                         <Border.Width>
@@ -287,7 +355,7 @@
                                 <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding SelectedAlert.LayerTiming, StringFormat=F3}"
                                            Style="{StaticResource AiLayerValue}" Foreground="{DynamicResource CvAccentBrush}"/>
 
-                                <cv:CvTrackedText Grid.Row="1" Label="PAYLOAD" Style="{StaticResource CvCaps}" FontSize="9" VerticalAlignment="Center"/>
+                                <cv:CvTrackedText Grid.Row="1" Label="PAYLOAD" Style="{StaticResource CvCaps}" FontSize="11" VerticalAlignment="Center"/>
                                 <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource AiLayerTrack}" Margin="0,0,8,0">
                                     <Border HorizontalAlignment="Left" CornerRadius="2" Background="{DynamicResource CvOkBrush}">
                                         <Border.Width>
@@ -301,7 +369,7 @@
                                 <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding SelectedAlert.LayerPayload, StringFormat=F3}"
                                            Style="{StaticResource AiLayerValue}" Foreground="{DynamicResource CvOkBrush}"/>
 
-                                <cv:CvTrackedText Grid.Row="2" Label="ML MODEL" Style="{StaticResource CvCaps}" FontSize="9" VerticalAlignment="Center"/>
+                                <cv:CvTrackedText Grid.Row="2" Label="ML MODEL" Style="{StaticResource CvCaps}" FontSize="11" VerticalAlignment="Center"/>
                                 <Border Grid.Row="2" Grid.Column="1" Style="{StaticResource AiLayerTrack}" Margin="0,0,8,0">
                                     <Border HorizontalAlignment="Left" CornerRadius="2" Background="{DynamicResource CvVioletBrush}">
                                         <Border.Width>
@@ -315,7 +383,7 @@
                                 <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding SelectedAlert.LayerMl, StringFormat=F3}"
                                            Style="{StaticResource AiLayerValue}" Foreground="{DynamicResource CvVioletBrush}"/>
 
-                                <cv:CvTrackedText Grid.Row="3" Label="TEMPORAL" Style="{StaticResource CvCaps}" FontSize="9" VerticalAlignment="Center"/>
+                                <cv:CvTrackedText Grid.Row="3" Label="TEMPORAL" Style="{StaticResource CvCaps}" FontSize="11" VerticalAlignment="Center"/>
                                 <Border Grid.Row="3" Grid.Column="1" Style="{StaticResource AiLayerTrack}" Margin="0,0,8,0">
                                     <Border HorizontalAlignment="Left" CornerRadius="2" Background="{DynamicResource CvWarnBrush}">
                                         <Border.Width>
@@ -331,24 +399,24 @@
                             </Grid>
 
                             <DockPanel Margin="0,8,0,0">
-                                <cv:CvTrackedText Label="LAYERS" Style="{StaticResource CvCaps}" FontSize="9" Margin="0,0,8,0"/>
+                                <cv:CvTrackedText Label="LAYERS" Style="{StaticResource CvCaps}" FontSize="11" Margin="0,0,8,0"/>
                                 <TextBlock Text="{Binding SelectedAlert.DetectionLayersText}" FontFamily="{StaticResource CvMonoFont}"
-                                           FontSize="10" Foreground="{DynamicResource CvAccentBrush}" TextTrimming="CharacterEllipsis"/>
+                                           FontSize="11.5" Foreground="{DynamicResource CvAccentBrush}" TextTrimming="CharacterEllipsis"/>
                             </DockPanel>
                             <DockPanel Margin="0,4,0,0"
                                        Visibility="{Binding SelectedAlert.HasKbMatch, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                <cv:CvTrackedText Label="KB MATCH" Style="{StaticResource CvCaps}" FontSize="9" Margin="0,0,8,0"/>
+                                <cv:CvTrackedText Label="KB MATCH" Style="{StaticResource CvCaps}" FontSize="11" Margin="0,0,8,0"/>
                                 <TextBlock Text="{Binding SelectedAlert.KbMatchLabel}" FontFamily="{StaticResource CvMonoFont}"
-                                           FontSize="10" Foreground="{DynamicResource CvWarnBrush}" TextTrimming="CharacterEllipsis"/>
+                                           FontSize="11.5" Foreground="{DynamicResource CvWarnBrush}" TextTrimming="CharacterEllipsis"/>
                             </DockPanel>
                             <DockPanel Margin="0,4,0,0"
                                        Visibility="{Binding SelectedAlert.HasPlausibilityViolation, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                <cv:CvTrackedText Label="PLAUSIBILITY" Style="{StaticResource CvCaps}" FontSize="9" Margin="0,0,8,0"/>
+                                <cv:CvTrackedText Label="PLAUSIBILITY" Style="{StaticResource CvCaps}" FontSize="11" Margin="0,0,8,0"/>
                                 <TextBlock Text="{Binding SelectedAlert.PlausibilityText}" FontFamily="{StaticResource CvMonoFont}"
-                                           FontSize="10" Foreground="{DynamicResource CvWarnBrush}" TextTrimming="CharacterEllipsis"/>
+                                           FontSize="11.5" Foreground="{DynamicResource CvWarnBrush}" TextTrimming="CharacterEllipsis"/>
                             </DockPanel>
                             <TextBlock Margin="0,6,0,0" Text="{Binding SelectedAlert.RecommendedResponse}" TextWrapping="Wrap"
-                                       FontFamily="{StaticResource CvUiFont}" FontSize="10.5" Foreground="{DynamicResource CvOkBrush}"
+                                       FontFamily="{StaticResource CvUiFont}" FontSize="12" Foreground="{DynamicResource CvOkBrush}"
                                        Visibility="{Binding SelectedAlert.HasRecommendedResponse, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                         </StackPanel>
                     </Border>
@@ -356,18 +424,20 @@
                     <!-- actions -->
                     <UniformGrid Grid.Row="4" Rows="1" Columns="4" Margin="12,6,12,12">
                         <Button Style="{StaticResource CvButtonGhost}" Height="32" Margin="4,0" Command="{Binding RefreshCommand}">
-                            <cv:CvTrackedText Label="REFRESH ALERTS" FontFamily="{StaticResource CvDisplayFont}" FontSize="10.5" FontWeight="SemiBold"/>
+                            <cv:CvTrackedText Label="REFRESH ALERTS" FontFamily="{StaticResource CvDisplayFont}" FontSize="12" FontWeight="SemiBold"/>
                         </Button>
                         <Button Style="{StaticResource CvButtonGhost}" Height="32" Margin="4,0"
                                 Command="{Binding SelectAlertCommand}" CommandParameter="{Binding FirstAlert}"
                                 IsEnabled="{Binding HasAlerts}">
-                            <cv:CvTrackedText Label="SELECT FIRST" FontFamily="{StaticResource CvDisplayFont}" FontSize="10.5" FontWeight="SemiBold"/>
+                            <cv:CvTrackedText Label="SELECT FIRST" FontFamily="{StaticResource CvDisplayFont}" FontSize="12" FontWeight="SemiBold"/>
                         </Button>
-                        <Button Style="{StaticResource CvButtonGhost}" Height="32" Margin="4,0" Command="{Binding ExportAlertsCommand}">
-                            <cv:CvTrackedText Label="EXPORT CSV" FontFamily="{StaticResource CvDisplayFont}" FontSize="10.5" FontWeight="SemiBold"/>
+                        <Button Style="{StaticResource CvButtonGhost}" Height="32" Margin="4,0" Command="{Binding ExportAlertsCommand}"
+                                AutomationProperties.Name="EXPORT CSV">
+                            <cv:CvTrackedText Label="EXPORT CSV" FontFamily="{StaticResource CvDisplayFont}" FontSize="12" FontWeight="SemiBold"/>
                         </Button>
-                        <Button Style="{StaticResource CvButtonGhost}" Height="32" Margin="4,0" Command="{Binding ExportPdfCommand}">
-                            <cv:CvTrackedText Label="EXPORT PDF" FontFamily="{StaticResource CvDisplayFont}" FontSize="10.5" FontWeight="SemiBold"/>
+                        <Button Style="{StaticResource CvButtonGhost}" Height="32" Margin="4,0" Command="{Binding ExportPdfCommand}"
+                                AutomationProperties.Name="EXPORT PDF">
+                            <cv:CvTrackedText Label="EXPORT PDF" FontFamily="{StaticResource CvDisplayFont}" FontSize="12" FontWeight="SemiBold"/>
                         </Button>
                     </UniformGrid>
                 </Grid>
@@ -389,14 +459,14 @@
                             <Rectangle DockPanel.Dock="Left" Style="{StaticResource CvSectionMarker}"
                                        Fill="{DynamicResource CvVioletBrush}" Effect="{DynamicResource CvVioletGlow}"/>
                             <cv:CvTrackedText DockPanel.Dock="Left" Label="CHAT WITH AI" Style="{StaticResource CvPanelTitle}"/>
-                            <TextBlock DockPanel.Dock="Left" Text="anomaly-grounded · Gemini · Ollama · RAG" Margin="14,0,0,0"
-                                       VerticalAlignment="Center" FontFamily="{StaticResource CvMonoFont}" FontSize="9.5"
+                            <TextBlock DockPanel.Dock="Left" Text="Gemini, then Ollama, then rules · knowledge-base retrieval · engine shown on each answer" Margin="14,0,0,0"
+                                       VerticalAlignment="Center" FontFamily="{StaticResource CvMonoFont}" FontSize="11"
                                        Foreground="{DynamicResource CvTextDimBrush}"/>
                             <Border DockPanel.Dock="Right" Style="{StaticResource CvBadge}" HorizontalAlignment="Right" Padding="10,4">
                                 <StackPanel Orientation="Horizontal">
                                     <Ellipse Style="{StaticResource CvStatusDot}" Width="6" Height="6"/>
                                     <cv:CvTrackedText Label="{Binding EngineStatusText}" Margin="7,0,0,0"
-                                                      FontFamily="{StaticResource CvMonoFont}" FontSize="9.5"
+                                                      FontFamily="{StaticResource CvMonoFont}" FontSize="11"
                                                       Foreground="{DynamicResource CvAccentDimBrush}"/>
                                 </StackPanel>
                             </Border>
@@ -407,12 +477,12 @@
                     <Border Grid.Row="1" Style="{StaticResource CvInset}" Margin="16,12,16,0" Padding="12,8"
                             Visibility="{Binding HasSelectedAlert, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <DockPanel>
-                            <cv:CvTrackedText DockPanel.Dock="Left" Label="CONTEXT" Style="{StaticResource CvCaps}" FontSize="9"
+                            <cv:CvTrackedText DockPanel.Dock="Left" Label="CONTEXT" Style="{StaticResource CvCaps}" FontSize="11"
                                               VerticalAlignment="Center" Margin="0,0,12,0"/>
                             <TextBlock DockPanel.Dock="Right" Text="{Binding SelectedAlert.ScoreText}" FontFamily="{StaticResource CvMonoFont}"
                                        FontSize="14" FontWeight="Bold" VerticalAlignment="Center"
                                        Foreground="{Binding SelectedAlert.SeverityColor, Converter={StaticResource HexColorToBrushConverter}}"/>
-                            <TextBlock VerticalAlignment="Center" FontFamily="{StaticResource CvMonoFont}" FontSize="11"
+                            <TextBlock VerticalAlignment="Center" FontFamily="{StaticResource CvMonoFont}" FontSize="12"
                                        TextTrimming="CharacterEllipsis">
                                 <Run Text="{Binding SelectedAlert.CanId, Mode=OneWay}" Foreground="{DynamicResource CvAccentBrush}"/><Run Text="  ·  " Foreground="{DynamicResource CvTextFaintBrush}"/><Run Text="{Binding SelectedAlert.Severity, Mode=OneWay}" Foreground="{DynamicResource CvWarnBrush}"/><Run Text="  ·  " Foreground="{DynamicResource CvTextFaintBrush}"/><Run Text="{Binding SelectedAlert.AttackType, Mode=OneWay}" Foreground="{DynamicResource CvTextSoftBrush}"/>
                             </TextBlock>
@@ -423,7 +493,7 @@
                     <Border Grid.Row="2" Style="{StaticResource CvInset}" Margin="16,10,16,0" Padding="12,9"
                             Visibility="{Binding HasAlerts, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <StackPanel>
-                            <cv:CvTrackedText Label="ATTACK DISTRIBUTION" Style="{StaticResource CvCaps}" FontSize="9" Margin="0,0,0,7"/>
+                            <cv:CvTrackedText Label="PATTERN DISTRIBUTION" Style="{StaticResource CvCaps}" FontSize="11" Margin="0,0,0,7"/>
                             <ItemsControl ItemsSource="{Binding AttackDistribution}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate DataType="{x:Type vm:AttackTypeBarItem}">
@@ -433,14 +503,14 @@
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="40"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Text="{Binding Label}" FontFamily="{StaticResource CvMonoFont}" FontSize="10"
+                                            <TextBlock Text="{Binding Label}" FontFamily="{StaticResource CvMonoFont}" FontSize="11.5"
                                                        Foreground="{DynamicResource CvTextSoftBrush}" TextTrimming="CharacterEllipsis"
                                                        VerticalAlignment="Center"/>
                                             <Rectangle Grid.Column="1" Height="6" RadiusX="1" RadiusY="1" HorizontalAlignment="Left"
                                                        Width="{Binding BarWidth}" Opacity="0.85" VerticalAlignment="Center"
                                                        Fill="{Binding Color, Converter={StaticResource HexColorToBrushConverter}}"/>
                                             <TextBlock Grid.Column="2" Text="{Binding CountText}" FontFamily="{StaticResource CvMonoFont}"
-                                                       FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                       FontSize="11.5" HorizontalAlignment="Right" VerticalAlignment="Center"
                                                        Foreground="{Binding Color, Converter={StaticResource HexColorToBrushConverter}}"/>
                                         </Grid>
                                     </DataTemplate>
@@ -473,9 +543,9 @@
                                                 Background="#0F2FF0D6" BorderBrush="#332FF0D6" BorderThickness="1"
                                                 Visibility="{Binding IsUser, Converter={StaticResource BooleanToVisibilityConverter}}">
                                             <StackPanel>
-                                                <TextBlock Text="{Binding Text}" FontFamily="{StaticResource CvUiFont}" FontSize="11.5"
+                                                <TextBlock Text="{Binding Text}" FontFamily="{StaticResource CvUiFont}" FontSize="12.5"
                                                            Foreground="{DynamicResource CvTextBrightBrush}" TextWrapping="Wrap"/>
-                                                <TextBlock Text="{Binding Time}" FontFamily="{StaticResource CvMonoFont}" FontSize="9"
+                                                <TextBlock Text="{Binding Time}" FontFamily="{StaticResource CvMonoFont}" FontSize="11"
                                                            Foreground="{DynamicResource CvTextDimBrush}" HorizontalAlignment="Right" Margin="0,4,0,0"/>
                                             </StackPanel>
                                         </Border>
@@ -483,7 +553,7 @@
                                                 Background="{DynamicResource CvTileBrush}" BorderBrush="{DynamicResource CvBorderBrush}" BorderThickness="1"
                                                 Visibility="{Binding IsAi, Converter={StaticResource BooleanToVisibilityConverter}}">
                                             <StackPanel>
-                                                <TextBlock Text="{Binding ModeLabel}" FontFamily="{StaticResource CvMonoFont}" FontSize="9.5"
+                                                <TextBlock Text="{Binding ModeLabel}" FontFamily="{StaticResource CvMonoFont}" FontSize="11"
                                                            FontWeight="Bold" Margin="0,0,0,5">
                                                     <TextBlock.Style>
                                                         <Style TargetType="TextBlock">
@@ -502,9 +572,9 @@
                                                         </Style>
                                                     </TextBlock.Style>
                                                 </TextBlock>
-                                                <TextBlock Text="{Binding Text}" FontFamily="{StaticResource CvUiFont}" FontSize="11.5"
+                                                <TextBlock Text="{Binding Text}" FontFamily="{StaticResource CvUiFont}" FontSize="12.5"
                                                            Foreground="{DynamicResource CvTextBrush}" TextWrapping="Wrap" LineHeight="17"/>
-                                                <TextBlock Text="{Binding Time}" FontFamily="{StaticResource CvMonoFont}" FontSize="9"
+                                                <TextBlock Text="{Binding Time}" FontFamily="{StaticResource CvMonoFont}" FontSize="11"
                                                            Foreground="{DynamicResource CvTextDimBrush}" HorizontalAlignment="Right" Margin="0,5,0,0"/>
                                             </StackPanel>
                                         </Border>
@@ -527,7 +597,7 @@
                                  ToolTip="Ask the analyst about the selected alert"/>
                         <Button Grid.Column="1" Style="{StaticResource CvButtonPrimary}" Command="{Binding SendChatCommand}"
                                 MinWidth="84" Height="36" Margin="8,0,0,0">
-                            <cv:CvTrackedText Label="SEND" FontFamily="{StaticResource CvDisplayFont}" FontSize="11" FontWeight="SemiBold"/>
+                            <cv:CvTrackedText Label="SEND" FontFamily="{StaticResource CvDisplayFont}" FontSize="12" FontWeight="SemiBold"/>
                         </Button>
                     </Grid>
                 </Grid>

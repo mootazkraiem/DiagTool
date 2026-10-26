@@ -1,33 +1,17 @@
 \chapter*{General Introduction}
+\markboth{\MakeUppercase{General Introduction}}{\MakeUppercase{General Introduction}}
 \addcontentsline{toc}{chapter}{General Introduction}
 
-Vehicles have become distributed computer networks on wheels. A modern car, and even more so an electric vehicle, contains dozens of \gls{ecu}s that control braking, battery management, motor torque, infotainment, and driver-assistance functions. These \gls{ecu}s talk to each other over shared internal networks, and the most common of these networks, by far, is the \gls{can} bus.
+A modern vehicle is a small network of computers on wheels. An electric car contains many \glspl{ecu} that control braking, battery management, motor torque and driver assistance, and they exchange data mostly over the \gls{can} bus.
 
-The \gls{can} protocol was standardized in the 1980s for industrial reliability: every node on the bus can send and receive frames, and the protocol guarantees that the highest-priority message wins in case of collision. This design works extremely well for a closed, trusted environment. It was never designed to resist an attacker who gains access to the bus, because it has no field for authentication and no encryption. Once an attacker can inject frames onto the bus, the bus itself cannot tell a legitimate frame from a forged one.
+The \gls{can} protocol~\cite{iso11898} was designed in the 1980s for reliability. Every node can send and receive frames, and when two nodes talk at the same time, the message with the highest priority wins. This works very well on a closed network where every node can be trusted. It was never meant to resist someone who gains access to the bus: a frame carries no field for authentication and no encryption, so the bus cannot tell a genuine frame from a forged one.
 
-Over the last fifteen years, security researchers have repeatedly shown that this is not a theoretical problem. Remote attacks against production vehicles, published diagnostic exploits, and public intrusion-detection datasets have all demonstrated that a compromised \gls{can} bus can affect physical vehicle behaviour. At the same time, the rise of electric vehicles has increased the number of safety-critical messages on the bus (battery management, motor control) and the number of remote attack surfaces (telematics, over-the-air updates, mobile apps).
+Over the last fifteen years, security researchers have shown many times that this is not a theoretical problem. Experimental analyses of production vehicles~\cite{koscher2010experimental,checkoway2011comprehensive}, a remote attack on an unmodified car~\cite{miller2015remote} and public intrusion detection datasets~\cite{seo2018gids,verma2020road} have all shown that access to the \gls{can} bus can change the physical behaviour of a vehicle. At the same time, electric vehicles have added more safety critical messages to the bus, such as battery management and motor control, and more remote entry points, such as telematics, over the air updates and mobile applications.
 
-An intrusion detection system for the \gls{can} bus has to work under constraints that are different from a typical network \gls{ids}: frames are small (up to 8 bytes of payload), periodic, and vehicle-specific, and a single trained model rarely generalizes across manufacturers. This motivates a system that combines several complementary detection strategies (timing, payload, machine learning, temporal persistence) and that adapts to the specific vehicle being monitored.
+Detecting anomalies on a \gls{can} bus is not the same problem as on a computer network: the frames carry at most 8 bytes, most are periodic, and their meaning changes from one vehicle to another. This calls for a system that looks at timing, payload and a learned model of normal behaviour, and that adapts to the vehicle it watches.
 
-This report describes the design, implementation, and validation of \textbf{CANvisionNative}, an intelligent, \gls{can}-based diagnostic and validation platform for Battery Management Systems. Diagnostics is the core objective: giving a BMS engineer continuous, unified visibility into \gls{can} traffic. Real-time monitoring, log replay, and machine-learning-based anomaly detection are capabilities built around that core, not the purpose of the platform on their own. The platform is built to detect anomalies on recorded and live \gls{can} traffic, to explain detected anomalies in plain language, and to export the results for later analysis. The project also includes a full engineering validation phase, in which the system was tested against a real one-hour vehicle recording, defects were identified with concrete evidence, fixed, and re-validated.
+This report presents the design, the implementation and the validation of \textbf{CANvisionNative}, a diagnostic and validation platform for the \gls{can} traffic of Battery Management Systems. It gives a BMS engineer one view of the traffic, through replay, monitoring and anomaly detection, explains the anomalies in plain language and exports the results. A large part of the project went into validation: six defects were found and corrected on a real vehicle recording, and the rebuilt models were evaluated on recordings they had never seen.
 
-
-
-
-
-
-
-
-\section*{Report structure}
-\addcontentsline{toc}{section}{Report structure}
-
-This report is organized into five chapters.
-
-Chapter 1 presents the general framework of the project: the host organization, the project context, the problem statement, the objectives, and the development methodology followed. 
-Chapter 2 presents the requirements analysis: a short review of existing solutions, the functional and non-functional requirements, the actors, and the use cases. 
-Chapter 3 presents the system design: the technology choices and the overall architecture, illustrated with UML diagrams. 
-Chapter 4 describes the implementation of the main modules, illustrated with real screenshots of the running application. 
-Chapter 5 presents the validation and results: the testing methodology, the real-data validation on the Kia EV6 recording, the six defects found and fixed, the before/after measurements, and an assessment of the system's software readiness.
- The report ends with a general conclusion, a bibliography, and a set of appendices.
+This report follows the phases of the Unified Process. Chapter~\ref{chap:framework} presents the general framework of the project: the host company, the context, the existing solutions, the problem statement, the proposed solution, its objectives and the development methodology. Chapter~\ref{chap:inception} presents the inception phase: the actors, the functional and non functional requirements, the use case model, the initial risks and the plan. Chapter~\ref{chap:elaboration} presents the elaboration phase: the technical choices, the architecture, the analysis model, the dynamic view, the detection architecture, the framing of the machine learning problem and the architecture baseline. Chapter~\ref{chap:construction} presents the four iterations of the construction phase: the first detection pipeline and client, its validation and correction on a Kia EV6 recording, the hardware layer and its bench rig, and the rebuild of the models with their evaluation on recordings kept out of training. Chapter~\ref{chap:transition} presents the transition phase: the final release, its tests, the traceability of the requirements, the deployment and documentation, and the scope within which the software can be considered stable. The report ends with a general conclusion.
 
 \cleardoublepage

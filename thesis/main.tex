@@ -10,19 +10,25 @@
 \pagenumbering{gobble}
 
 \input{chapters/00_cover.tex}
+\input{chapters/00_signature.tex}
+\input{chapters/00_dedication.tex}
 \input{chapters/00_acknowledgements.tex}
-\input{chapters/00_abstract.tex}
-\input{chapters/00_resume.tex}
 
 \pagenumbering{roman}
 
+% the lists are set with single line spacing so that the contents fit on three pages
+\begingroup
+\setstretch{1}
 \tableofcontents
 \clearpage
 \listoffigures
 \clearpage
 \listoftables
 \clearpage
+\endgroup
 \printglossary[type=\acronymtype,title={List of Abbreviations}]
+% written out in the text, listed here as well
+\glsadd{bms}\glsadd{svm}\glsadd{lof}
 \clearpage
 
 \input{chapters/00_general_introduction.tex}
@@ -34,23 +40,21 @@
 \setcounter{page}{1}
 
 \input{chapters/chapter1_general_framework.tex}
-\input{chapters/chapter2_requirements.tex}
-\input{chapters/chapter3_design.tex}
-\input{chapters/chapter4_implementation.tex}
-\input{chapters/chapter5_validation.tex}
+\input{chapters/chapter2_inception.tex}
+\input{chapters/chapter3_elaboration.tex}
+\input{chapters/chapter4_construction.tex}
+\input{chapters/chapter5_transition.tex}
 \input{chapters/00_general_conclusion.tex}
 
 % ============================================================
 % BACK MATTER
 % ============================================================
-\printbibliography[title={Bibliography}]
+\printbibliography[heading=bibintoc,title={Bibliography}]
 
-\appendix
-\input{appendices/appendixA_api_endpoints.tex}
-\input{appendices/appendixB_configuration.tex}
-\input{appendices/appendixC_datasets.tex}
-\input{appendices/appendixD_additional_validation.tex}
-\input{appendices/appendixE_data_sources.tex}
+% the abstracts, in English and in French, come after the bibliography
+\cleardoublepage
+\input{chapters/00_abstract.tex}
+\input{chapters/00_resume.tex}
 
 \input{chapters/00_backcover.tex}
 

@@ -283,14 +283,6 @@
                 <!-- Default: both cards visible, normal content shown -->
                 <VisualState x:Name="ChooserMode">
                     <Storyboard>
-                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="LiveCard"
-                                                       Storyboard.TargetProperty="Visibility">
-                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
-                        </ObjectAnimationUsingKeyFrames>
-                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="OfflineCard"
-                                                       Storyboard.TargetProperty="Visibility">
-                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
-                        </ObjectAnimationUsingKeyFrames>
                         <DoubleAnimation Storyboard.TargetName="LiveCard"
                                          Storyboard.TargetProperty="Opacity"
                                          To="1" Duration="0"/>
@@ -323,10 +315,6 @@
                 <!-- Live session selected: offline card collapsed, live card shows progress -->
                 <VisualState x:Name="LiveConnecting">
                     <Storyboard>
-                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="OfflineCard"
-                                                       Storyboard.TargetProperty="Visibility">
-                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Collapsed}"/>
-                        </ObjectAnimationUsingKeyFrames>
                         <ObjectAnimationUsingKeyFrames Storyboard.TargetName="LiveNormal"
                                                        Storyboard.TargetProperty="Visibility">
                             <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Collapsed}"/>
@@ -341,10 +329,6 @@
                 <!-- Offline import selected: live card collapsed, offline card shows progress -->
                 <VisualState x:Name="OfflineImporting">
                     <Storyboard>
-                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="LiveCard"
-                                                       Storyboard.TargetProperty="Visibility">
-                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Collapsed}"/>
-                        </ObjectAnimationUsingKeyFrames>
                         <ObjectAnimationUsingKeyFrames Storyboard.TargetName="OfflineNormal"
                                                        Storyboard.TargetProperty="Visibility">
                             <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Collapsed}"/>
@@ -363,10 +347,6 @@
                 <!-- File chosen: confirm the vehicle / AI model before the analysis runs -->
                 <VisualState x:Name="OfflineModelSelect">
                     <Storyboard>
-                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="LiveCard"
-                                                       Storyboard.TargetProperty="Visibility">
-                            <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Collapsed}"/>
-                        </ObjectAnimationUsingKeyFrames>
                         <ObjectAnimationUsingKeyFrames Storyboard.TargetName="OfflineNormal"
                                                        Storyboard.TargetProperty="Visibility">
                             <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Collapsed}"/>
@@ -411,10 +391,6 @@
                     <VisualTransition From="LiveConnecting" To="ChooserMode">
                         <Storyboard>
                             <!-- Restore OfflineCard visibility at t=0 so opacity fade-in works -->
-                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="OfflineCard"
-                                                           Storyboard.TargetProperty="Visibility">
-                                <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
-                            </ObjectAnimationUsingKeyFrames>
                             <DoubleAnimation Storyboard.TargetName="LiveCardScale"
                                              Storyboard.TargetProperty="ScaleX"
                                              From="1" To="0" Duration="0:0:0.15"/>
@@ -462,10 +438,6 @@
                     <VisualTransition From="OfflineImporting" To="ChooserMode">
                         <Storyboard>
                             <!-- Restore LiveCard visibility at t=0 so opacity fade-in works -->
-                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="LiveCard"
-                                                           Storyboard.TargetProperty="Visibility">
-                                <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
-                            </ObjectAnimationUsingKeyFrames>
                             <DoubleAnimation Storyboard.TargetName="OfflineCardScale"
                                              Storyboard.TargetProperty="ScaleX"
                                              From="1" To="0" Duration="0:0:0.15"/>
@@ -527,7 +499,7 @@
                         HorizontalAlignment="Center">
 
                 <!-- ── LIVE SESSION card ─────────────────────────────────── -->
-                <Border x:Name="LiveCard" Opacity="0"
+                <Border x:Name="LiveCard" Opacity="0" MouseEnter="Card_MouseEnter" MouseLeave="Card_MouseLeave"
                         Width="496" Height="394" Padding="32,26"
                         Background="{DynamicResource CvPanelBrush}" BorderBrush="{DynamicResource CvBorderAccentBrush}"
                         BorderThickness="1" CornerRadius="3" Margin="15,0"
@@ -539,15 +511,6 @@
                             <TranslateTransform x:Name="LiveHoverShift" Y="0"/>
                         </TransformGroup>
                     </Border.RenderTransform>
-                    <Border.Triggers>
-                        <EventTrigger RoutedEvent="MouseEnter">
-                            <BeginStoryboard x:Name="LiveHoverInSb" Storyboard="{StaticResource LiveHoverIn}"/>
-                        </EventTrigger>
-                        <EventTrigger RoutedEvent="MouseLeave">
-                            <StopStoryboard BeginStoryboardName="LiveHoverInSb"/>
-                            <BeginStoryboard Storyboard="{StaticResource LiveHoverOut}"/>
-                        </EventTrigger>
-                    </Border.Triggers>
                     <Grid>
                         <!-- corner brackets -->
                         <Border x:Name="LiveHoverGlow" Opacity="0" IsHitTestVisible="False"
@@ -630,7 +593,7 @@
 
                             <TextBlock x:Name="LiveMeta" Grid.Row="6" Margin="0,0,0,12" FontFamily="{StaticResource CvMonoFont}" FontSize="9"
                                        Foreground="{DynamicResource CvTextDimBrush}">
-                                <Run Text="{Binding ModelSelection.Models.Count, Mode=OneWay}"/><Run Text=" MODELS · LIVE DECODE · "/><Run Text="{Binding HealthLlmText, Mode=OneWay}"/>
+                                <Run Text="{Binding ModelSelection.EvaluatedModelCount, Mode=OneWay}"/><Run Text=" EVALUATED OF "/><Run Text="{Binding ModelSelection.Models.Count, Mode=OneWay}"/><Run Text=" MODEL ENTRIES · LIVE DECODE · "/><Run Text="{Binding HealthLlmText, Mode=OneWay}"/>
                             </TextBlock>
 
                             <Border x:Name="LiveStatus" Grid.Row="7" Margin="0,0,0,14">
@@ -662,6 +625,22 @@
                                         </Style>
                                     </TextBlock.Style>
                                 </TextBlock>
+                                <!-- plugged-in hardware: the live session unlocks only with a device -->
+                                <TextBlock Text="·" Margin="10,0" VerticalAlignment="Center" FontSize="10"
+                                           Foreground="{DynamicResource CvTextDimBrush}"/>
+                                <TextBlock Text="{Binding HardwareStatusText}" VerticalAlignment="Center"
+                                           FontFamily="{StaticResource CvMonoFont}" FontSize="10">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{DynamicResource CvTextMutedBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsHardwareDetected}" Value="True">
+                                                    <Setter Property="Foreground" Value="{DynamicResource CvOkBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                             </StackPanel>
                             </Border>
 
@@ -669,7 +648,8 @@
                                     IsEnabled="{Binding CanStartLive}"
                                     Command="{Binding LaunchOnlineDiagnosisCommand}"
                                     AutomationProperties.Name="START LIVE SESSION"
-                                    ToolTip="Start monitoring the live CAN bus">
+                                    ToolTipService.ShowOnDisabled="True"
+                                    ToolTip="{Binding LiveActionToolTip}">
                                 <cvctl:CvTrackedText Label="START LIVE SESSION" FontFamily="{StaticResource CvDisplayFont}"
                                                      FontSize="11.5" FontWeight="SemiBold" Tracking="2"/>
                             </Button>
@@ -735,7 +715,7 @@
                 </Border>
 
                 <!-- ── OFFLINE IMPORT card ──────────────────────────────── -->
-                <Border x:Name="OfflineCard" Opacity="0"
+                <Border x:Name="OfflineCard" Opacity="0" MouseEnter="Card_MouseEnter" MouseLeave="Card_MouseLeave"
                         Width="496" Height="394" Padding="32,26"
                         Background="{DynamicResource CvPanelBrush}" BorderBrush="{DynamicResource CvBorderAccentBrush}"
                         BorderThickness="1" CornerRadius="3" Margin="15,0"
@@ -747,15 +727,6 @@
                             <TranslateTransform x:Name="OfflineHoverShift" Y="0"/>
                         </TransformGroup>
                     </Border.RenderTransform>
-                    <Border.Triggers>
-                        <EventTrigger RoutedEvent="MouseEnter">
-                            <BeginStoryboard x:Name="OfflineHoverInSb" Storyboard="{StaticResource OfflineHoverIn}"/>
-                        </EventTrigger>
-                        <EventTrigger RoutedEvent="MouseLeave">
-                            <StopStoryboard BeginStoryboardName="OfflineHoverInSb"/>
-                            <BeginStoryboard Storyboard="{StaticResource OfflineHoverOut}"/>
-                        </EventTrigger>
-                    </Border.Triggers>
                     <Grid>
                         <!-- corner brackets -->
                         <Border x:Name="OfflineHoverGlow" Opacity="0" IsHitTestVisible="False"
@@ -993,29 +964,15 @@
           </StackPanel>
 
         <!-- ── System strip ───────────────────────────────────────────────
-             Bottom-left the live system state, bottom-right the hardware
-             action, as the reference resolves them last. Every value is real:
-             backend link, loaded models, LLM provider and this build's version. -->
+             Bottom-left the live system state. Every value is real: loaded
+             models, LLM provider and this build's version. The backend link
+             and the hardware action were removed at the owner's request. -->
         <Grid x:Name="HomeFooter" Opacity="0" VerticalAlignment="Bottom" Margin="40,0,40,44">
             <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center"
                        FontFamily="{StaticResource CvMonoFont}" FontSize="9"
                        Foreground="{DynamicResource CvTextDimBrush}">
-                <Run Text="CANVISION IDS "/><Run Text="{Binding AppVersionText, Mode=OneWay}"/><Run Text="   ·   BACKEND "/><Run Text="{Binding BackendStatusText, Mode=OneWay}"/><Run Text="   ·   "/><Run Text="{Binding ModelSelection.Models.Count, Mode=OneWay}"/><Run Text=" MODELS   ·   LLM "/><Run Text="{Binding HealthLlmText, Mode=OneWay}"/>
+                <Run Text="CANVISION IDS "/><Run Text="{Binding AppVersionText, Mode=OneWay}"/><Run Text="   ·   "/><Run Text="{Binding ModelSelection.EvaluatedModelCount, Mode=OneWay}"/><Run Text=" EVALUATED OF "/><Run Text="{Binding ModelSelection.Models.Count, Mode=OneWay}"/><Run Text=" MODEL ENTRIES   ·   LLM "/><Run Text="{Binding HealthLlmText, Mode=OneWay}"/>
             </TextBlock>
-
-            <Button HorizontalAlignment="Right" VerticalAlignment="Center" Style="{StaticResource HomeAction}"
-                    Padding="14,6" Height="28"
-                    Command="{Binding DataContext.NavigationService.NavigateToSectionCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                    CommandParameter="{x:Static cvmodels:SectionKey.HardwareSetup}"
-                    AutomationProperties.Name="CONNECT WITH HARDWARE"
-                    ToolTip="Open Hardware Setup to connect a CAN adapter">
-                <StackPanel Orientation="Horizontal">
-                    <Ellipse Width="5" Height="5" VerticalAlignment="Center" Fill="{DynamicResource CvAccentBrush}"/>
-                    <cvctl:CvTrackedText Label="CONNECT WITH HARDWARE" Margin="8,0,0,0"
-                                         FontFamily="{StaticResource CvMonoFont}" FontSize="9" Tracking="1"
-                                         Foreground="{DynamicResource CvAccentBrush}"/>
-                </StackPanel>
-            </Button>
         </Grid>
         </Grid>
 

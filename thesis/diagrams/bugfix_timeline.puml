@@ -1,33 +1,25 @@
 @startuml
-skinparam backgroundColor white
-skinparam defaultFontName Helvetica
-skinparam defaultFontSize 11
-skinparam shadowing false
-skinparam roundcorner 6
-skinparam ArrowColor #2C5AA0
-skinparam ArrowThickness 1.1
-skinparam component {
-  BackgroundColor #EAF2FF
-  BorderColor #2C5AA0
-}
+!include style.iuml
+skinparam linetype ortho
+skinparam nodesep 35
+skinparam ranksep 40
 
-component "Root-cause\nanalysis\n(15,945 alerts,\n100% explained)" as A #EAF2FF
-component "Fix 1\nVehicle model\nselection" as B #FFE0B2
-component "Fix 2\nDriving-state\nclassification" as C #FFE0B2
-component "Fix 3\nReason\nattribution" as D #FFE0B2
-component "Fix 4\nReplay parser\nconsistency" as E #FFE0B2
+rectangle "Root cause analysis\n15,945 alerts,\nall explained" as A
+rectangle "Fix 1\nvehicle model\nselection" as F1
+rectangle "Fix 2\ndriving state\nclassification" as F2
+rectangle "Fix 3\nattribution of\nthe reason" as F3
+rectangle "Fix 4\none parser\nfor replay" as F4
+rectangle "Full run through\nthe application" as E
+rectangle "Fix 5\npolling timer\nleft stopped" as F5
+rectangle "Fix 6\nstale explanation\ncache" as F6
+rectangle "Corrected first pipeline\n11,971 alerts" as R
 
-component "End-to-end\nre-validation" as F #C8E6C9
-component "Fix 5\nAlert-polling\ntimer" as G #FFCDD2
-component "Fix 6\nAI explanation\ncache staleness" as H #FFCDD2
-component "Release\nCandidate" as I #C8E6C9
-
-A -right-> B
-B -right-> C
-C -right-> D
-D -right-> E
-E -down-> F
-F -right-> G
-G -right-> H
-H -right-> I
+A -right-> F1
+F1 -right-> F2
+F2 -right-> F3
+F3 -right-> F4
+F4 -down-> E
+E -left-> F5
+F5 -left-> F6
+F6 -left-> R
 @enduml

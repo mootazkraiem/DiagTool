@@ -1,20 +1,21 @@
 @startuml
-skinparam backgroundColor white
-skinparam defaultFontName Helvetica
-skinparam defaultFontSize 14
-skinparam shadowing false
-skinparam roundcorner 6
-skinparam state {
-  BackgroundColor #EAF2FF
-  BorderColor #2C5AA0
-  ArrowColor #2C5AA0
-}
+!include style.iuml
+skinparam linetype polyline
+skinparam nodesep 40
+skinparam ranksep 40
 
-[*] --> Parking
+rectangle "14 rolling features\nof the frame" as F
+rectangle "RobustScaler" as S
+rectangle "K-Means\n(5 clusters, shared\nby all vehicles)" as K
+rectangle "Cluster to state\nmapping" as M
+rectangle "Driving state:\nparking, idle\nor driving" as ST
+rectangle "Isolation Forest of\nthis state and vehicle\n(with its own scaler)" as IF
+rectangle "Generic model,\nthen a heuristic" as G
 
-Parking --> Idle : activity detected
-Idle --> Driving : sustained motion
-Driving --> Idle : motion drops off
-Idle --> Parking : no activity
-Driving --> Parking : session ends
+F -right-> S
+S -right-> K
+K -right-> M
+M -down-> ST
+ST -left-> IF
+IF .left.> G : no forest\nfor this state
 @enduml

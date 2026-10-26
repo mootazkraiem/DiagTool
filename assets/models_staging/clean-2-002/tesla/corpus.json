@@ -1,0 +1,17 @@
+{
+  "training": {
+    "fingerprint": "f14d4256ff0f821bf15a85b4c7c5fb0a8916a5c38c4d2de5ce98918bc9c116fb",
+    "recordings": [
+      {
+        "path": "EV-CANlogs-main/Tesla/Model 3/tesla-model3-battery-only.log.log",
+        "sha256": "fde97eb1cc6a16420d70e34699ea13d1313d97eeaf030c8a7af11a56e55acdf3",
+        "content_sha256": "6a8324db6e82708a93ea6d556e8ad11964ccc67ff3140794f84715f5597278a8",
+        "frames": 118053,
+        "frame_cap": null
+      }
+    ]
+  },
+  "holdout": {
+    "recordings": []
+  }
+}

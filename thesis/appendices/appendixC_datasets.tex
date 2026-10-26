@@ -1,65 +1,92 @@
 \chapter{Datasets}
 \label{app:datasets}
 
-This appendix describes every dataset used by CANvisionNative, either for training the machine-learning models or for validating the system, and explains why the Kia EV6 recording became the official validation dataset used throughout Chapter~\ref{chap:validation}.
+This appendix describes the datasets used in the project, for training the models and for validating the system: the corpus of the final models, the corpus of the first pipeline, the description of each dataset family, and the reasons behind the choice of the validation recordings. Every source is a public academic release, public sample data from a vendor, or traffic shared openly by the community; no dataset was bought, licensed under a restrictive commercial agreement or obtained under a non disclosure agreement.
 
-\section{Training corpus}
+\section{Corpus of the final models}
 
-The machine-learning models used by CANvisionNative were trained on a corpus of \textbf{more than seven million CAN frames} drawn from sixty-six sources, summarized in Table~\ref{tab:app-training-corpus}.
+The final models were trained and evaluated per vehicle, with a split by recording: some complete recordings for training, and at least one complete recording kept aside as a holdout. The fingerprints of the recordings guarantee that no recording is on both sides. Table~\ref{tab:app-final-corpus} gives the corpus of the four models in production.
 
 \begin{table}[H]
 \centering
-\caption{Main sources of the training corpus.}
+\footnotesize
+\caption{Corpus of the final models in production.}
+\label{tab:app-final-corpus}
+\begin{tabularx}{\textwidth}{|P{2.6cm}|Y|r|r|r|}
+\hline
+\textbf{Model} & \textbf{Source} & \textbf{Training recordings} & \textbf{Training frames} & \textbf{Holdout frames} \\
+\hline
+Jaguar I-PACE & Community EV logs (EV-CANlogs) & 3 & 233{,}598 & 50{,}361 \\
+\hline
+Kia EV6 & Community EV logs (EV-CANlogs) & 2 & 448{,}198 & 438{,}170 \\
+\hline
+Nissan Leaf 2019 & CSS Electronics sample data (CANedge2 logger) & 8 & 1{,}317{,}070 & 491{,}969 \\
+\hline
+ROAD ambient & ROAD dataset, ambient recordings & 10 & 1{,}437{,}195 & 150{,}000 \\
+\hline
+\textbf{Total} & & \textbf{23} & \textbf{3{,}436{,}061} & \textbf{1{,}130{,}500} \\
+\hline
+\end{tabularx}
+\normalsize
+\end{table}
+
+Six other vehicles did not reach production. The MG ZS EV model was held back after its evaluation, because about 78\% of its holdout frames belong to identifiers absent from its only training recording. The Hyundai Ioniq 5, the Kaggle normal traffic dataset and the Tesla have only one recording each, so their models could not be evaluated on a holdout. No final model was built for the Škoda Enyaq, whose recordings are all kept as protected evaluation files, nor for the older Nissan Leaf family, which we excluded because its recordings mix two logger formats.
+
+\section{Corpus of the first pipeline}
+
+The models of the first pipeline (Section~\ref{sec:impl-state}) were trained on a corpus of \textbf{more than seven million \gls{can} frames} from sixty six sources, summarised in Table~\ref{tab:app-training-corpus}.
+
+\begin{table}[H]
+\centering
+\caption{Main sources of the corpus of the first pipeline.}
 \label{tab:app-training-corpus}
-\begin{tabular}{|p{4.2cm}|p{6.8cm}|r|}
+\begin{tabular}{|P{4.2cm}|P{6.8cm}|r|}
 \hline
 \textbf{Source} & \textbf{Description} & \textbf{Frames} \\
 \hline
-ROAD ambient~\cite{verma2020road} & Ambient (attack-free) drives from the ROAD dataset & 1{,}737{,}195 \\
+ROAD ambient~\cite{verma2020road} & Ambient recordings (without attacks) of the ROAD dataset & 1{,}737{,}195 \\
 \hline
-Car-Hacking (normal rows)~\cite{seo2018gids} & Public benchmark, normal-traffic subset & 1{,}200{,}000 \\
+Car-Hacking (normal rows)~\cite{seo2018gids} & Public benchmark, normal traffic only & 1{,}200{,}000 \\
 \hline
-Nissan Leaf              & Community EV CAN logs & 1{,}163{,}181 \\
+Nissan Leaf              & Community EV \gls{can} logs & 1{,}163{,}181 \\
 \hline
-BMW i3                   & Community EV CAN logs & 1{,}044{,}993 \\
+BMW i3                   & Community EV \gls{can} logs & 1{,}044{,}993 \\
 \hline
-Kia EV6                  & Community EV CAN logs & 886{,}368 \\
+Kia EV6                  & Community EV \gls{can} logs & 886{,}368 \\
 \hline
-13 additional sources    & Kia Soul, Jaguar I-PACE, MG ZS EV, Tesla, others & $\sim$1{,}032{,}329 \\
+13 other sources         & Kia Soul, Jaguar I-PACE, MG ZS EV, Tesla and others & about 1{,}032{,}329 \\
 \hline
 \end{tabular}
 \end{table}
 
-This corpus produced sixteen vehicle- or dataset-specific trained model bundles (including Kia EV6, Nissan Leaf, BMW i3, Škoda Enyaq, Tesla, and others), plus one generic fallback bundle, alongside the shared state-classification model used by the state classifier (Section~\ref{sec:impl-state}).
+For the first pipeline, we tried to train sixteen bundles, one per vehicle or dataset. Fourteen gave a usable model. The two others, BYD Atto 3 and Ford Mustang Mach-E, had too few frames in any driving state to reach the 5{,}000 frames per state that this pipeline required. Today, the model selector of the client lists 20 entries: the general model, 14 vehicle models, each with its status (Table~\ref{tab:model-status}), and 5 \gls{dbc} profiles without a model of their own, including the bench rig, which are scored with the general model.
 
 \section{Dataset descriptions}
 
-Tables~\ref{tab:app-css} to~\ref{tab:app-community} describe each of the four dataset families used in the project — the primary validation recording, the two labelled academic benchmarks used for training, and the community-contributed EV logs used for training volume and diversity — against the same eight criteria: source, license, vehicle, format, purpose, trustworthiness, strengths, and limitations.
-
-Tables~\ref{tab:app-css}--\ref{tab:app-community} give one table per dataset family, so each stays short enough to read as a single block.
+Tables~\ref{tab:app-css} to~\ref{tab:app-community} describe the four families of datasets used in the project with the same eight criteria: source, license, vehicle, format, purpose, trustworthiness, strengths and limits.
 
 \begin{table}[H]
 \centering
 \footnotesize
-\caption{CSS Electronics EV Data Pack (Kia EV6) — primary validation dataset.}
+\caption{CSS Electronics sample data (Kia EV6 and Nissan Leaf 2019).}
 \label{tab:app-css}
-\begin{tabularx}{\textwidth}{|p{2.6cm}|X|}
+\begin{tabularx}{\textwidth}{|P{3cm}|Y|}
 \hline
-Source & Published by CSS Electronics, a commercial manufacturer of CANedge data loggers, as a free public sample data pack demonstrating real-world CAN/UDS logging. \\
+Source & Published by CSS Electronics, a manufacturer of CANedge data loggers, as free public sample data showing real \gls{can} and \gls{uds} logging~\cite{css_evdata}. \\
 \hline
-License / access & Freely downloadable from CSS Electronics' public data pack page for evaluation and demonstration purposes. \\
+License and access & Freely downloadable from the public pages of CSS Electronics, for evaluation and demonstration. \\
 \hline
-Vehicle & Kia EV6 (real, unmodified production vehicle). \\
+Vehicles & Kia EV6 (EV Data Pack) and Nissan Leaf 2019, both real, unmodified production vehicles. \\
 \hline
-Format & \gls{mf4} binary log (ASAM MDF v4), converted to a canonical CSV frame stream by this project's MF4 pipeline (Section~\ref{sec:impl-mf4}). \\
+Format & \gls{mf4} binary logs (ASAM MDF version 4), converted into the common frame stream by our \gls{mf4} conversion (Section~\ref{sec:impl-mf4}). \\
 \hline
-Purpose in this project & Primary validation dataset for the whole of Chapter~\ref{chap:validation}: root-cause analysis, all six engineering fixes, and every before/after measurement. \\
+Purpose in this project & The one hour Kia EV6 recording is the dataset of the first validation iteration: root cause analysis, the six fixes and all the measurements before and after. The Nissan Leaf 2019 recordings are the training and holdout data of one of the final models. \\
 \hline
-Trustworthiness & High: captured by a professional logger performing active \gls{uds} polling of a real vehicle's \gls{ecu}s during an actual one-hour drive, giving an independently known ground truth against which the state-classification defect (Fix 2) could be directly checked. \\
+Trustworthiness & High: recorded by a professional logger on real vehicles. The Kia EV6 recording was made during an actual drive with active \gls{uds} polling, which gave us an independent fact (the vehicle was being driven) to check the state classification of Fix 2. \\
 \hline
-Strengths & Real production vehicle; independently verifiable frame count against MF4 metadata; already has a named profile and trained model bundle; realistic UDS polling pattern. \\
+Strengths & Real production vehicles; frame counts that can be checked against the \gls{mf4} metadata; a \gls{dbc} profile exists for both vehicles. \\
 \hline
-Limitations & A single vehicle and a single one-hour session; does not by itself confirm that the same alert-rate proportions hold on other vehicles or driving styles (Chapter~\ref{chap:validation}, Limitations). \\
+Limitations & One recording of the Kia EV6 in the first iteration, and one logger for the Nissan Leaf 2019, so the results do not cover every driving situation. \\
 \hline
 \end{tabularx}
 \end{table}
@@ -67,25 +94,25 @@ Limitations & A single vehicle and a single one-hour session; does not by itself
 \begin{table}[H]
 \centering
 \footnotesize
-\caption{ROAD dataset~\cite{verma2020road} — training corpus.}
+\caption{ROAD dataset~\cite{verma2020road}.}
 \label{tab:app-road}
-\begin{tabularx}{\textwidth}{|p{2.6cm}|X|}
+\begin{tabularx}{\textwidth}{|P{3cm}|Y|}
 \hline
-Source & Published by its authors (Verma et al.) as an open academic benchmark, described in the paper title as the ``Real ORNL Automotive Dynamometer'' CAN intrusion detection dataset. \\
+Source & Published by its authors (Verma et al.) as an open academic benchmark, the ``Real ORNL Automotive Dynamometer'' \gls{can} intrusion detection dataset. \\
 \hline
-License / access & Released publicly by the authors for research use. \\
+License and access & Released publicly by the authors for research use. \\
 \hline
-Vehicle & Real vehicle traffic captured on a dynamometer test bench, with both ambient (attack-free) and labelled-attack recordings, including a distinction between plain injection and masquerade attacks. \\
+Vehicle & Traffic of a real vehicle on a dynamometer test bench, with ambient recordings (without attacks) and recordings with labelled attacks. \\
 \hline
-Format & candump-style timestamped text log ((ts) can0 ID\#hexdata). \\
+Format & Text log in the candump style with timestamps: \texttt{(ts) can0 ID\#hexdata}. \\
 \hline
-Purpose in this project & Only the ambient (attack-free) recordings were used, as part of the training corpus, to expose the models to real, normal traffic patterns from a source independent of the community EV logs. \\
+Purpose in this project & Only the ambient recordings were used: in the corpus of the first pipeline, and as the training and holdout data of the final ROAD ambient model. \\
 \hline
-Trustworthiness & High as an academic benchmark purpose-built for \gls{ids} evaluation, though captured on a dynamometer bench rather than on open roads; used here only for its normal-traffic statistics. \\
+Trustworthiness & High, as an academic benchmark built for the evaluation of intrusion detection, although it was recorded on a test bench and not on the road. \\
 \hline
-Strengths & Peer-reviewed provenance; explicit ambient/attack separation makes it safe to use only the ambient part; adds a training source independent of the community EV logs. \\
+Strengths & Documented provenance; a clear separation between ambient and attack recordings, so the ambient part can be used safely. \\
 \hline
-Limitations & Dynamometer traffic, not open-road traffic; attack labels were not used in this project, so this dataset contributes only volume and diversity, not attack ground truth. \\
+Limitations & Test bench traffic, not road traffic. We did not use the labelled attack recordings, so this dataset gives us no measured detection rate; evaluating the final models on them is future work (Chapter~\ref{chap:validation}). \\
 \hline
 \end{tabularx}
 \end{table}
@@ -93,25 +120,25 @@ Limitations & Dynamometer traffic, not open-road traffic; attack labels were not
 \begin{table}[H]
 \centering
 \footnotesize
-\caption{Car-Hacking dataset~\cite{seo2018gids} — training corpus.}
+\caption{Car-Hacking dataset~\cite{seo2018gids}.}
 \label{tab:app-carhacking}
-\begin{tabularx}{\textwidth}{|p{2.6cm}|X|}
+\begin{tabularx}{\textwidth}{|P{3cm}|Y|}
 \hline
-Source & Published by the Hacking and Countermeasure Research Lab (HCRL), used in the GIDS paper as a benchmark for GAN-based intrusion detection. \\
+Source & Published by the Hacking and Countermeasure Research Lab (HCRL) and used in the GIDS paper as a benchmark for intrusion detection. \\
 \hline
-License / access & Publicly released by HCRL for research use. \\
+License and access & Released publicly by HCRL for research use. \\
 \hline
-Vehicle & Real vehicle CAN traffic with labelled attack and normal traffic. \\
+Vehicle & \gls{can} traffic of a real vehicle, with labelled normal and attack traffic. \\
 \hline
-Format & CSV, timestamp, can\_id, dlc, b0..b7 columns, plus a label column. \\
+Format & \gls{csv} with timestamp, identifier, length and payload bytes, plus a label column. \\
 \hline
-Purpose in this project & Only the normal-traffic rows (no attack labels) were used, as part of the training corpus, for the same reason as the ROAD ambient data: real, normal traffic diversity from a second independent public source. \\
+Purpose in this project & Only the normal rows were used, in the corpus of the first pipeline, as a second independent public source of normal traffic. The final models do not use it. \\
 \hline
-Trustworthiness & High as one of the most widely cited public \gls{can} \gls{ids} benchmarks; used here strictly for its normal rows. \\
+Trustworthiness & High, as one of the most cited public benchmarks of \gls{can} intrusion detection; we only used its normal rows. \\
 \hline
-Strengths & Well-known, widely cited benchmark, which makes its normal-traffic statistics easy to cross-check against other published work. \\
+Strengths & Well known, which makes its statistics easy to compare with published work. \\
 \hline
-Limitations & Captured on a single test vehicle under controlled conditions; like ROAD, its attack labels were not used, only its normal rows. \\
+Limitations & One test vehicle in controlled conditions; its attack labels were not used. \\
 \hline
 \end{tabularx}
 \end{table}
@@ -119,37 +146,39 @@ Limitations & Captured on a single test vehicle under controlled conditions; lik
 \begin{table}[H]
 \centering
 \footnotesize
-\caption{Community EV CAN logs — training corpus.}
+\caption{Community EV \gls{can} logs.}
 \label{tab:app-community}
-\begin{tabularx}{\textwidth}{|p{2.6cm}|X|}
+\begin{tabularx}{\textwidth}{|P{3cm}|Y|}
 \hline
-Source & CAN logs shared publicly by EV enthusiast and vehicle-research communities, covering the Nissan Leaf, BMW i3, Kia EV6, Kia Soul, Tesla, Jaguar I-PACE, MG ZS EV, Hyundai Ioniq 5, Škoda Enyaq, and other platforms. \\
+Source & \gls{can} logs shared publicly by communities of electric vehicle owners and researchers, mainly the EV-CANlogs collection~\cite{evcanlogs}, covering the Nissan Leaf, BMW i3, Kia EV6, Kia Soul, Tesla, Jaguar I-PACE, MG ZS EV, Hyundai Ioniq 5, Škoda Enyaq and other vehicles. \\
 \hline
-License / access & Shared informally and publicly by their contributors; used here for internal model training only, not redistributed as part of this project's deliverables. \\
+License and access & Shared publicly by their contributors; used for training and evaluation only, and not redistributed with this project. \\
 \hline
-Vehicle & One real vehicle per source, matching the vehicle profiles listed in Table~\ref{tab:vehicles}. \\
+Vehicle & One real vehicle per source. \\
 \hline
-Format & Mostly SavvyCAN-style or candump-style CSV logs. \\
+Format & Mostly \gls{csv} logs in the SavvyCAN style (timestamps in microseconds) or in the candump style, and some Vector (.asc) logs. \\
 \hline
-Purpose in this project & Bulk of the training corpus, giving each supported vehicle profile its own trained Isolation Forest bundle instead of relying on one generic model. \\
+Purpose in this project & Most of the corpus of the first pipeline, and the training and holdout data of the final Jaguar I-PACE and Kia EV6 models. \\
 \hline
-Trustworthiness & Variable and less formally documented than the two academic benchmarks above; mitigated by using them only for training, not for any validation claim in Chapter~\ref{chap:validation}. \\
+Trustworthiness & Variable, and less documented than the academic benchmarks. For the final models, the evaluation on a holdout recording of the same source makes the results checkable. \\
 \hline
-Strengths & Wide vehicle coverage, which is exactly what makes the sixteen per-vehicle model bundles (Appendix~\ref{app:datasets}) possible instead of a single generic model. \\
+Strengths & Wide coverage of vehicles, which is what makes models per vehicle possible. \\
 \hline
-Limitations & Informal provenance and inconsistent documentation quality between sources; not used for any validation claim in Chapter~\ref{chap:validation}, only for training. \\
+Limitations & Informal provenance and uneven documentation; few recordings per vehicle, which is why several vehicles have no holdout. \\
 \hline
 \end{tabularx}
 \end{table}
 
-\section{Selection criteria}
+\section{Choice of the validation recordings}
 
-Model training favoured breadth: as many independent vehicles and sources as could be gathered, so that the per-vehicle model store (Appendix~\ref{app:datasets}, Section~\ref{sec:impl-vehicle}) would not depend on a single manufacturer's traffic pattern. Validation had the opposite priority: depth and independent verifiability on one recording, rather than breadth across many. A dataset was suitable for validation only if it met four conditions: it had to come from a real, unmodified vehicle rather than a synthetic simulation; it had to be long enough to produce statistically meaningful before/after measurements; its frame count had to be independently cross-checkable against the raw file's own metadata, to rule out a parsing defect before it could be mistaken for a detection defect; and the vehicle had to already have a named profile and a trained model bundle, so that the full vehicle-aware detection path — not just the generic fallback — could be exercised end to end.
+Training and validation had different priorities. For training, we wanted many independent recordings per vehicle, so that a model does not depend on one session. For validation, we wanted recordings that we could check independently.
 
-\section{Why the Kia EV6 recording became the official validation dataset}
+In the first iteration, a recording was suitable only if it met four conditions: it came from a real, unmodified vehicle; it was long enough for measurements before and after a fix to be meaningful; its frame count could be checked against the metadata of the file, to rule out a parsing defect being taken for a detection defect; and the vehicle already had a profile and a trained model, so that the path specific to the vehicle was tested, and not just the generic fallback.
 
-The Kia EV6 recording from the CSS Electronics EV Data Pack was the only real-vehicle recording available that satisfied all four conditions above at once. It is a genuine, unmodified production vehicle, not a bench or simulated setup. At 97{,}741 frames over roughly one hour, it is long enough that a percentage-point change in alert rate or ML-score saturation (Table~\ref{tab:before-after}) reflects a real shift in behaviour rather than noise from a handful of frames. Its frame count could be independently cross-checked against the \gls{mf4} file's own channel-group metadata (Section~\ref{sec:validation-setup}), which is what first exposed the \gls{mf4} conversion defect described there, before any detection-level claim was trusted. Finally, the Kia EV6 is one of the nine named vehicle profiles in Table~\ref{tab:vehicles}, with its own \gls{dbc} file and trained model bundle, so replaying it exercises the full per-vehicle detection path — the exact path Fix 1 (Chapter~\ref{chap:validation}) proved was previously broken. The active \gls{uds} polling pattern of the recording was an additional, deliberate advantage: it produces a structured, request/response traffic pattern rather than uniform background noise, which is what allowed the timing layer's contribution to the baseline alert volume (Table~\ref{tab:rootcause}) to be explained structurally instead of dismissed as unexplained noise.
+The Kia EV6 recording of the CSS Electronics EV Data Pack was the only recording available that met these four conditions at once: an unmodified production vehicle, 97{,}741 frames over about one hour, a frame count that could be checked against the channel group metadata of the \gls{mf4} file (which is how we found the conversion defect of Section~\ref{sec:validation-setup}), and a vehicle with its own profile and trained model, the path that Fix 1 showed was broken. Its active \gls{uds} polling was an extra advantage: it produces a structured pattern of requests and responses, which allowed us to explain the timing share of the alerts (Table~\ref{tab:rootcause}) by its structure instead of treating it as noise.
 
-\section{Cross-validation dataset}
+In the second iteration, the rule was simpler and stricter: each final model is evaluated on complete recordings that were never used to fit it or to set its threshold (Table~\ref{tab:app-final-corpus}).
 
-To test for cross-session and cross-dataset state leakage in the AI explanation module (Section~\ref{sec:validation-ai}), a second, independent real recording was used: a Renault Clio DoS-attack candump log, from a different vehicle and a different capture tool, containing frames on identifiers unrelated to the Kia EV6 recording (for example 0xC6, 0x511). This dataset was chosen specifically because it shares no vehicle profile, no logger format, and no identifier space with the Kia EV6 recording, which makes any cross-contamination between the two immediately obvious rather than masked by coincidental overlap.
+\section{Dataset used to check the separation of sessions}
+
+To check that no data leaks from one session or dataset into another in the explanation module (Section~\ref{sec:validation-ai}), we used a second, independent recording: a candump log recorded on a Renault Clio during a denial of service experiment, from another vehicle and another capture tool, with identifiers unrelated to the Kia EV6 recording (for example 0xC6 and 0x511). We chose it because it shares no vehicle profile, no logger format and no identifier with the Kia EV6 recording, so any mixing of the two would be obvious.

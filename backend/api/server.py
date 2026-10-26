@@ -864,7 +864,7 @@ async def analyze(
             raw_bytes = [int(row.get(f"b{i}", 0)) for i in range(8)]
 
             # Plausibility check
-            plaus = _plausibility.check(can_id_hex, raw_bytes)
+            plaus = _plausibility.check(can_id_hex, raw_bytes, vehicle=requested_model)
             context["plausibility_checked"] = plaus["checked"]
             context["plausibility_passed"] = plaus["passed"]
             context["plausibility_violations"] = plaus["violations"]
@@ -989,7 +989,8 @@ async def analyze(
                         f"{ctx.get('can_id', 'unknown')} were collapsed into this summary. "
                         f"Peak anomaly score {float(ctx.get('anomaly_score', 0.0)):.3f}."
                     ),
-                    "recommendation": "Investigate the source of the high-frequency traffic burst.",
+                    "recommendation": ("Several frames of this identifier were flagged close together. "
+                                       "Check which layers flagged them before assuming a flood."),
                     "kb_match_label": str(ctx.get("temporal_pattern", "")),
                 },
             ))
@@ -1466,13 +1467,30 @@ def api_live_signals(limit: int = 200) -> dict[str, Any]:
         return {"status": "ok", "items": live_signals_buffer[-max(1, min(limit, 1000)):]}
 
 
+def _profile_decoded(frame: dict[str, Any]) -> list[dict[str, Any]]:
+    """The DBC decoding the hardware reader attached to a frame, in can_decode's shape."""
+    return [
+        {
+            "signal":       s.get("name", ""),
+            "value":        s.get("value"),
+            "unit":         s.get("unit", ""),
+            "system":       s.get("system", ""),
+            "out_of_range": bool(s.get("out_of_range", False)),
+        }
+        for s in (frame.get("signals") or [])
+    ]
+
+
 @app.get("/api/live/decoded-signals")
 def api_live_decoded_signals() -> dict[str, Any]:
     """Return the latest known decoded engineering value per signal name.
 
-    Scans the last 200 frames, decodes each unique CAN-ID via the signal map,
-    keeps only the most-recent value per signal name, and returns the aggregated
-    list so the UI can populate the LIVE SIGNAL MONITOR without raw-byte parsing.
+    Scans the last 200 frames and keeps only the most-recent value per signal
+    name, so the UI can populate the LIVE SIGNAL MONITOR without raw-byte parsing.
+    A hardware frame already decoded with the DBC of the selected vehicle profile
+    keeps that decoding; other frames are decoded via the signal map, which is
+    not tied to a vehicle and would give the bench rig's 0x316 and 0x3F9 the
+    meaning of unrelated Hyundai messages.
     """
     if _hardware_gone_stale():
         return {"status": "ok", "items": [], "stale": True}
@@ -1486,7 +1504,7 @@ def api_live_decoded_signals() -> dict[str, Any]:
         raw_bytes = [
             int(frame.get(f"b{i}", 0)) for i in range(8)
         ]
-        for sig in can_decode(can_id, raw_bytes):
+        for sig in (_profile_decoded(frame) or can_decode(can_id, raw_bytes)):
             name = sig["signal"]
             if name not in latest:
                 latest[name] = {
@@ -1620,9 +1638,20 @@ def api_explain_alert(alert_index: int) -> dict[str, Any]:
             "reason":    replay_ctx.get("detail", f"top_feature={replay_ctx.get('top_feature', '')}"),
             "dominant_detection_layer": (
                 "timing" if replay_ctx.get("timing_anomaly") else
-                "temporal" if replay_ctx.get("temporal_pattern", "normal") != "normal" else
+                "temporal" if replay_ctx.get("temporal_pattern", "normal") not in ("normal", "alert_burst") else
                 "payload" if not replay_ctx.get("plausibility_passed", True) else "ml"
             ),
+            # Evidence the explainer may use, as measured by the detection engine.
+            "decoded_signals":  decoded_signals,
+            "is_burst_summary": bool(replay_ctx.get("is_burst_summary", False)),
+            "suppressed_count": int(replay_ctx.get("suppressed_count", 0) or 0),
+            "burst_window_s":   replay_ctx.get("burst_window_s"),
+            "layer_scores": {
+                "timing":   layers.get("timing", float(replay_ctx.get("timing_score", 0.0))),
+                "payload":  layers.get("payload", 0.0),
+                "ml":       layers.get("ml", float(replay_ctx.get("anomaly_score", 0.0))),
+                "temporal": layers.get("persistence", float(replay_ctx.get("temporal_score", 0.0))),
+            },
         }
 
         if cache_key in _explain_cache:
@@ -2162,6 +2191,57 @@ def api_offline_summary(session_id: str) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 _MF4_CACHE_DIR = Path("backend/ml/outputs/mf4_converted")
+
+
+class SignalDiscoveryRequest(BaseModel):
+    file_path: str
+    vehicle_id: str = ""
+    max_channels: int = 4
+    points: int = 80
+
+
+@app.post("/api/signals/discover")
+def api_signals_discover(req: SignalDiscoveryRequest) -> dict[str, Any]:
+    """The signals a capture actually carries (backend.decoding.signal_discovery).
+
+    Named, decoded signals when the selected vehicle has a DBC that decodes this
+    capture; otherwise raw payload-byte channels, marked undecoded.
+    """
+    from backend.decoding.signal_discovery import discover
+    from backend.offline.session_analyzer import _load_file
+
+    path = Path(req.file_path)
+    if not path.is_file():
+        raise HTTPException(status_code=400, detail=f"file not found: {path}")
+    try:
+        result = discover(_load_file(path), req.vehicle_id,
+                          max_channels=max(1, min(req.max_channels, 12)), points=max(2, min(req.points, 400)))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"status": "ok", **result}
+
+
+class DatasetDescribeRequest(BaseModel):
+    file_path: str
+    vehicle_id: str = ""
+
+
+@app.post("/api/dataset/describe")
+def api_dataset_describe(req: DatasetDescribeRequest) -> dict[str, Any]:
+    """Measured facts about a capture and its place in the selected model's corpus
+    (training recording, held-back test recording, or neither)."""
+    from backend.ml.runtime.model_status import _default_model_root
+    from backend.offline.dataset_facts import describe
+    from backend.offline.session_analyzer import _load_file
+
+    path = Path(req.file_path)
+    if not path.is_file():
+        raise HTTPException(status_code=400, detail=f"file not found: {path}")
+    try:
+        result = describe(path, _load_file(path), req.vehicle_id, _default_model_root())
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"status": "ok", **result}
 
 
 class Mf4ConvertRequest(BaseModel):

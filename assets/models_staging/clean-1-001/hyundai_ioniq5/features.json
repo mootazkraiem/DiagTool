@@ -1,0 +1,17 @@
+{
+  "feature_pipeline": "canonical-1",
+  "window": 10,
+  "features": [
+    "time_diff",
+    "rolling_mean_time_diff",
+    "rolling_std_time_diff",
+    "payload_entropy"
+  ],
+  "dropped_features": {
+    "byte_diff": "near-constant (IQR 0, std 0.558)",
+    "rolling_mean_byte_diff": "near-constant (IQR 0, std 0.571)",
+    "rolling_std_byte_diff": "near-constant (IQR 0, std 0.788)",
+    "rolling_max_byte_diff": "near-constant (IQR 0, std 1.22)",
+    "changed_bytes_count": "near-constant (IQR 0, std 0.597)"
+  }
+}
