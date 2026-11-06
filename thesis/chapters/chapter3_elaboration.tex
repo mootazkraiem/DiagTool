@@ -1,7 +1,8 @@
 \chapter{Elaboration: Analysis and Architecture}
 \label{chap:elaboration}
 
-\section{Introduction}
+\section*{Introduction}
+\addcontentsline{toc}{section}{Introduction}
 
 The elaboration phase analyses the requirements of Chapter~\ref{chap:inception} and builds the architecture on which the construction iterations grow. This chapter says what the system is made of and why: the technical choices, the overall architecture, the analysis model, the dynamic view of the key use cases, the detection architecture, and the framing of the machine learning problem. It ends with the architecture baseline that the phase delivered, and the risks it reduced. How each part was implemented is described in the iterations of Chapter~\ref{chap:construction}.
 
@@ -310,6 +311,7 @@ The elaboration phase ended with an executable architecture, delivered by milest
 
 This baseline reduced three risks of Table~\ref{tab:risks}. Live capture would only differ from replay and simulation by its transport, since all three feed the same runtime engine (R1). Every source would enter the engine as the same frame representation (R7). And the client and the backend were shown to work together through the \gls{api}, so that the following iterations could add features on both sides without changing how they communicate.
 
-\section{Conclusion}
+\section*{Conclusion}
+\addcontentsline{toc}{section}{Conclusion}
 
 This chapter presented the technical choices, the architecture of the client and the backend, the domain and data models, the dynamic view of a replay and of an explanation, the two detection paths, the framing of the machine learning problem, and the architecture baseline of the elaboration phase. The next chapter presents the four iterations of the construction phase.

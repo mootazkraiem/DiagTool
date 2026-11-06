@@ -1,6 +1,7 @@
 \chapter*{General Conclusion}
 \markboth{\MakeUppercase{General Conclusion}}{\MakeUppercase{General Conclusion}}
 \addcontentsline{toc}{chapter}{General Conclusion}
+\renewcommand*{\thischapterid}{none}
 
 In this report, we presented CANvisionNative, a diagnostic and validation platform for the \gls{can} traffic of Battery Management Systems, built through the four phases of the Unified Process, from its inception to its transition.
 
@@ -16,7 +17,7 @@ The risks of the initial list (Table~\ref{tab:risks}) also proved useful, since 
 
 The main lesson of this work is that the most costly defects were the silent ones: none of them crashed, and each one only appeared when what the system reported was compared with a fact known independently, such as a vehicle being driven or a file being valid. A holdout is only meaningful when the split is made by recording and not by frame, and a flagged rate on unlabelled data is not a detection rate. Working with real logs showed how much the data format matters, from the channel groups of an \gls{mf4} file to the diagnostic polling that shapes the timing of a recording, and the bench rig showed that a single malformed line on a serial link can matter as much as the detection code. Above all, a detection system is only as trustworthy as the evidence behind each of its numbers.
 
-This work also has limits, detailed in Section~\ref{sec:limitations}. Live capture was tested on a bench rig, not on a vehicle. The final models were evaluated on recordings without attack labels, so we report flagged rates, from 0.60\% to 6.09\%, and not a detection rate, a precision or a recall. The live path scores about 200 to 260 frames per second, enough for a slow bus but not for buses that carry thousands of frames per second. Finally, each vehicle was evaluated on one holdout recording, and some vehicles have many identifiers too rare to get a model.
+This work also has limits, detailed in \Sref{sec:limitations}. Live capture was tested on a bench rig, not on a vehicle. The final models were evaluated on recordings without attack labels, so we report flagged rates, from 0.60\% to 6.09\%, and not a detection rate, a precision or a recall. The live path scores about 200 to 260 frames per second, enough for a slow bus but not for buses that carry thousands of frames per second. Finally, each vehicle was evaluated on one holdout recording, and some vehicles have many identifiers too rare to get a model.
 
 These limits point to the next steps. The first is to validate live capture on a real vehicle, which would close milestone M2. The second is to evaluate the final models on recordings with labelled attacks, such as those of the ROAD dataset, to measure what they detect as well as what they flag. The live path should then be made fast enough for busy buses, for example by scoring several frames at once or by using fewer trees, with each change measured on the holdout recordings. More recordings per vehicle would give a holdout to the vehicles that have none today and a model to more of the rare identifiers.
 

@@ -1,7 +1,8 @@
 \chapter{Transition: Final Release and Validation}
 \label{chap:transition}
 
-\section{Introduction}
+\section*{Introduction}
+\addcontentsline{toc}{section}{Introduction}
 
 The transition phase delivers the system to its users. This chapter presents the final release use case by use case, the test strategy and its results, the traceability of the requirements, the installation and documentation of the platform, and the scope within which it can be considered stable.
 
@@ -16,7 +17,7 @@ The screenshots below show the final release during the analysis of the Jaguar I
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.72\textwidth]{f01_home.png}
+{\setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.4pt}\fbox{\includegraphics[width=\dimexpr0.72\textwidth-1pt\relax]{f01_home.png}}}
 \caption{Home screen: choice between a live session and an offline import.}
 \label{fig:screen-home}
 \end{figure}
@@ -27,7 +28,7 @@ The screenshots below show the final release during the analysis of the Jaguar I
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{f02_dashboard.png}
+{\setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.4pt}\fbox{\includegraphics[width=\dimexpr1\textwidth-1pt\relax]{f02_dashboard.png}}}
 \caption{Dashboard after the analysis of the Jaguar I-PACE holdout recording.}
 \label{fig:screen-dashboard-final}
 \end{figure}
@@ -38,7 +39,7 @@ The screenshots below show the final release during the analysis of the Jaguar I
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.9\textwidth]{f02b_dataset_card.png}
+{\setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.4pt}\fbox{\includegraphics[width=\dimexpr0.9\textwidth-1pt\relax]{f02b_dataset_card.png}}}
 \caption{Dataset card of the Jaguar I-PACE holdout recording, open over the Dashboard.}
 \label{fig:screen-dataset-card}
 \end{figure}
@@ -49,7 +50,7 @@ The screenshots below show the final release during the analysis of the Jaguar I
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{f07_logplayback.png}
+{\setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.4pt}\fbox{\includegraphics[width=\dimexpr1\textwidth-1pt\relax]{f07_logplayback.png}}}
 \caption{Log Playback during the replay of the Jaguar I-PACE holdout recording.}
 \label{fig:screen-logplayback}
 \end{figure}
@@ -61,7 +62,7 @@ The screenshots below show the final release during the analysis of the Jaguar I
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{f08_anomaly_intel.png}
+{\setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.4pt}\fbox{\includegraphics[width=\dimexpr1\textwidth-1pt\relax]{f08_anomaly_intel.png}}}
 \caption{Anomaly Intel: alert list, signals of the selected alert and explanation panel.}
 \label{fig:screen-anomaly-intel}
 \end{figure}
@@ -94,7 +95,7 @@ The screenshots below show the final release during the analysis of the Jaguar I
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{f03_telemetry.png}
+{\setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.4pt}\fbox{\includegraphics[width=\dimexpr1\textwidth-1pt\relax]{f03_telemetry.png}}}
 \caption[Telemetry: channels of the Jaguar I-PACE recording.]{Telemetry: channels of the Jaguar I-PACE recording. No \acrshort{dbc} file exists for this vehicle, so the channels are raw payload bytes, marked as undecoded.}
 \label{fig:screen-telemetry}
 \end{figure}
@@ -103,13 +104,13 @@ The screenshots below show the final release during the analysis of the Jaguar I
     \item \textbf{Configure settings:} The Settings screen holds the key of the \gls{llm} provider, the hardware interface (adapter, serial port, bitrate) and an alert threshold, saved locally between sessions. In the current version, this threshold is only stored by the client: it is not sent to the backend, which scores with the values of Table~\ref{tab:two-paths}.
 \end{itemize}
 
-\Needspace{690pt}% keep the heading with its float
+\Needspace{409pt}% keep the heading with its float
 \section{Test strategy and results}
 \label{sec:tests}
 
 \subsection{Test plan}
 
-The same rule applied to every test: a claim had to be backed by reproducible evidence, a defect counted as found only once it could be triggered on demand, and as fixed only once the same test, run again, gave the expected result. Table~\ref{tab:qa-timeline} lists the stages of the validation over the iterations, and Table~\ref{tab:testing-matrix} what each kind of test covered.
+The same rule applied to every test: a claim had to be backed by reproducible evidence, a defect counted as found only once it could be triggered on demand, and as fixed only once the same test, run again, gave the expected result. Table~\ref{tab:qa-timeline} lists the stages of the validation over the iterations.
 
 \begin{table}[H]
 \centering
@@ -134,6 +135,12 @@ The same rule applied to every test: a claim had to be backed by reproducible ev
 \hline
 \end{tabularx}
 \end{table}
+
+\Needspace{427pt}% keep the text with its float
+\Needspace{410pt}% keep the heading with its float
+\subsection{Testing matrix}
+
+Table~\ref{tab:testing-matrix} shows what each kind of test covered, and how it was tested.
 
 \begin{table}[H]
 \centering
@@ -170,13 +177,13 @@ Two automated suites run after every change. The 318 backend tests (pytest) cove
 \subsection{End to end test of the release}
 \label{sec:e2e}
 
-Analysing the Jaguar I-PACE holdout file through the application gave the same numbers as the evaluation of Section~\ref{sec:validation-protocol}: 50{,}361 frames, 40{,}477 scored and 1{,}249 flagged (Section~\ref{sec:tour}). This test also revealed display problems, corrected before the screenshots of Section~\ref{sec:tour} were taken. The \gls{csv} exports wrote the scores with the decimal comma of a French Windows installation, which shifted the columns of the file; after the fix, the 339 exported rows all read back with the nine columns of the header. A bus load was shown that was in fact the processing rate of the application divided by twenty. A frequency analysis labelled an identifier sending 0.2 messages per second as a denial of service burst, because its baseline was almost zero. And some explanation texts presented a possible attack as a fact on unlabelled data.
+Analysing the Jaguar I-PACE holdout file through the application gave the same numbers as the evaluation of \Sref{sec:validation-protocol}: 50{,}361 frames, 40{,}477 scored and 1{,}249 flagged (\Sref{sec:tour}). This test also revealed display problems, corrected before the screenshots of \Sref{sec:tour} were taken. The \gls{csv} exports wrote the scores with the decimal comma of a French Windows installation, which shifted the columns of the file; after the fix, the 339 exported rows all read back with the nine columns of the header. A bus load was shown that was in fact the processing rate of the application divided by twenty. A frequency analysis labelled an identifier sending 0.2 messages per second as a denial of service burst, because its baseline was almost zero. And some explanation texts presented a possible attack as a fact on unlabelled data.
 
 \subsection{Performance}
 
 The offline analysis meets NFR1: the 491{,}969 frames of the Nissan Leaf holdout were analysed in 187 seconds, and the Jaguar I-PACE file in about one minute in the application. The live path processes about 200 to 260 frames per second (Table~\ref{tab:perf-live}), which keeps up with a slow bus such as the one of the Nissan Leaf, but not with buses that carry thousands of frames per second.
 
-\Needspace{385pt}% keep the heading with its float
+\Needspace{399pt}% keep the heading with its float
 \section{Requirements traceability}
 \label{sec:traceability}
 
@@ -191,31 +198,31 @@ Table~\ref{tab:traceability} links each functional requirement to its implementa
 \hline
 \textbf{Req.} & \textbf{Implemented in} & \textbf{Validated by} \\
 \hline
-FR1 & Common parser, Section~\ref{sec:impl-parser} & Fix 4, Section~\ref{sec:it2} \\
+FR1 & Common parser, \Sref{sec:impl-parser} & Fix 4, \Sref{sec:it2} \\
 \hline
-FR2 & Vehicle profiles and model selection, Section~\ref{sec:impl-vehicle} & Fix 1, Section~\ref{sec:it2} \\
+FR2 & Vehicle profiles and model selection, \Sref{sec:impl-vehicle} & Fix 1, \Sref{sec:it2} \\
 \hline
-FR3 & Replay engine, Section~\ref{sec:impl-replay} & Throughput before and after, Table~\ref{tab:before-after} \\
+FR3 & Replay engine, \Sref{sec:impl-replay} & Throughput before and after, Table~\ref{tab:before-after} \\
 \hline
-FR4 & Detection paths, Section~\ref{sec:design-pipeline}; final models, Section~\ref{sec:impl-feature-eng} & Root cause analysis, Table~\ref{tab:rootcause}; holdout results, Table~\ref{tab:holdout-results} \\
+FR4 & Detection paths, \Sref{sec:design-pipeline}; final models, \Sref{sec:impl-feature-eng} & Root cause analysis, Table~\ref{tab:rootcause}; holdout results, Table~\ref{tab:holdout-results} \\
 \hline
 FR5 & Severity rules, Table~\ref{tab:two-paths} & Severity distribution, Figure~\ref{fig:chart-severity} \\
 \hline
-FR6 & Explanation engine, Section~\ref{sec:design-ai} & Fix 6, Section~\ref{sec:validation-ai} \\
+FR6 & Explanation engine, \Sref{sec:design-ai} & Fix 6, \Sref{sec:validation-ai} \\
 \hline
-FR7 & Exports, Section~\ref{sec:it1} & End to end test, Section~\ref{sec:e2e} \\
+FR7 & Exports, \Sref{sec:it1} & End to end test, \Sref{sec:e2e} \\
 \hline
-FR8 & Live simulation, Section~\ref{sec:baseline} & Interactive interface audit, Section~\ref{sec:it2} \\
+FR8 & Live simulation, \Sref{sec:baseline} & Interactive interface audit, \Sref{sec:it2} \\
 \hline
-FR9 & Hardware layer, Section~\ref{sec:impl-hardware} & Bench rig test, Section~\ref{sec:validation-bench}; no vehicle test \\
+FR9 & Hardware layer, \Sref{sec:impl-hardware} & Bench rig test, \Sref{sec:validation-bench}; no vehicle test \\
 \hline
-FR10 & Session recording, Section~\ref{sec:it1} & Interactive interface audit, Section~\ref{sec:it2} \\
+FR10 & Session recording, \Sref{sec:it1} & Interactive interface audit, \Sref{sec:it2} \\
 \hline
-FR11 & Settings, Section~\ref{sec:tour} & Interactive interface audit, Section~\ref{sec:it2}; the alert threshold is stored but not yet applied \\
+FR11 & Settings, \Sref{sec:tour} & Interactive interface audit, \Sref{sec:it2}; the alert threshold is stored but not yet applied \\
 \hline
-FR12 & Dataset card and signal discovery, Section~\ref{sec:impl-capture} & End to end test, Section~\ref{sec:e2e} \\
+FR12 & Dataset card and signal discovery, \Sref{sec:impl-capture} & End to end test, \Sref{sec:e2e} \\
 \hline
-FR13 & Model status and manifest checks, Section~\ref{sec:it4} & Holdout evaluation, Section~\ref{sec:validation-protocol} \\
+FR13 & Model status and manifest checks, \Sref{sec:it4} & Holdout evaluation, \Sref{sec:validation-protocol} \\
 \hline
 \end{tabularx}
 \end{table}
@@ -248,7 +255,7 @@ curl http://127.0.0.1:8765/health
 
 \subsection{Model promotion}
 
-New vehicle models are produced and promoted with the commands of the training pipeline (Section~\ref{sec:impl-models}). \code{plan} checks the corpus and prints the split without fitting anything; \code{train} fits a version into the staging folder; \code{validate} checks a staged version; and \code{promote} validates it again and moves it into production, archiving the files it replaces:
+New vehicle models are produced and promoted with the commands of the training pipeline (\Sref{sec:impl-models}). \code{plan} checks the corpus and prints the split without fitting anything; \code{train} fits a version into the staging folder; \code{validate} checks a staged version; and \code{promote} validates it again and moves it into production, archiving the files it replaces:
 
 \begin{lstlisting}[numbers=none]
 python -m backend.ml.training.clean_pipeline plan
@@ -304,6 +311,7 @@ Within the scope of this validation, we consider the software stable:
 
 This scope has limits, which we state plainly. It is not a production, safety or security certification, and it does not cover deployment in a vehicle. Live capture was tested only on a bench rig with synthetic traffic, since no compatible vehicle was available, and the run on the physical rig has not been repeated after the last corrections. The final models were evaluated on recordings without attack labels, so we can report flagged rates but no detection rate, precision or recall; we did not evaluate the final models on the labelled attack recordings of public datasets. The live path is too slow for buses above about 260 frames per second. The weights and thresholds of the fused score are fixed configuration values whose effect was not evaluated separately, and the alert threshold shown in the Settings screen is stored but not yet applied to scoring. The coverage of some vehicles is incomplete: on the Jaguar I-PACE, about a fifth of the frames cannot be scored, mostly because they belong to identifiers too rare to have a model. Each vehicle was evaluated on one holdout recording, which says more about that recording than about every driving situation. Finally, the explanations may cite a similar past case, and this history is kept across sessions on purpose, so an analyst who compares two unrelated vehicles may see a past case from the other vehicle.
 
-\section{Conclusion}
+\section*{Conclusion}
+\addcontentsline{toc}{section}{Conclusion}
 
 The transition phase delivered a release whose screens cover every use case, checked by automated tests and by an end to end test on a recording the models never saw. Every functional requirement is traced to its implementation and its evidence, the platform comes with an installation procedure, a model promotion procedure and a user guide, and its limits are measured and stated.

@@ -1,7 +1,8 @@
 \chapter{General Framework}
 \label{chap:framework}
 
-\section{Introduction}
+\section*{Introduction}
+\addcontentsline{toc}{section}{Introduction}
 
 This chapter sets the frame of the project: the host company and team, the context of the work, the existing solutions, the problems the project addresses, the solution we propose, its objectives, and the development process we followed, the Unified Process.
 
@@ -109,7 +110,7 @@ We propose \textbf{CANvisionNative}, a diagnostic and validation platform for th
     \item Three traffic sources: recorded logs, a live simulator, and live capture from a \gls{can} adapter.
 \end{itemize}
 
-CANvisionNative does not compete with detection research; it gathers in one diagnostic workflow what the tools of Section~\ref{sec:existing} offer separately: replay of several log formats, monitoring, anomaly detection per vehicle, and explanations in plain language. The model used for a vehicle is chosen explicitly and its status is shown before use. The platform can be used after the fact, on a recorded log, or as a live monitor when an adapter is connected.
+CANvisionNative does not compete with detection research; it gathers in one diagnostic workflow what the tools of \Sref{sec:existing} offer separately: replay of several log formats, monitoring, anomaly detection per vehicle, and explanations in plain language. The model used for a vehicle is chosen explicitly and its status is shown before use. The platform can be used after the fact, on a recorded log, or as a live monitor when an adapter is connected.
 
 \section{Objectives}
 
@@ -197,13 +198,13 @@ Inception & February & Problem, existing tools, vision, use cases, initial risks
 \hline
 Elaboration & February to March & Analysis and design models; executable architecture: client and backend, one runtime engine for replay, simulation and live capture (M1) & Chapter~\ref{chap:elaboration} \\
 \hline
-Construction, iteration 1 & March to June & First detection pipeline and client: M3 to M8 & Section~\ref{sec:it1} \\
+Construction, iteration 1 & March to June & First detection pipeline and client: M3 to M8 & \Sref{sec:it1} \\
 \hline
-Construction, iteration 2 & June to July & Validation and correction of six defects on a Kia EV6 recording & Section~\ref{sec:it2} \\
+Construction, iteration 2 & June to July & Validation and correction of six defects on a Kia EV6 recording & \Sref{sec:it2} \\
 \hline
-Construction, iteration 3 & August to September & Hardware layer and bench rig (M2) & Section~\ref{sec:it3} \\
+Construction, iteration 3 & August to September & Hardware layer and bench rig (M2) & \Sref{sec:it3} \\
 \hline
-Construction, iteration 4 & September & Model rebuild and evaluation on recordings kept out of training & Section~\ref{sec:it4} \\
+Construction, iteration 4 & September & Model rebuild and evaluation on recordings kept out of training & \Sref{sec:it4} \\
 \hline
 Transition & September to October & Final release, tests, deployment guide and report & Chapter~\ref{chap:transition} \\
 \hline
@@ -235,6 +236,7 @@ The models of this report follow the \gls{uml}~\cite{omg2017uml}. The following 
 
 The diagrams were drawn with draw.io from a script that keeps every diagram in a file that can be edited. The source code was versioned with Git and GitHub, and the report was typeset with \LaTeX.
 
-\section{Conclusion}
+\section*{Conclusion}
+\addcontentsline{toc}{section}{Conclusion}
 
 This chapter presented the host company, the context of the project, the existing solutions and their limits, the problem and the solution we propose, its objectives, and the Unified Process that organised the work. The next chapter presents the inception phase: the capture of the requirements.

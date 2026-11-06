@@ -203,6 +203,25 @@
 
 % ---------- Section title numbering depth ----------
 \setcounter{secnumdepth}{3}
+% Sections are numbered within their chapter without the chapter number (1, 1.1, 1.1.1),
+% so that no heading has more than three levels of numbering. Figures and tables keep the
+% chapter number (Figure 2.1).
+\renewcommand{\thesection}{\arabic{section}}
+% A reference to a section remembers its chapter: \Sref{label} prints "Section 3" inside the
+% same chapter and "Section 3 of Chapter 4" from another chapter.
+\makeatletter
+\DeclareRobustCommand{\chmark}[1]{\gdef\lastrefch{#1}}
+\gdef\lastrefch{}
+\renewcommand*{\p@section}{\chmark{\thechapter}}
+\renewcommand*{\p@subsection}{\chmark{\thechapter}}
+\renewcommand*{\p@subsubsection}{\chmark{\thechapter}}
+\newcommand*{\thischapterid}{\thechapter}
+\newcommand*{\Sref}[1]{%
+  \gdef\lastrefch{}\sbox\z@{\ref*{#1}}%
+  Section~\ref{#1}%
+  \begingroup\edef\@tempa{\lastrefch}\edef\@tempb{\thischapterid}%
+  \ifx\@tempa\@empty\else\ifx\@tempa\@tempb\else\ of Chapter~\lastrefch\fi\fi\endgroup}
+\makeatother
 \setcounter{tocdepth}{3}
 
 % ---------- Custom commands ----------

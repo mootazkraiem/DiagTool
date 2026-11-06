@@ -1,7 +1,8 @@
 \chapter{Construction: Iterations}
 \label{chap:construction}
 
-\section{Introduction}
+\section*{Introduction}
+\addcontentsline{toc}{section}{Introduction}
 
 This chapter presents the construction phase, during which CANvisionNative was built on the architecture baseline of Chapter~\ref{chap:elaboration}. It first explains how the work of the phase was planned in iterations, then presents the four iterations one after the other: the first detection pipeline and client, its validation and correction on a real recording, the hardware layer and its bench rig, and the rebuild of the vehicle models.
 
@@ -118,11 +119,11 @@ bench\_rig      & Arduino bench rig             & 500 kbps \\
 
 \subsubsection{Explanation module}
 
-The explanation module implements the design of Section~\ref{sec:design-ai}. The context of an alert is built in the backend, and the providers are called in turn through their \gls{http} interfaces. Each explanation is added to a history store, so that later similar anomalies can refer to it, and cached during a run, so that the same alert is not explained twice.
+The explanation module implements the design of \Sref{sec:design-ai}. The context of an alert is built in the backend, and the providers are called in turn through their \gls{http} interfaces. Each explanation is added to a history store, so that later similar anomalies can refer to it, and cached during a run, so that the same alert is not explained twice.
 
 \subsubsection{Client and exports}
 
-The client implements the seven screens of Section~\ref{sec:design-frontend}, presented in Chapter~\ref{chap:transition}. Anomaly Intel exports the alert list as a \gls{csv} file or as a PDF report built with PDFsharp, both read from the list on screen.
+The client implements the seven screens of \Sref{sec:design-frontend}, presented in Chapter~\ref{chap:transition}. Anomaly Intel exports the alert list as a \gls{csv} file or as a PDF report built with PDFsharp, both read from the list on screen.
 
 \subsection{Tests}
 
@@ -219,7 +220,7 @@ The machine learning share pointed at the defects in model selection and state c
     \item \textbf{Root cause:} Two defects added up. The vector given to the classifier was built from a list of 11 features meant for the scoring model, while the K-Means model had been trained on 14 features, so every call raised the error ``expected 14 features, got 11''. A very broad error handler caught this error and always returned ``parking'', which made the failure constant and therefore invisible unless someone reproduced the exact error on purpose.
     \item \textbf{Fix:} We corrected the feature list to the 14 features in the order used at training, and added the scaling step that was missing before the classification.
     \item \textbf{Evidence:} After the fix, the same recording was classified as \textbf{99.92\% ``driving''} (97{,}667 of 97{,}741 frames), with 64 frames ``unknown'' and 10 ``parking'', a credible result for an hour of driving.
-    \item \textbf{Result:} The Isolation Forest of the right state is now used for almost every frame. This fix explains most of the improvements reported in Section~\ref{sec:validation-beforeafter}.
+    \item \textbf{Result:} The Isolation Forest of the right state is now used for almost every frame. This fix explains most of the improvements reported in \Sref{sec:validation-beforeafter}.
 \end{itemize}
 
 \subsubsection{Fix 3: attribution of the reason}
@@ -237,7 +238,7 @@ The machine learning share pointed at the defects in model selection and state c
 
 \begin{itemize}
     \item \textbf{Problem:} Some formats that the file dialog accepted gave empty or meaningless replays.
-    \item \textbf{Investigation:} We compared the loading code of the replay engine with the shared loader of Section~\ref{sec:impl-parser}, which the offline analysis already used without problems.
+    \item \textbf{Investigation:} We compared the loading code of the replay engine with the shared loader of \Sref{sec:impl-parser}, which the offline analysis already used without problems.
     \item \textbf{Root cause:} The replay engine had its own loading code, which called a generic \gls{csv} reader directly. Any .log, .asc or .txt file chosen in the dialog was read as a broken \gls{csv} file.
     \item \textbf{Fix:} The replay engine now calls the shared loader, and its own \gls{csv} only code was removed.
     \item \textbf{Evidence:} The corrected \gls{csv} path gave exactly the same output as before on all 97{,}741 frames, and small candump and Vector test files, which had produced timestamps and identifiers equal to zero, were parsed correctly.
@@ -385,7 +386,7 @@ This second step revealed two defects of the hardware layer, which we corrected:
     \item \textbf{Old data stayed on screen after the rig was unplugged.} When the boards were disconnected, the link was still reported as up, because its status only changed on a hard error, and the live screens kept showing the last frames received, hours later. The link is now reported as lost when no frame has arrived for five seconds, disconnecting clears the buffers of live data, and each live update says whether it comes from the hardware or from the simulator, so that the client can show which one the analyst is looking at.
 \end{itemize}
 
-Two more gaps concerned the interpretation of live frames. First, the frames were not decoded correctly. The rig had been connected under the profile of a real vehicle, whose \gls{dbc} file does not define 0x316 or 0x3F9, and the live signal panel read the frames with a signal map shared by all vehicles, which gave them the meaning of unrelated messages from another manufacturer. Second, the frame on the unknown identifier was never raised as an alert, and it could not have been: the whitelist of Section~\ref{sec:design-pipeline} belonged to the offline analysis, and live capture had no check of the identifiers at all. We corrected both. The rig now has its own vehicle profile and \gls{dbc} file, and the live screens use the decoding of the selected profile first, so the live values sent to the screens become a speed of 60~km/h and a state of charge of 78\%. The profile of the rig declares its \gls{dbc} file complete, so live capture flags 0x666 on its first frame, without any learning window. Automated tests send the three frames of the rig through the virtual bus of python-can and check the decoded values, the alert on 0x666, and the absence of such alerts for a profile whose \gls{dbc} file is partial.
+Two more gaps concerned the interpretation of live frames. First, the frames were not decoded correctly. The rig had been connected under the profile of a real vehicle, whose \gls{dbc} file does not define 0x316 or 0x3F9, and the live signal panel read the frames with a signal map shared by all vehicles, which gave them the meaning of unrelated messages from another manufacturer. Second, the frame on the unknown identifier was never raised as an alert, and it could not have been: the whitelist of \Sref{sec:design-pipeline} belonged to the offline analysis, and live capture had no check of the identifiers at all. We corrected both. The rig now has its own vehicle profile and \gls{dbc} file, and the live screens use the decoding of the selected profile first, so the live values sent to the screens become a speed of 60~km/h and a state of charge of 78\%. The profile of the rig declares its \gls{dbc} file complete, so live capture flags 0x666 on its first frame, without any learning window. Automated tests send the three frames of the rig through the virtual bus of python-can and check the decoded values, the alert on 0x666, and the absence of such alerts for a profile whose \gls{dbc} file is partial.
 
 \subsection{Assessment}
 
@@ -579,7 +580,7 @@ One model call costs about 24 milliseconds, so even with the model called on eve
 \subsubsection{Comparison with the other candidate algorithms}
 \label{sec:validation-compare}
 
-As planned in Section~\ref{sec:ml-selection}, we measured LOF and the One Class SVM against Isolation Forest under the same conditions (Figure~\ref{fig:ml-compare-pipeline}). The four vehicles with a final model keep their production split, and every identifier with a final model is fitted three times, on the same features and the same training rows: at most 5{,}000 evenly spaced rows per identifier, because the One Class SVM does not scale to the largest ones. The three models get the threshold rule of the final models and score the holdout recording, which none of them saw.
+As planned in \Sref{sec:ml-selection}, we measured LOF and the One Class SVM against Isolation Forest under the same conditions (Figure~\ref{fig:ml-compare-pipeline}). The four vehicles with a final model keep their production split, and every identifier with a final model is fitted three times, on the same features and the same training rows: at most 5{,}000 evenly spaced rows per identifier, because the One Class SVM does not scale to the largest ones. The three models get the threshold rule of the final models and score the holdout recording, which none of them saw.
 
 \begin{figure}[H]
 \centering
@@ -588,7 +589,7 @@ As planned in Section~\ref{sec:ml-selection}, we measured LOF and the One Class 
 \label{fig:ml-compare-pipeline}
 \end{figure}
 
-There are no attack labels, so the measure comes from the holdout recordings, which we assume to be normal traffic (Section~\ref{sec:validation-protocol}): every flagged row is then a false alarm, and a model whose boundary generalises flags about the 2\% of its calibration. Isolation Forest flags the fewest normal rows on average, 3.2\% against 5.1\% for LOF and 6.5\% for the One Class SVM, and has the lowest worst case, 6.4\% on ROAD against 13.1\% and 14.0\% on the Jaguar I-PACE (Figure~\ref{fig:ml-compare-flagged}). It is not the best everywhere: LOF does as well on the Kia EV6 and better on ROAD. Trained on these capped rows, Isolation Forest stays close to the final models trained on all rows (Table~\ref{tab:holdout-results}).
+There are no attack labels, so the measure comes from the holdout recordings, which we assume to be normal traffic (\Sref{sec:validation-protocol}): every flagged row is then a false alarm, and a model whose boundary generalises flags about the 2\% of its calibration. Isolation Forest flags the fewest normal rows on average, 3.2\% against 5.1\% for LOF and 6.5\% for the One Class SVM, and has the lowest worst case, 6.4\% on ROAD against 13.1\% and 14.0\% on the Jaguar I-PACE (Figure~\ref{fig:ml-compare-flagged}). It is not the best everywhere: LOF does as well on the Kia EV6 and better on ROAD. Trained on these capped rows, Isolation Forest stays close to the final models trained on all rows (Table~\ref{tab:holdout-results}).
 
 \begin{figure}[H]
 \centering
@@ -597,7 +598,7 @@ There are no attack labels, so the measure comes from the holdout recordings, wh
 \label{fig:ml-compare-flagged}
 \end{figure}
 
-This advantage has a price (Figure~\ref{fig:ml-compare-cost}). Isolation Forest is the slowest of the three: 138 seconds of training for the four vehicles against 41 and 17, and about 23 milliseconds to score one frame against 1 and 0.4. This is the model call measured in Section~\ref{sec:validation-speed}, and the reason the live path does not keep up with fast buses. We kept Isolation Forest because the offline analysis, the main use of the platform, needs few and even false alarms more than speed; LOF would score a live frame more than twenty times faster, at the cost of four times more false alarms on the Jaguar I-PACE.
+This advantage has a price (Figure~\ref{fig:ml-compare-cost}). Isolation Forest is the slowest of the three: 138 seconds of training for the four vehicles against 41 and 17, and about 23 milliseconds to score one frame against 1 and 0.4. This is the model call measured in \Sref{sec:validation-speed}, and the reason the live path does not keep up with fast buses. We kept Isolation Forest because the offline analysis, the main use of the platform, needs few and even false alarms more than speed; LOF would score a live frame more than twenty times faster, at the cost of four times more false alarms on the Jaguar I-PACE.
 
 \begin{figure}[H]
 \centering
@@ -620,6 +621,7 @@ Figure~\ref{fig:ml-feature-shares} shows what the final forests rely on. The thr
 
 Four vehicles are in production, with 296 identifier models, each evaluated on a recording it never saw, with flagged rates from 0.60\% to 6.09\% that could each be explained. One model, the MG ZS EV, was held back because its evaluation showed that it could not be trusted. Isolation Forest was confirmed as the algorithm that flags the fewest normal rows, at the cost of a live path limited to slow buses.
 
-\section{Conclusion}
+\section*{Conclusion}
+\addcontentsline{toc}{section}{Conclusion}
 
 The four iterations of the construction phase delivered the first detection pipeline and the client, validated and corrected it on a real recording, added live capture tested on a bench rig, and rebuilt the models so that each one enters production only after an evaluation on unseen data. The next chapter presents the transition phase: the final release, its tests and its deployment.
