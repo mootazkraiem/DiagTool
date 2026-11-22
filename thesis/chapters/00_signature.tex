@@ -1,3 +1,11 @@
-% Validation form of ESPRIT, completed, signed by both supervisors and scanned.
-% It is inserted right after the cover page (page 1 of the signed PDF only).
-\includepdf[pages=1,pagecommand={\thispagestyle{empty}}]{images/validation_form_signed.pdf}
+% Validation form of ESPRIT, signed and stamped by the supervisors (scan of the signed sheet),
+% inserted right after the cover page as the form requires.
+% The unsigned LaTeX version of this page was replaced by the scan on 2026-11-19.
+\clearpage
+\thispagestyle{empty}
+\begin{tikzpicture}[remember picture, overlay]
+\node[inner sep=0pt] at (current page.center)
+  {\includegraphics[width=0.92\paperwidth,height=0.94\paperheight,keepaspectratio]{validation_form_signed.jpg}};
+\end{tikzpicture}
+\null
+\clearpage
